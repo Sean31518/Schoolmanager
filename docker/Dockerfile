@@ -26,9 +26,9 @@ COPY docker/entrypoint.sh ./entrypoint.sh
 RUN chmod +x ./entrypoint.sh && chown node:node ./entrypoint.sh
 
 USER node
-EXPOSE 6666
+EXPOSE 6969
 
 HEALTHCHECK --interval=30s --timeout=5s --retries=3 --start-period=10s \
-  CMD wget -qO- http://localhost:6666/api/health || exit 1
+  CMD wget -qO- http://localhost:6969/api/health || exit 1
 
 ENTRYPOINT ["./entrypoint.sh"]

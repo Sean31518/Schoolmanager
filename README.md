@@ -38,7 +38,7 @@ Dashboard und Kalender mit automatischem Ferien-/Feiertage-Import.
    docker compose up --build -d
    ```
 
-3. Im Browser öffnen: <http://localhost:6666>
+3. Im Browser öffnen: <http://localhost:6969>
 
 Die Daten liegen persistent im Docker-Volume `schulmanager-data`
 (SQLite-Datei `/data/schulmanager.db` im Container).
@@ -62,7 +62,7 @@ Voraussetzungen: Node.js 20+.
 ```sh
 npm install
 npm run prisma:migrate      # legt backend/dev.db an und wendet Migrationen an
-npm run dev:backend         # Backend auf Port 6666
+npm run dev:backend         # Backend auf Port 6969
 npm run dev:frontend        # Frontend (Vite) mit Proxy auf /api -> Backend
 ```
 
