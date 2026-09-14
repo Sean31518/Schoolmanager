@@ -4,6 +4,19 @@ Ein selbst gehosteter, freier (FOSS) Schulmanager: Stundenplan, Fächer mit frei
 gestaltbaren Notizbereichen (Regelheft, Vokabelheft, ...), Hausaufgaben,
 Dashboard und Kalender mit automatischem Ferien-/Feiertage-Import.
 
+## Funktionsumfang
+
+- **Stundenplan**: frei konfigurierbares Zeitraster (Stunden- und Pausenzeiten),
+  Fach-Zuordnung pro Wochentag/Stunde
+- **Fächer**: eigene Farbe, beliebig viele frei benannte Notizbereiche pro Fach
+  (z.B. Regelheft, Vokabelheft) mit Rich-Text-Inhalt je Klassenstufe
+- **Dashboard**: Schnellzugriff auf die Hefte der aktuellen Klassenstufe,
+  Hausaufgaben mit Abgabedatum, freie Notizen (z.B. Schließfachnummer)
+- **Kalender**: manuelle Termine/Klausuren sowie ein Import von Schulferien
+  (ferien-api.de) und gesetzlichen Feiertagen (Nager.Date) nach Bundesland,
+  wiederholbar ohne Duplikate
+- **Mehrbenutzerfähig**: eigene Konten mit vollständig isolierten Daten
+
 ## Tech-Stack
 
 - **Backend**: Node.js/TypeScript, Express, Prisma ORM, SQLite
@@ -55,6 +68,17 @@ npm run dev:frontend        # Frontend (Vite) mit Proxy auf /api -> Backend
 
 Das Backend liest seine Konfiguration aus `backend/.env` (siehe
 `.env.example` für alle Variablen).
+
+### Tests
+
+```sh
+npm run test:backend
+```
+
+Die Backend-Tests (vitest + supertest) laufen gegen eine eigene SQLite-Datei
+(`backend/prisma/test.db`, wird automatisch migriert und ist nicht Teil des
+Repos) und decken Auth-Flows, die Isolation zwischen Benutzerkonten und den
+Ferien-/Feiertage-Import ab.
 
 ## Projektstruktur
 

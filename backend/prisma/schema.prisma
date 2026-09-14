@@ -116,7 +116,6 @@ model TimeGridSlot {
 
   timetableSlots TimetableSlot[]
 
-  @@unique([userId, sortOrder])
   @@index([userId])
 }
 
