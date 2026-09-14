@@ -1,0 +1,26 @@
+services:
+  schulmanager:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    image: schulmanager:latest
+    ports:
+      - "6666:6666"
+    volumes:
+      - schulmanager-data:/data
+    env_file:
+      - .env
+    environment:
+      - PORT=6666
+      - NODE_ENV=production
+      - DATABASE_URL=file:/data/schulmanager.db
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:6666/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+volumes:
+  schulmanager-data:

@@ -1,0 +1,188 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// SQLite hat keine nativen Enum-Typen in Prisma - die zulässigen Werte werden
+// stattdessen als String gespeichert und auf Anwendungsebene über zod validiert
+// (siehe backend/src/lib/enums.ts):
+// FederalState: BW BY BE BB HB HH HE MV NI NW RP SL SN ST SH TH
+// Weekday: MONDAY TUESDAY WEDNESDAY THURSDAY FRIDAY SATURDAY SUNDAY
+// TimeGridSlotType: LESSON BREAK
+// CalendarEventType: MANUAL EXAM HOLIDAY PUBLIC_HOLIDAY
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  displayName  String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  settings       Settings?
+  subjects       Subject[]
+  timeGridSlots  TimeGridSlot[]
+  timetableSlots TimetableSlot[]
+  calendarEvents CalendarEvent[]
+  homework       Homework[]
+  generalNotes   GeneralNote[]
+  refreshTokens  RefreshToken[]
+}
+
+model RefreshToken {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String    @unique
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
+}
+
+model Settings {
+  id                     String       @id @default(cuid())
+  userId                 String       @unique
+  user                   User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  currentGradeLevel      Int      @default(5)
+  currentSchoolYearLabel String?
+  federalState           String   @default("BW")
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime     @updatedAt
+}
+
+model Subject {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name      String
+  color     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  noteSectionTypes NoteSectionType[]
+  timetableSlots   TimetableSlot[]
+  calendarEvents   CalendarEvent[]
+  homework         Homework[]
+
+  @@unique([userId, name])
+  @@index([userId])
+}
+
+model NoteSectionType {
+  id        String   @id @default(cuid())
+  subjectId String
+  subject   Subject  @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  name      String
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  notes Note[]
+
+  @@unique([subjectId, name])
+  @@index([subjectId])
+}
+
+model Note {
+  id                String          @id @default(cuid())
+  noteSectionTypeId String
+  noteSectionType   NoteSectionType @relation(fields: [noteSectionTypeId], references: [id], onDelete: Cascade)
+  gradeLevel        Int
+  contentJson       String
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+
+  @@unique([noteSectionTypeId, gradeLevel])
+  @@index([noteSectionTypeId])
+}
+
+model TimeGridSlot {
+  id        String           @id @default(cuid())
+  userId    String
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  label     String
+  type      String
+  startTime String
+  endTime   String
+  sortOrder Int
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+
+  timetableSlots TimetableSlot[]
+
+  @@unique([userId, sortOrder])
+  @@index([userId])
+}
+
+model TimetableSlot {
+  id             String       @id @default(cuid())
+  userId         String
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  weekday        String
+  timeGridSlotId String
+  timeGridSlot   TimeGridSlot @relation(fields: [timeGridSlotId], references: [id], onDelete: Cascade)
+  subjectId      String?
+  subject        Subject?     @relation(fields: [subjectId], references: [id], onDelete: SetNull)
+  room           String?
+  note           String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@unique([userId, weekday, timeGridSlotId])
+  @@index([userId])
+}
+
+model CalendarEvent {
+  id          String            @id @default(cuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title       String
+  type        String    @default("MANUAL")
+  startDate   DateTime
+  endDate     DateTime?
+  allDay      Boolean           @default(true)
+  subjectId   String?
+  subject     Subject?          @relation(fields: [subjectId], references: [id], onDelete: SetNull)
+  note        String?
+  externalRef String?
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  @@unique([userId, externalRef])
+  @@index([userId, startDate])
+}
+
+model Homework {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  subjectId String?
+  subject   Subject?  @relation(fields: [subjectId], references: [id], onDelete: SetNull)
+  dueDate   DateTime?
+  done      Boolean   @default(false)
+  note      String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([userId, dueDate])
+}
+
+model GeneralNote {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title       String?
+  contentJson String
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId])
+}
