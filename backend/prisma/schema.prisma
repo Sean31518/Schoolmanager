@@ -83,25 +83,40 @@ model NoteSectionType {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  notes Note[]
+  topics Topic[]
 
   @@unique([subjectId, name])
   @@index([subjectId])
 }
 
-model Note {
+model Topic {
   id                String          @id @default(cuid())
   noteSectionTypeId String
   noteSectionType   NoteSectionType @relation(fields: [noteSectionTypeId], references: [id], onDelete: Cascade)
-  gradeLevel        Int
-  contentJson       String
+  name              String
+  gradeLevel        Int?
+  sortOrder         Int             @default(0)
   createdAt         DateTime        @default(now())
   updatedAt         DateTime        @updatedAt
 
+  notes Note[]
+
+  @@index([noteSectionTypeId])
+}
+
+model Note {
+  id          String   @id @default(cuid())
+  topicId     String
+  topic       Topic    @relation(fields: [topicId], references: [id], onDelete: Cascade)
+  title       String
+  contentJson String
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
   examPrepItems ExamPrepItem[]
 
-  @@unique([noteSectionTypeId, gradeLevel])
-  @@index([noteSectionTypeId])
+  @@index([topicId])
 }
 
 model TimeGridSlot {

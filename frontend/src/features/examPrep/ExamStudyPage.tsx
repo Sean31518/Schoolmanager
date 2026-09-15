@@ -61,7 +61,8 @@ export function ExamStudyPage() {
                   className="h-2.5 w-2.5 flex-shrink-0 rounded-full"
                   style={{ backgroundColor: item.subjectColor }}
                 />
-                {item.subjectName} · {item.sectionTypeName} · Klasse {item.gradeLevel}
+                {item.subjectName} · {item.sectionTypeName} · {item.topicName} · {item.title}
+                {item.gradeLevel ? ` · Klasse ${item.gradeLevel}` : ''}
               </div>
               <h2 className="mt-1 text-lg font-semibold text-slate-800 dark:text-slate-100">
                 {section.label}

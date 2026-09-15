@@ -27,9 +27,19 @@ export async function requireOwnedCalendarEvent(userId: string, eventId: string)
   return event;
 }
 
+export async function requireOwnedTopic(userId: string, topicId: string) {
+  const topic = await prisma.topic.findFirst({
+    where: { id: topicId, noteSectionType: { subject: { userId } } },
+  });
+  if (!topic) {
+    throw new NotFoundError("Thema nicht gefunden");
+  }
+  return topic;
+}
+
 export async function requireOwnedNote(userId: string, noteId: string) {
   const note = await prisma.note.findFirst({
-    where: { id: noteId, noteSectionType: { subject: { userId } } },
+    where: { id: noteId, topic: { noteSectionType: { subject: { userId } } } },
   });
   if (!note) {
     throw new NotFoundError("Notiz nicht gefunden");

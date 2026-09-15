@@ -144,10 +144,15 @@ export function ExamPrepPage() {
                     className="h-3 w-3 flex-shrink-0 rounded-full"
                     style={{ backgroundColor: candidate.subjectColor }}
                   />
-                  <span className="font-medium text-slate-800 dark:text-slate-100">
-                    {candidate.subjectName} · {candidate.sectionTypeName} · Klasse{' '}
-                    {candidate.gradeLevel}
-                  </span>
+                  <div>
+                    <div className="font-medium text-slate-800 dark:text-slate-100">
+                      {candidate.subjectName} · {candidate.sectionTypeName} · {candidate.topicName}
+                    </div>
+                    <div className="text-xs text-slate-400 dark:text-slate-500">
+                      {candidate.title}
+                      {candidate.gradeLevel ? ` · Klasse ${candidate.gradeLevel}` : ''}
+                    </div>
+                  </div>
                 </div>
                 <ul className="mt-2 space-y-1">
                   {sections.map((section) => (

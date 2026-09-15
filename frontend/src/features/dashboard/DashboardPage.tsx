@@ -29,7 +29,7 @@ export function DashboardPage() {
                 {data.quickLinks.map((link) => (
                   <Link
                     key={link.sectionTypeId}
-                    to={`/subjects/${link.subjectId}/sections/${link.sectionTypeId}/${data.currentGradeLevel}`}
+                    to={`/subjects/${link.subjectId}/sections/${link.sectionTypeId}`}
                     className="flex items-center gap-3 rounded-lg bg-white p-4 shadow-sm hover:shadow dark:bg-slate-800"
                   >
                     <span
@@ -49,7 +49,7 @@ export function DashboardPage() {
               </div>
             ) : (
               <p className="mt-3 text-slate-400 dark:text-slate-500">
-                Noch keine Notizbereiche für Klasse {data.currentGradeLevel}.{' '}
+                Noch keine Notizbereiche angelegt.{' '}
                 <Link to="/subjects" className="text-blue-600 hover:underline dark:text-blue-400">
                   Fächer verwalten
                 </Link>

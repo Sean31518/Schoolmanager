@@ -5,24 +5,32 @@ import { prisma } from "../../lib/prisma.js";
 import type { saveExamPrepSchema } from "./examPrep.schema.js";
 
 const noteWithContext = {
-  noteSectionType: { include: { subject: true } },
+  topic: { include: { noteSectionType: { include: { subject: true } } } },
 } as const;
 
 function mapNote(note: {
   id: string;
-  gradeLevel: number;
+  title: string;
   contentJson: string;
-  noteSectionType: { id: string; name: string; subject: { id: string; name: string; color: string } };
+  topic: {
+    id: string;
+    name: string;
+    gradeLevel: number | null;
+    noteSectionType: { id: string; name: string; subject: { id: string; name: string; color: string } };
+  };
 }) {
   return {
     noteId: note.id,
-    gradeLevel: note.gradeLevel,
+    title: note.title,
+    topicId: note.topic.id,
+    topicName: note.topic.name,
+    gradeLevel: note.topic.gradeLevel,
     contentJson: JSON.parse(note.contentJson) as unknown,
-    sectionTypeId: note.noteSectionType.id,
-    sectionTypeName: note.noteSectionType.name,
-    subjectId: note.noteSectionType.subject.id,
-    subjectName: note.noteSectionType.subject.name,
-    subjectColor: note.noteSectionType.subject.color,
+    sectionTypeId: note.topic.noteSectionType.id,
+    sectionTypeName: note.topic.noteSectionType.name,
+    subjectId: note.topic.noteSectionType.subject.id,
+    subjectName: note.topic.noteSectionType.subject.name,
+    subjectColor: note.topic.noteSectionType.subject.color,
   };
 }
 
@@ -86,15 +94,20 @@ export async function getExamPrepCandidates(userId: string, eventId: string, all
 
   const notes = await prisma.note.findMany({
     where: {
-      noteSectionType: {
-        subject: {
-          userId,
-          ...(event.subjectId && !allSubjects ? { id: event.subjectId } : {}),
+      topic: {
+        noteSectionType: {
+          subject: {
+            userId,
+            ...(event.subjectId && !allSubjects ? { id: event.subjectId } : {}),
+          },
         },
       },
     },
     include: noteWithContext,
-    orderBy: [{ noteSectionType: { subject: { name: "asc" } } }, { gradeLevel: "asc" }],
+    orderBy: [
+      { topic: { noteSectionType: { subject: { name: "asc" } } } },
+      { topic: { gradeLevel: "asc" } },
+    ],
   });
 
   return notes.map(mapNote);

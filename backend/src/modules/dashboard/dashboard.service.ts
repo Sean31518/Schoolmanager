@@ -11,9 +11,8 @@ export async function getDashboard(userId: string) {
       noteSectionTypes: {
         orderBy: { sortOrder: "asc" },
         include: {
-          notes: {
-            where: { gradeLevel: currentGradeLevel },
-            select: { id: true },
+          topics: {
+            select: { notes: { select: { id: true } } },
           },
         },
       },
@@ -27,7 +26,7 @@ export async function getDashboard(userId: string) {
       color: subject.color,
       sectionTypeId: sectionType.id,
       sectionTypeName: sectionType.name,
-      hasContent: sectionType.notes.length > 0,
+      hasContent: sectionType.topics.some((topic) => topic.notes.length > 0),
     })),
   );
 

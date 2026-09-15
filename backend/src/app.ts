@@ -12,11 +12,12 @@ import { generalNotesRouter } from "./modules/generalNotes/generalNotes.routes.j
 import { healthRouter } from "./modules/health/health.routes.js";
 import { homeworkRouter } from "./modules/homework/homework.routes.js";
 import { sectionTypeByIdRouter } from "./modules/noteSectionTypes/noteSectionTypes.routes.js";
-import { notesRouter } from "./modules/notes/notes.routes.js";
+import { noteByIdRouter, notesRouter } from "./modules/notes/notes.routes.js";
 import { settingsRouter } from "./modules/settings/settings.routes.js";
 import { subjectsRouter } from "./modules/subjects/subjects.routes.js";
 import { timeGridRouter } from "./modules/timeGrid/timeGrid.routes.js";
 import { timetableRouter } from "./modules/timetable/timetable.routes.js";
+import { topicByIdRouter, topicsRouter } from "./modules/topics/topics.routes.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const publicDir = path.join(__dirname, "..", "public");
@@ -32,8 +33,11 @@ export function createApp() {
   app.use("/api/auth", authRouter);
   app.use("/api/settings", settingsRouter);
   app.use("/api/subjects", subjectsRouter);
-  app.use("/api/section-types/:sectionTypeId/notes", notesRouter);
+  app.use("/api/section-types/:sectionTypeId/topics", topicsRouter);
   app.use("/api/section-types", sectionTypeByIdRouter);
+  app.use("/api/topics/:topicId/notes", notesRouter);
+  app.use("/api/topics", topicByIdRouter);
+  app.use("/api/notes", noteByIdRouter);
   app.use("/api/time-grid", timeGridRouter);
   app.use("/api/timetable", timetableRouter);
   app.use("/api/homework", homeworkRouter);

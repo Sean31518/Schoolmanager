@@ -1,27 +1,53 @@
-import { ApiRequestError, apiFetch } from '../../lib/apiClient'
-import type { NoteDto } from './types'
+import { apiFetch } from '../../lib/apiClient'
+import type { NoteDto, TopicDto } from './types'
 
-export function listNotes(sectionTypeId: string) {
-  return apiFetch<NoteDto[]>(`/section-types/${sectionTypeId}/notes`)
+export function listTopics(sectionTypeId: string) {
+  return apiFetch<TopicDto[]>(`/section-types/${sectionTypeId}/topics`)
 }
 
-export async function getNote(
+export function createTopic(
   sectionTypeId: string,
-  gradeLevel: number,
-): Promise<NoteDto | null> {
-  try {
-    return await apiFetch<NoteDto>(`/section-types/${sectionTypeId}/notes/${gradeLevel}`)
-  } catch (err) {
-    if (err instanceof ApiRequestError && err.status === 404) {
-      return null
-    }
-    throw err
-  }
+  data: { name: string; gradeLevel?: number | null },
+) {
+  return apiFetch<TopicDto>(`/section-types/${sectionTypeId}/topics`, {
+    method: 'POST',
+    body: JSON.stringify(data),
+  })
 }
 
-export function upsertNote(sectionTypeId: string, gradeLevel: number, contentJson: unknown) {
-  return apiFetch<NoteDto>(`/section-types/${sectionTypeId}/notes/${gradeLevel}`, {
-    method: 'PUT',
-    body: JSON.stringify({ contentJson }),
+export function updateTopic(
+  topicId: string,
+  data: Partial<{ name: string; gradeLevel: number | null }>,
+) {
+  return apiFetch<TopicDto>(`/topics/${topicId}`, { method: 'PATCH', body: JSON.stringify(data) })
+}
+
+export function deleteTopic(topicId: string) {
+  return apiFetch<void>(`/topics/${topicId}`, { method: 'DELETE' })
+}
+
+export function listNotes(topicId: string) {
+  return apiFetch<NoteDto[]>(`/topics/${topicId}/notes`)
+}
+
+export function getNote(noteId: string) {
+  return apiFetch<NoteDto>(`/notes/${noteId}`)
+}
+
+export function createNote(topicId: string, data: { title: string; contentJson?: unknown }) {
+  return apiFetch<NoteDto>(`/topics/${topicId}/notes`, {
+    method: 'POST',
+    body: JSON.stringify(data),
   })
+}
+
+export function updateNote(
+  noteId: string,
+  data: Partial<{ title: string; contentJson: unknown }>,
+) {
+  return apiFetch<NoteDto>(`/notes/${noteId}`, { method: 'PATCH', body: JSON.stringify(data) })
+}
+
+export function deleteNote(noteId: string) {
+  return apiFetch<void>(`/notes/${noteId}`, { method: 'DELETE' })
 }

@@ -1,6 +1,9 @@
 export interface ExamPrepCandidateDto {
   noteId: string
-  gradeLevel: number
+  title: string
+  topicId: string
+  topicName: string
+  gradeLevel: number | null
   contentJson: unknown
   sectionTypeId: string
   sectionTypeName: string

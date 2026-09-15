@@ -19,12 +19,18 @@ async function setupSubjectWithNote(
     .send({ name: "Regelheft" });
   const sectionTypeId = sectionRes.body.id as string;
 
-  const noteRes = await request(app)
-    .put(`/api/section-types/${sectionTypeId}/notes/${gradeLevel}`)
+  const topicRes = await request(app)
+    .post(`/api/section-types/${sectionTypeId}/topics`)
     .set(headers)
-    .send({ contentJson: noteContent });
+    .send({ name: "Wellen", gradeLevel });
+  const topicId = topicRes.body.id as string;
 
-  return { subjectId, sectionTypeId, noteId: noteRes.body.id as string };
+  const noteRes = await request(app)
+    .post(`/api/topics/${topicId}/notes`)
+    .set(headers)
+    .send({ title: "Wellen Notiz", contentJson: noteContent });
+
+  return { subjectId, sectionTypeId, topicId, noteId: noteRes.body.id as string };
 }
 
 const SAMPLE_DOC = {
@@ -105,10 +111,14 @@ describe("Exam prep", () => {
       .post(`/api/subjects/${otherSubjectId}/section-types`)
       .set(headers)
       .send({ name: "Regelheft" });
-    await request(app)
-      .put(`/api/section-types/${otherSectionRes.body.id}/notes/7`)
+    const otherTopicRes = await request(app)
+      .post(`/api/section-types/${otherSectionRes.body.id}/topics`)
       .set(headers)
-      .send({ contentJson: SAMPLE_DOC });
+      .send({ name: "Grammatik", gradeLevel: 7 });
+    await request(app)
+      .post(`/api/topics/${otherTopicRes.body.id}/notes`)
+      .set(headers)
+      .send({ title: "Grammatik Notiz", contentJson: SAMPLE_DOC });
 
     const eventRes = await request(app)
       .post("/api/calendar-events")

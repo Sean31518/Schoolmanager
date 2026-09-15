@@ -21,10 +21,17 @@ describe("Ownership isolation between users", () => {
       .send({ name: "Regelheft" });
     const sectionTypeId = sectionRes.body.id as string;
 
-    await request(app)
-      .put(`/api/section-types/${sectionTypeId}/notes/5`)
+    const topicRes = await request(app)
+      .post(`/api/section-types/${sectionTypeId}/topics`)
       .set(aHeaders)
-      .send({ contentJson: { type: "doc", content: [] } });
+      .send({ name: "Wellen" });
+    const topicId = topicRes.body.id as string;
+
+    const noteRes = await request(app)
+      .post(`/api/topics/${topicId}/notes`)
+      .set(aHeaders)
+      .send({ title: "Wellen Notiz", contentJson: { type: "doc", content: [] } });
+    const noteId = noteRes.body.id as string;
 
     expect((await request(app).get(`/api/subjects/${subjectId}`).set(bHeaders)).status).toBe(
       404,
@@ -33,9 +40,13 @@ describe("Ownership isolation between users", () => {
       (await request(app).get(`/api/subjects/${subjectId}/section-types`).set(bHeaders)).status,
     ).toBe(404);
     expect(
-      (await request(app).get(`/api/section-types/${sectionTypeId}/notes/5`).set(bHeaders))
+      (await request(app).get(`/api/section-types/${sectionTypeId}/topics`).set(bHeaders))
         .status,
     ).toBe(404);
+    expect(
+      (await request(app).get(`/api/topics/${topicId}/notes`).set(bHeaders)).status,
+    ).toBe(404);
+    expect((await request(app).get(`/api/notes/${noteId}`).set(bHeaders)).status).toBe(404);
     expect(
       (await request(app).delete(`/api/section-types/${sectionTypeId}`).set(bHeaders)).status,
     ).toBe(404);
