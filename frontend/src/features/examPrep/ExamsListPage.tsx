@@ -25,20 +25,18 @@ export function ExamsListPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-semibold text-slate-800 dark:text-slate-100">Klausuren</h1>
+      <h1 className="text-[15px] font-semibold text-text-primary">Klausuren</h1>
 
       {isLoading ? (
-        <p className="text-slate-400 dark:text-slate-500">Lädt...</p>
+        <p className="text-text-tertiary">Lädt...</p>
       ) : (
         <>
           <section>
-            <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-100">
-              Anstehend
-            </h2>
+            <h2 className="text-[13px] font-semibold text-text-primary">Anstehend</h2>
             {upcoming.length === 0 ? (
-              <p className="mt-2 text-slate-400 dark:text-slate-500">
+              <p className="mt-2 text-text-tertiary">
                 Keine anstehenden Klausuren.{' '}
-                <Link to="/calendar" className="text-blue-600 hover:underline dark:text-blue-400">
+                <Link to="/calendar" className="text-accent hover:underline">
                   Im Kalender anlegen
                 </Link>
               </p>
@@ -47,29 +45,22 @@ export function ExamsListPage() {
                 {upcoming.map((exam) => (
                   <li
                     key={exam.id}
-                    className="flex items-center gap-3 rounded-lg bg-white p-4 shadow-sm dark:bg-slate-800"
+                    className="flex items-center gap-3 rounded-lg border border-border bg-bg-1 p-4"
                   >
                     {exam.subject && (
                       <span
-                        className="h-3 w-3 flex-shrink-0 rounded-full"
+                        className="h-[9px] w-[9px] shrink-0 rounded-[2px]"
                         style={{ backgroundColor: exam.subject.color }}
                       />
                     )}
-                    <span className="font-medium text-slate-800 dark:text-slate-100">
-                      {exam.title}
-                    </span>
+                    <span className="font-medium text-text-primary">{exam.title}</span>
                     {exam.subject && (
-                      <span className="text-sm text-slate-400 dark:text-slate-500">
-                        {exam.subject.name}
-                      </span>
+                      <span className="text-sm text-text-tertiary">{exam.subject.name}</span>
                     )}
-                    <span className="ml-auto text-sm text-slate-500 dark:text-slate-400">
+                    <span className="ml-auto font-mono text-xs text-text-tertiary">
                       {formatDate(exam.startDate)}
                     </span>
-                    <Link
-                      to={`/exams/${exam.id}`}
-                      className="text-sm text-blue-600 hover:underline dark:text-blue-400"
-                    >
+                    <Link to={`/exams/${exam.id}`} className="text-sm text-accent hover:underline">
                       Vorbereiten
                     </Link>
                   </li>
@@ -80,31 +71,24 @@ export function ExamsListPage() {
 
           {past.length > 0 && (
             <section>
-              <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-100">
-                Vergangen
-              </h2>
+              <h2 className="text-[13px] font-semibold text-text-primary">Vergangen</h2>
               <ul className="mt-3 space-y-2">
                 {past.map((exam) => (
                   <li
                     key={exam.id}
-                    className="flex items-center gap-3 rounded-lg bg-white p-4 shadow-sm opacity-70 dark:bg-slate-800"
+                    className="flex items-center gap-3 rounded-lg border border-border bg-bg-1 p-4 opacity-70"
                   >
                     {exam.subject && (
                       <span
-                        className="h-3 w-3 flex-shrink-0 rounded-full"
+                        className="h-[9px] w-[9px] shrink-0 rounded-[2px]"
                         style={{ backgroundColor: exam.subject.color }}
                       />
                     )}
-                    <span className="font-medium text-slate-800 dark:text-slate-100">
-                      {exam.title}
-                    </span>
-                    <span className="ml-auto text-sm text-slate-500 dark:text-slate-400">
+                    <span className="font-medium text-text-primary">{exam.title}</span>
+                    <span className="ml-auto font-mono text-xs text-text-tertiary">
                       {formatDate(exam.startDate)}
                     </span>
-                    <Link
-                      to={`/exams/${exam.id}`}
-                      className="text-sm text-blue-600 hover:underline dark:text-blue-400"
-                    >
+                    <Link to={`/exams/${exam.id}`} className="text-sm text-accent hover:underline">
                       Ansehen
                     </Link>
                   </li>

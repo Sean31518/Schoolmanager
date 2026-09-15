@@ -16,17 +16,13 @@ export function TimetableGrid() {
   const setCell = useSetTimetableCell()
 
   if (isLoading || !data) {
-    return <p className="text-slate-400 dark:text-slate-500">Lädt...</p>
+    return <p className="text-text-tertiary">Lädt...</p>
   }
 
   const { timeGridSlots, timetableSlots } = data
 
   if (timeGridSlots.length === 0) {
-    return (
-      <p className="text-slate-400 dark:text-slate-500">
-        Lege zuerst oben ein Zeitraster an.
-      </p>
-    )
+    return <p className="text-text-tertiary">Lege zuerst oben ein Zeitraster an.</p>
   }
 
   function findCell(weekday: string, timeGridSlotId: string) {
@@ -40,13 +36,13 @@ export function TimetableGrid() {
       <table className="w-full min-w-[640px] border-collapse text-sm">
         <thead>
           <tr>
-            <th className="w-28 border-b border-slate-200 pb-2 text-left text-xs font-semibold text-slate-500 dark:border-slate-700 dark:text-slate-400">
-              Zeit
+            <th className="w-28 border-b border-border pb-2 text-left font-mono text-[10px] font-medium tracking-wider text-text-muted">
+              ZEIT
             </th>
             {WEEKDAYS.map((day) => (
               <th
                 key={day.value}
-                className="border-b border-slate-200 pb-2 text-left text-xs font-semibold text-slate-500 dark:border-slate-700 dark:text-slate-400"
+                className="border-b border-border pb-2 text-left font-mono text-[10px] font-medium tracking-wider text-text-muted"
               >
                 {day.label}
               </th>
@@ -57,13 +53,13 @@ export function TimetableGrid() {
           {timeGridSlots.map((slot) => {
             if (slot.type === 'BREAK') {
               return (
-                <tr key={slot.id} className="bg-slate-50 dark:bg-slate-900">
-                  <td className="border border-slate-200 px-2 py-1 text-xs text-slate-400 dark:border-slate-700 dark:text-slate-500">
+                <tr key={slot.id} className="bg-bg-muted">
+                  <td className="border border-border-subtle px-2 py-1 font-mono text-[10px] text-text-muted">
                     {slot.startTime}–{slot.endTime}
                   </td>
                   <td
                     colSpan={WEEKDAYS.length}
-                    className="border border-slate-200 px-2 py-1 text-center text-xs text-slate-400 dark:border-slate-700 dark:text-slate-500"
+                    className="border border-border-subtle px-2 py-1 text-center font-mono text-[10px] tracking-wider text-text-muted"
                   >
                     {slot.label}
                   </td>
@@ -73,19 +69,16 @@ export function TimetableGrid() {
 
             return (
               <tr key={slot.id}>
-                <td className="border border-slate-200 px-2 py-2 align-top text-xs text-slate-500 dark:border-slate-700 dark:text-slate-400">
+                <td className="border border-border-subtle px-2 py-2 align-top text-xs text-text-secondary">
                   <div>{slot.label}</div>
-                  <div>
+                  <div className="font-mono text-[10px] text-text-muted">
                     {slot.startTime}–{slot.endTime}
                   </div>
                 </td>
                 {WEEKDAYS.map((day) => {
                   const cell = findCell(day.value, slot.id)
                   return (
-                    <td
-                      key={day.value}
-                      className="border border-slate-200 p-0 align-top dark:border-slate-700"
-                    >
+                    <td key={day.value} className="border border-border-subtle p-0 align-top">
                       <SubjectDropdown
                         value={cell?.subjectId ?? ''}
                         subjects={subjects ?? []}

@@ -10,24 +10,25 @@ function formatDate(iso: string) {
 
 export function RemindersWidget({ items }: { items: ReminderDto[] }) {
   return (
-    <div className="rounded-lg bg-white p-4 shadow-sm dark:bg-slate-800">
-      <h2 className="text-sm font-semibold text-slate-800 dark:text-slate-100">
-        Nächste Termine
-      </h2>
+    <div className="rounded-lg border border-border bg-bg-1">
+      <div className="border-b border-border px-3 py-2 font-mono text-[10px] tracking-wider text-text-tertiary">
+        NÄCHSTE TERMINE
+      </div>
       {items.length === 0 ? (
-        <p className="mt-2 text-sm text-slate-400 dark:text-slate-500">Nichts Anstehendes.</p>
+        <p className="px-3 py-3 text-sm text-text-tertiary">Nichts Anstehendes.</p>
       ) : (
-        <ul className="mt-2 space-y-2">
+        <ul>
           {items.map((item) => (
-            <li key={`${item.kind}-${item.id}`} className="flex items-center gap-2 text-sm">
+            <li
+              key={`${item.kind}-${item.id}`}
+              className="flex items-center gap-2.5 border-b border-border-subtle px-3 py-2.5 text-sm last:border-b-0"
+            >
               <span
-                className="h-2 w-2 flex-shrink-0 rounded-full"
-                style={{ backgroundColor: item.subjectColor ?? '#94a3b8' }}
+                className="h-[22px] w-[3px] shrink-0 rounded-[2px]"
+                style={{ backgroundColor: item.subjectColor ?? '#6f6d65' }}
               />
-              <span className="flex-1 truncate text-slate-700 dark:text-slate-200">
-                {item.title}
-              </span>
-              <span className="flex-shrink-0 text-xs text-slate-400 dark:text-slate-500">
+              <span className="flex-1 truncate text-text-primary">{item.title}</span>
+              <span className="shrink-0 font-mono text-[10px] text-text-tertiary">
                 {formatDate(item.date)}
               </span>
             </li>

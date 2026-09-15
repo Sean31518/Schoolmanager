@@ -1,40 +1,43 @@
 import { Link } from 'react-router-dom'
+import { formatRelativeTime } from '../../lib/relativeTime'
 import type { RecentlyViewedNoteDto } from './types'
 
 export function RecentNotesWidget({ notes }: { notes: RecentlyViewedNoteDto[] }) {
   return (
-    <div className="rounded-lg bg-white p-4 shadow-sm dark:bg-slate-800">
-      <h2 className="text-sm font-semibold text-slate-800 dark:text-slate-100">
-        Zuletzt besucht
-      </h2>
+    <div className="rounded-lg border border-border bg-bg-1">
+      <div className="flex items-center justify-between border-b border-border px-3 py-2">
+        <span className="font-mono text-[10px] tracking-wider text-text-tertiary">
+          ZULETZT BEARBEITET
+        </span>
+      </div>
       {notes.length === 0 ? (
-        <p className="mt-2 text-sm text-slate-400 dark:text-slate-500">
-          Noch keine Notiz geöffnet.
-        </p>
+        <p className="px-3 py-3 text-sm text-text-tertiary">Noch keine Notiz geöffnet.</p>
       ) : (
-        <ul className="mt-2 space-y-2">
+        <div className="grid grid-cols-2 gap-2 p-2.5 sm:grid-cols-4">
           {notes.map((note) => (
-            <li key={note.id}>
-              <Link
-                to={`/subjects/${note.subjectId}/sections/${note.sectionTypeId}/topics/${note.topicId}/notes/${note.id}`}
-                className="block"
-              >
-                <div className="flex items-center gap-2 text-sm">
-                  <span
-                    className="h-2 w-2 flex-shrink-0 rounded-full"
-                    style={{ backgroundColor: note.subjectColor }}
-                  />
-                  <span className="flex-1 truncate text-slate-700 hover:text-blue-600 dark:text-slate-200 dark:hover:text-blue-400">
-                    {note.title}
-                  </span>
-                </div>
-                <div className="ml-4 truncate text-xs text-slate-400 dark:text-slate-500">
-                  {note.subjectName} · {note.sectionTypeName} · {note.topicName}
-                </div>
-              </Link>
-            </li>
+            <Link
+              key={note.id}
+              to={`/subjects/${note.subjectId}/sections/${note.sectionTypeId}/topics/${note.topicId}/notes/${note.id}`}
+              className="flex min-w-0 flex-col gap-1.5 rounded-md border border-border-subtle px-2.5 py-2 hover:border-border"
+            >
+              <span className="flex items-center gap-1.5">
+                <span
+                  className="h-[7px] w-[7px] shrink-0 rounded-[2px]"
+                  style={{ backgroundColor: note.subjectColor }}
+                />
+                <span className="min-w-0 flex-1 truncate font-mono text-[9px] tracking-wider text-text-tertiary">
+                  {note.subjectName.toUpperCase()}
+                </span>
+              </span>
+              <span className="truncate text-xs font-semibold leading-tight text-text-primary">
+                {note.title}
+              </span>
+              <span className="font-mono text-[9px] text-text-muted">
+                {formatRelativeTime(note.lastViewedAt)}
+              </span>
+            </Link>
           ))}
-        </ul>
+        </div>
       )}
     </div>
   )

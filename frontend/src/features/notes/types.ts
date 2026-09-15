@@ -39,3 +39,13 @@ export interface NoteDto {
   updatedAt: string
   blocks: NoteBlockDto[]
 }
+
+export interface SubjectNoteSummaryDto {
+  id: string
+  title: string
+  updatedAt: string
+  topicId: string
+  topicName: string
+  sectionTypeId: string
+  sectionTypeName: string
+}

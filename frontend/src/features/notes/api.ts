@@ -1,5 +1,9 @@
 import { apiFetch } from '../../lib/apiClient'
-import type { NoteBlockDto, NoteBlockFileDto, NoteDto, TopicDto } from './types'
+import type { NoteBlockDto, NoteBlockFileDto, NoteDto, SubjectNoteSummaryDto, TopicDto } from './types'
+
+export function listSubjectNotes(subjectId: string) {
+  return apiFetch<SubjectNoteSummaryDto[]>(`/subjects/${subjectId}/notes`)
+}
 
 export function listTopics(sectionTypeId: string) {
   return apiFetch<TopicDto[]>(`/section-types/${sectionTypeId}/topics`)

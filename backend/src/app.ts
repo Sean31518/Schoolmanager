@@ -10,6 +10,7 @@ import { calendarEventsRouter } from "./modules/calendarEvents/calendarEvents.ro
 import { dashboardRouter } from "./modules/dashboard/dashboard.routes.js";
 import { examPrepRouter } from "./modules/examPrep/examPrep.routes.js";
 import { filesRouter } from "./modules/files/files.routes.js";
+import { flashcardByIdRouter, flashcardsRouter } from "./modules/flashcards/flashcards.routes.js";
 import { generalNotesRouter } from "./modules/generalNotes/generalNotes.routes.js";
 import { healthRouter } from "./modules/health/health.routes.js";
 import { homeworkRouter } from "./modules/homework/homework.routes.js";
@@ -41,6 +42,8 @@ export function createApp() {
   app.use("/api/section-types/:sectionTypeId/topics", topicsRouter);
   app.use("/api/section-types", sectionTypeByIdRouter);
   app.use("/api/topics/:topicId/notes", notesRouter);
+  app.use("/api/topics/:topicId/flashcards", flashcardsRouter);
+  app.use("/api/flashcards", flashcardByIdRouter);
   app.use("/api/topics", topicByIdRouter);
   app.use("/api/notes/:noteId/blocks", noteBlocksRouter);
   app.use("/api/notes", noteByIdRouter);

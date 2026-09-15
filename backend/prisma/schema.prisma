@@ -14,6 +14,7 @@ generator client {
 // Weekday: MONDAY TUESDAY WEDNESDAY THURSDAY FRIDAY SATURDAY SUNDAY
 // TimeGridSlotType: LESSON BREAK
 // CalendarEventType: MANUAL EXAM HOLIDAY PUBLIC_HOLIDAY
+// FlashcardState: NEW LEARNING KNOWN
 
 model User {
   id           String   @id @default(cuid())
@@ -101,8 +102,24 @@ model Topic {
 
   notes       Note[]
   gradeLevels TopicGradeLevel[]
+  flashcards  Flashcard[]
 
   @@index([noteSectionTypeId])
+}
+
+model Flashcard {
+  id             String    @id @default(cuid())
+  topicId        String
+  topic          Topic     @relation(fields: [topicId], references: [id], onDelete: Cascade)
+  question       String
+  answer         String
+  state          String    @default("NEW")
+  sortOrder      Int       @default(0)
+  lastReviewedAt DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([topicId])
 }
 
 model TopicGradeLevel {

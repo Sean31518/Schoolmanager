@@ -40,6 +40,14 @@ export function useDeleteTopic(sectionTypeId: string) {
   })
 }
 
+export function useSubjectNotes(subjectId: string) {
+  return useQuery({
+    queryKey: ['subject-notes', subjectId],
+    queryFn: () => api.listSubjectNotes(subjectId),
+    enabled: Boolean(subjectId),
+  })
+}
+
 export function useNotes(topicId: string) {
   return useQuery({
     queryKey: ['notes', topicId],
@@ -60,7 +68,10 @@ export function useCreateNote(topicId: string) {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (data: { title: string }) => api.createNote(topicId, data),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['notes', topicId] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['notes', topicId] })
+      queryClient.invalidateQueries({ queryKey: ['subject-notes'] })
+    },
   })
 }
 
@@ -71,6 +82,7 @@ export function useUpdateNote(noteId: string) {
     onSuccess: (updated) => {
       queryClient.invalidateQueries({ queryKey: ['note', noteId] })
       queryClient.invalidateQueries({ queryKey: ['notes', updated.topicId] })
+      queryClient.invalidateQueries({ queryKey: ['subject-notes'] })
     },
   })
 }
@@ -79,7 +91,10 @@ export function useDeleteNote(topicId: string) {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (noteId: string) => api.deleteNote(noteId),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['notes', topicId] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['notes', topicId] })
+      queryClient.invalidateQueries({ queryKey: ['subject-notes'] })
+    },
   })
 }
 

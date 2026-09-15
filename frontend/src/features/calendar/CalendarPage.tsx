@@ -90,72 +90,72 @@ export function CalendarPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-slate-800 dark:text-slate-100">Kalender</h1>
+        <h1 className="text-[15px] font-semibold text-text-primary">Kalender</h1>
         <div className="flex items-center gap-2 text-sm">
           <button
             onClick={() => goToMonth(-1)}
-            className="rounded border border-slate-300 px-2 py-1 dark:border-slate-600 dark:text-slate-200"
+            className="rounded-md border border-border px-2 py-1 text-text-secondary hover:border-text-disabled"
           >
             ←
           </button>
-          <span className="min-w-[10rem] text-center font-medium capitalize text-slate-800 dark:text-slate-100">
+          <span className="min-w-[10rem] text-center text-[13px] font-medium capitalize text-text-primary">
             {monthLabel}
           </span>
           <button
             onClick={() => goToMonth(1)}
-            className="rounded border border-slate-300 px-2 py-1 dark:border-slate-600 dark:text-slate-200"
+            className="rounded-md border border-border px-2 py-1 text-text-secondary hover:border-text-disabled"
           >
             →
           </button>
         </div>
       </div>
 
-      <p className="text-sm text-slate-500 dark:text-slate-400">
+      <p className="text-sm text-text-tertiary">
         Ferien &amp; Feiertage importieren?{' '}
-        <Link to="/settings" className="text-blue-600 hover:underline dark:text-blue-400">
+        <Link to="/settings" className="text-accent hover:underline">
           In den Einstellungen
         </Link>
       </p>
 
-      <div className="rounded-lg bg-white p-4 shadow-sm dark:bg-slate-800">
-        <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-100">Neuer Termin</h2>
+      <div className="rounded-lg border border-border bg-bg-1 p-4">
+        <h2 className="text-[13px] font-semibold text-text-primary">Neuer Termin</h2>
         <form onSubmit={handleCreate} className="mt-3 flex flex-wrap items-end gap-3">
-          <label className="text-sm text-slate-600 dark:text-slate-300">
+          <label className="text-sm text-text-secondary">
             Titel
             <input
               required
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="mt-1 block rounded border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+              className="mt-1 block rounded-md border border-border bg-bg-muted px-3 py-2 text-sm text-text-primary"
             />
           </label>
-          <label className="text-sm text-slate-600 dark:text-slate-300">
+          <label className="text-sm text-text-secondary">
             Typ
             <select
               value={type}
               onChange={(e) => setType(e.target.value as 'MANUAL' | 'EXAM')}
-              className="mt-1 block rounded border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+              className="mt-1 block rounded-md border border-border bg-bg-muted px-3 py-2 text-sm text-text-primary"
             >
               <option value="MANUAL">Termin</option>
               <option value="EXAM">Klausur</option>
             </select>
           </label>
-          <label className="text-sm text-slate-600 dark:text-slate-300">
+          <label className="text-sm text-text-secondary">
             Datum
             <input
               type="date"
               required
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
-              className="mt-1 block rounded border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+              className="mt-1 block rounded-md border border-border bg-bg-muted px-3 py-2 text-sm text-text-primary"
             />
           </label>
-          <label className="text-sm text-slate-600 dark:text-slate-300">
+          <label className="text-sm text-text-secondary">
             Fach (optional)
             <select
               value={subjectId}
               onChange={(e) => setSubjectId(e.target.value)}
-              className="mt-1 block rounded border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+              className="mt-1 block rounded-md border border-border bg-bg-muted px-3 py-2 text-sm text-text-primary"
             >
               <option value="">–</option>
               {(subjects ?? []).map((subject) => (
@@ -168,30 +168,27 @@ export function CalendarPage() {
           <button
             type="submit"
             disabled={createEvent.isPending}
-            className="rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+            className="rounded-md bg-accent px-4 py-2 text-sm font-semibold text-accent-ink disabled:opacity-50"
           >
             Anlegen
           </button>
         </form>
-        {error && <p className="mt-2 text-sm text-red-600 dark:text-red-400">{error}</p>}
+        {error && <p className="mt-2 text-sm text-red-400">{error}</p>}
       </div>
 
-      <div className="rounded-lg bg-white p-4 shadow-sm dark:bg-slate-800">
+      <div className="rounded-lg border border-border bg-bg-1 p-4">
         {isLoading ? (
-          <p className="text-slate-400 dark:text-slate-500">Lädt...</p>
+          <p className="text-text-tertiary">Lädt...</p>
         ) : (
           <>
-            <div className="grid grid-cols-7 rounded-t border border-b-0 border-slate-200 text-xs font-semibold text-slate-500 dark:border-slate-700 dark:text-slate-400">
+            <div className="grid grid-cols-7 rounded-t-md border border-b-0 border-border-subtle font-mono text-[10px] tracking-wider text-text-muted">
               {WEEKDAY_LABELS.map((label) => (
-                <div
-                  key={label}
-                  className="bg-slate-50 px-2 py-1 text-center dark:bg-slate-900"
-                >
+                <div key={label} className="bg-bg-muted px-2 py-1 text-center">
                   {label}
                 </div>
               ))}
             </div>
-            <div className="overflow-hidden rounded-b border border-slate-200 dark:border-slate-700">
+            <div className="overflow-hidden rounded-b-md border border-border-subtle">
               {weeks.map((week) => (
                 <WeekRow
                   key={toDateKey(week[0])}
@@ -203,13 +200,13 @@ export function CalendarPage() {
                 />
               ))}
             </div>
-            <div className="mt-3 flex flex-wrap gap-3 text-xs text-slate-500 dark:text-slate-400">
+            <div className="mt-3 flex flex-wrap gap-3 text-xs text-text-tertiary">
               {(Object.keys(TYPE_LABELS) as CalendarEventType[])
                 .filter((t) => t !== 'MANUAL' && t !== 'EXAM')
                 .map((t) => (
                 <span key={t} className="flex items-center gap-1.5">
                   <span
-                    className="h-2.5 w-2.5 rounded-full"
+                    className="h-2.5 w-2.5 rounded-[2px]"
                     style={{ backgroundColor: TYPE_COLORS[t] }}
                   />
                   {TYPE_LABELS[t]}

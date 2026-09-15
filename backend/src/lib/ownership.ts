@@ -57,6 +57,16 @@ export async function requireOwnedNoteBlock(userId: string, blockId: string) {
   return block;
 }
 
+export async function requireOwnedFlashcard(userId: string, flashcardId: string) {
+  const flashcard = await prisma.flashcard.findFirst({
+    where: { id: flashcardId, topic: { noteSectionType: { subject: { userId } } } },
+  });
+  if (!flashcard) {
+    throw new NotFoundError("Karteikarte nicht gefunden");
+  }
+  return flashcard;
+}
+
 export async function requireOwnedFile(userId: string, fileId: string) {
   const file = await prisma.uploadedFile.findFirst({ where: { id: fileId, userId } });
   if (!file) {

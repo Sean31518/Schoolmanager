@@ -38,18 +38,18 @@ export function WeekRow({
           <div
             key={dayKey}
             className={
-              (isCurrentMonth ? 'bg-white dark:bg-slate-800' : 'bg-slate-50 dark:bg-slate-900') +
-              ' border-b border-r border-slate-200 p-1.5 dark:border-slate-700' +
+              (isCurrentMonth ? 'bg-bg-1' : 'bg-bg-muted') +
+              ' border-b border-r border-border-subtle p-1.5' +
               (col === 0 ? ' border-l' : '')
             }
           >
             <div
               className={
                 isToday
-                  ? 'inline-flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-xs font-semibold text-white'
+                  ? 'inline-flex h-5 w-5 items-center justify-center rounded-[5px] bg-accent font-mono text-[11px] font-semibold text-accent-ink'
                   : isCurrentMonth
-                    ? 'text-xs font-medium text-slate-600 dark:text-slate-300'
-                    : 'text-xs font-medium text-slate-300 dark:text-slate-600'
+                    ? 'font-mono text-[11px] text-text-secondary'
+                    : 'font-mono text-[11px] text-text-disabled'
               }
             >
               {day.getUTCDate()}
@@ -64,16 +64,16 @@ export function WeekRow({
           onClick={() => onEventClick(seg.event)}
           title={seg.event.title}
           className={
-            'absolute flex items-center truncate px-1 text-[11px] font-medium text-white' +
-            (seg.isStart ? ' rounded-l' : '') +
-            (seg.isEnd ? ' rounded-r' : '')
+            'absolute flex items-center truncate border-l-4 bg-bg-2 px-1.5 text-[11px] font-medium text-text-primary' +
+            (seg.isStart ? ' rounded-l-[4px]' : '') +
+            (seg.isEnd ? ' rounded-r-[4px]' : '')
           }
           style={{
             left: `calc(${(seg.startCol / 7) * 100}% + 2px)`,
             width: `calc(${((seg.endCol - seg.startCol + 1) / 7) * 100}% - 4px)`,
             top: DAY_NUMBER_HEIGHT + seg.lane * (LANE_HEIGHT + LANE_GAP),
             height: LANE_HEIGHT,
-            backgroundColor: getEffectiveColor(seg.event),
+            borderLeftColor: getEffectiveColor(seg.event),
           }}
         >
           {seg.event.title}

@@ -30,7 +30,7 @@ export function GeneralNoteCard({ note }: { note: GeneralNoteDto }) {
   }
 
   return (
-    <div className="rounded-lg border border-slate-200 p-3 dark:border-slate-700">
+    <div className="rounded-md border border-border-subtle p-3">
       <div className="flex items-center justify-between gap-2">
         <input
           value={title}
@@ -39,11 +39,11 @@ export function GeneralNoteCard({ note }: { note: GeneralNoteDto }) {
             scheduleSave({ title: e.target.value })
           }}
           placeholder="Titel (optional)"
-          className="w-full border-none bg-transparent text-sm font-medium text-slate-700 focus:outline-none dark:text-slate-200"
+          className="w-full border-none bg-transparent text-sm font-medium text-text-primary placeholder:text-text-muted focus:outline-none"
         />
         <button
           onClick={() => void deleteNote.mutateAsync(note.id)}
-          className="flex-shrink-0 text-xs text-slate-400 hover:text-red-600 dark:text-slate-500 dark:hover:text-red-400"
+          className="shrink-0 text-xs text-text-muted hover:text-red-400"
         >
           Löschen
         </button>

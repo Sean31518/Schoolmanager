@@ -1,72 +1,196 @@
-import { Link, Outlet } from 'react-router-dom'
+import type { ReactNode } from 'react'
+import { NavLink, Outlet } from 'react-router-dom'
 import { useAuth } from '../features/auth/AuthContext'
-import { useTheme } from '../lib/useTheme'
+import { useSubjects } from '../features/subjects/hooks'
+
+const navItems = [
+  {
+    to: '/',
+    label: 'Übersicht',
+    end: true,
+    icon: (
+      <>
+        <rect width="7" height="9" x="3" y="3" rx="1" />
+        <rect width="7" height="5" x="14" y="3" rx="1" />
+        <rect width="7" height="9" x="14" y="12" rx="1" />
+        <rect width="7" height="5" x="3" y="16" rx="1" />
+      </>
+    ),
+  },
+  {
+    to: '/timetable',
+    label: 'Stundenplan',
+    icon: (
+      <>
+        <path d="M3 9h18" />
+        <path d="M9 3v18" />
+        <rect x="3" y="3" width="18" height="18" rx="2" />
+      </>
+    ),
+  },
+  {
+    to: '/calendar',
+    label: 'Kalender',
+    icon: (
+      <>
+        <path d="M8 2v3" />
+        <path d="M16 2v3" />
+        <rect x="3" y="3" width="18" height="18" rx="2" />
+        <path d="M3 9h18" />
+        <path d="M8 13h.01" />
+        <path d="M12 13h.01" />
+        <path d="M16 13h.01" />
+        <path d="M8 17h.01" />
+        <path d="M12 17h.01" />
+        <path d="M16 17h.01" />
+      </>
+    ),
+  },
+  {
+    to: '/exams',
+    label: 'Klausuren',
+    icon: (
+      <>
+        <path d="M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z" />
+        <path d="M22 10v6" />
+        <path d="M6 12.5V16a6 3 0 0 0 12 0v-3.5" />
+      </>
+    ),
+  },
+  {
+    to: '/subjects',
+    label: 'Fächer',
+    icon: (
+      <>
+        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+      </>
+    ),
+  },
+]
+
+function NavIcon({ children }: { children: ReactNode }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.75"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className="h-[15px] w-[15px] shrink-0"
+    >
+      {children}
+    </svg>
+  )
+}
 
 export function Layout() {
   const { user } = useAuth()
-  const { theme, toggleTheme } = useTheme()
+  const { data: subjects } = useSubjects()
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
-      <header className="border-b border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800">
-        <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-3">
-          <div className="flex items-center gap-6">
-            <Link to="/" className="text-lg font-semibold text-slate-800 dark:text-slate-100">
-              Schulmanager
-            </Link>
-            <nav className="flex gap-4 text-sm text-slate-600 dark:text-slate-300">
-              <Link to="/subjects" className="hover:text-blue-600 dark:hover:text-blue-400">
-                Fächer
-              </Link>
-              <Link to="/timetable" className="hover:text-blue-600 dark:hover:text-blue-400">
-                Stundenplan
-              </Link>
-              <Link to="/calendar" className="hover:text-blue-600 dark:hover:text-blue-400">
-                Kalender
-              </Link>
-              <Link to="/exams" className="hover:text-blue-600 dark:hover:text-blue-400">
-                Klausuren
-              </Link>
-            </nav>
-          </div>
-          <div className="flex items-center gap-3 text-sm text-slate-500 dark:text-slate-400">
-            <button
-              onClick={toggleTheme}
-              aria-label={theme === 'dark' ? 'Zu hellem Design wechseln' : 'Zu dunklem Design wechseln'}
-              title={theme === 'dark' ? 'Helles Design' : 'Dunkles Design'}
-              className="rounded border border-slate-300 p-1.5 hover:bg-slate-100 dark:border-slate-600 dark:hover:bg-slate-700"
+    <div className="flex min-h-screen bg-bg-0 font-sans text-text-primary">
+      <aside className="flex w-[210px] shrink-0 flex-col gap-4 border-r border-border bg-bg-2 px-3 py-4">
+        <NavLink to="/" className="flex items-center gap-2.5 px-1">
+          <span className="flex h-6 w-6 items-center justify-center rounded-md bg-accent font-mono text-xs font-semibold text-accent-ink">
+            S
+          </span>
+          <span className="flex flex-col leading-tight">
+            <span className="text-[13px] font-semibold">Schulmanager</span>
+          </span>
+        </NavLink>
+
+        <nav className="flex flex-col gap-0.5">
+          {navItems.map((item) => (
+            <NavLink
+              key={item.to}
+              to={item.to}
+              end={item.end}
+              className={({ isActive }) =>
+                `flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-[13px] font-medium ${
+                  isActive
+                    ? 'bg-bg-hover font-semibold text-text-primary shadow-[inset_2px_0_0_var(--color-accent)]'
+                    : 'text-text-secondary hover:bg-bg-hover/60 hover:text-text-primary'
+                }`
+              }
             >
-              {theme === 'dark' ? (
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  fill="currentColor"
-                  className="h-4 w-4"
-                >
-                  <path d="M12 3a1 1 0 011 1v1a1 1 0 11-2 0V4a1 1 0 011-1zm0 15a5 5 0 100-10 5 5 0 000 10zm9-6a1 1 0 010 2h-1a1 1 0 110-2h1zM4 12a1 1 0 010 2H3a1 1 0 010-2h1zm14.657-6.657a1 1 0 011.414 1.414l-.707.707a1 1 0 11-1.414-1.414l.707-.707zM6.05 17.95a1 1 0 011.414 1.414l-.707.707a1 1 0 11-1.414-1.414l.707-.707zm12.607 1.414a1 1 0 01-1.414 0l-.707-.707a1 1 0 111.414-1.414l.707.707a1 1 0 010 1.414zM7.464 6.464A1 1 0 016.05 6.464l-.707-.707A1 1 0 116.757 4.343l.707.707a1 1 0 010 1.414zM12 20a1 1 0 011 1v0a1 1 0 11-2 0v0a1 1 0 011-1z" />
-                </svg>
-              ) : (
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  fill="currentColor"
-                  className="h-4 w-4"
-                >
-                  <path d="M20.354 15.354A9 9 0 018.646 3.646a9.003 9.003 0 1011.708 11.708z" />
-                </svg>
+              {({ isActive }) => (
+                <>
+                  <span className={isActive ? 'text-accent' : 'text-text-tertiary'}>
+                    <NavIcon>{item.icon}</NavIcon>
+                  </span>
+                  {item.label}
+                </>
               )}
-            </button>
-            <span>{user?.displayName}</span>
-            <Link
-              to="/settings"
-              className="rounded border border-slate-300 px-3 py-1 hover:bg-slate-100 dark:border-slate-600 dark:hover:bg-slate-700"
+            </NavLink>
+          ))}
+        </nav>
+
+        <div className="h-px bg-border" />
+
+        <div className="flex flex-col gap-1.5 px-1">
+          <span className="font-mono text-[9px] tracking-wider text-text-muted">FÄCHER</span>
+          {(subjects ?? []).map((subject) => (
+            <NavLink
+              key={subject.id}
+              to={`/subjects/${subject.id}`}
+              className="flex items-center gap-2 text-xs text-text-secondary hover:text-text-primary"
             >
-              Einstellungen
-            </Link>
-          </div>
+              <span
+                className="h-[7px] w-[7px] shrink-0 rounded-[2px]"
+                style={{ backgroundColor: subject.color }}
+              />
+              {subject.name}
+            </NavLink>
+          ))}
         </div>
-      </header>
-      <main className="mx-auto max-w-5xl px-6 py-8">
+
+        <div className="mt-auto flex items-center gap-2 border-t border-border pt-3">
+          <button
+            type="button"
+            title="Design-Umschalter (bald verfügbar)"
+            aria-label="Design-Umschalter (bald verfügbar)"
+            className="flex h-[22px] w-[22px] items-center justify-center rounded-md bg-bg-hover text-text-secondary"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.75"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="h-[13px] w-[13px]"
+            >
+              <path d="M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401" />
+            </svg>
+          </button>
+          <span className="flex-1 truncate text-xs text-text-secondary">
+            {user?.displayName}
+          </span>
+          <NavLink
+            to="/settings"
+            title="Einstellungen"
+            aria-label="Einstellungen"
+            className="flex text-text-muted hover:text-text-primary"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.75"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="h-3.5 w-3.5"
+            >
+              <path d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915" />
+              <circle cx="12" cy="12" r="3" />
+            </svg>
+          </NavLink>
+        </div>
+      </aside>
+
+      <main className="flex-1 min-w-0 px-8 py-8">
         <Outlet />
       </main>
     </div>

@@ -111,21 +111,16 @@ export function StoffBrowser({
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="flex max-h-[85vh] w-full max-w-2xl flex-col rounded-lg bg-white shadow-lg dark:bg-slate-800"
+        className="flex max-h-[85vh] w-full max-w-2xl flex-col rounded-lg border border-border bg-bg-1 shadow-lg"
       >
-        <div className="flex items-center justify-between border-b border-slate-200 p-4 dark:border-slate-700">
-          <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-100">
-            Stoff hinzufügen
-          </h2>
-          <button
-            onClick={onClose}
-            className="text-sm text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
-          >
+        <div className="flex items-center justify-between border-b border-border p-4">
+          <h2 className="text-[15px] font-semibold text-text-primary">Stoff hinzufügen</h2>
+          <button onClick={onClose} className="text-sm text-text-muted hover:text-text-primary">
             Schließen
           </button>
         </div>
 
-        <div className="flex flex-wrap items-center gap-1 border-b border-slate-200 px-4 py-2 text-sm dark:border-slate-700">
+        <div className="flex flex-wrap items-center gap-1 border-b border-border px-4 py-2 text-sm">
           <button
             onClick={() => {
               setSubjectId(null)
@@ -133,20 +128,20 @@ export function StoffBrowser({
               setTopicId(null)
               setNoteId(null)
             }}
-            className="text-blue-600 hover:underline dark:text-blue-400"
+            className="text-accent hover:underline"
           >
             Fächer
           </button>
           {subject && (
             <>
-              <span className="text-slate-400">/</span>
+              <span className="text-text-muted">/</span>
               <button
                 onClick={() => {
                   setSectionTypeId(null)
                   setTopicId(null)
                   setNoteId(null)
                 }}
-                className="text-blue-600 hover:underline dark:text-blue-400"
+                className="text-accent hover:underline"
               >
                 {subject.name}
               </button>
@@ -154,13 +149,13 @@ export function StoffBrowser({
           )}
           {sectionType && (
             <>
-              <span className="text-slate-400">/</span>
+              <span className="text-text-muted">/</span>
               <button
                 onClick={() => {
                   setTopicId(null)
                   setNoteId(null)
                 }}
-                className="text-blue-600 hover:underline dark:text-blue-400"
+                className="text-accent hover:underline"
               >
                 {sectionType.name}
               </button>
@@ -168,19 +163,16 @@ export function StoffBrowser({
           )}
           {topic && (
             <>
-              <span className="text-slate-400">/</span>
-              <button
-                onClick={() => setNoteId(null)}
-                className="text-blue-600 hover:underline dark:text-blue-400"
-              >
+              <span className="text-text-muted">/</span>
+              <button onClick={() => setNoteId(null)} className="text-accent hover:underline">
                 {topic.name}
               </button>
             </>
           )}
           {note && (
             <>
-              <span className="text-slate-400">/</span>
-              <span className="text-slate-600 dark:text-slate-300">{note.title}</span>
+              <span className="text-text-muted">/</span>
+              <span className="text-text-secondary">{note.title}</span>
             </>
           )}
         </div>
@@ -192,17 +184,17 @@ export function StoffBrowser({
                 <button
                   key={s.id}
                   onClick={() => setSubjectId(s.id)}
-                  className="flex w-full items-center gap-2 rounded p-2 text-left hover:bg-slate-100 dark:hover:bg-slate-700"
+                  className="flex w-full items-center gap-2 rounded-md p-2 text-left hover:bg-bg-hover"
                 >
                   <span
-                    className="h-2.5 w-2.5 flex-shrink-0 rounded-full"
+                    className="h-[9px] w-[9px] shrink-0 rounded-[2px]"
                     style={{ backgroundColor: s.color }}
                   />
-                  <span className="text-slate-700 dark:text-slate-200">{s.name}</span>
+                  <span className="text-text-secondary">{s.name}</span>
                 </button>
               ))}
               {subjects?.length === 0 && (
-                <p className="text-sm text-slate-400 dark:text-slate-500">Keine Fächer angelegt.</p>
+                <p className="text-sm text-text-tertiary">Keine Fächer angelegt.</p>
               )}
             </div>
           )}
@@ -213,13 +205,13 @@ export function StoffBrowser({
                 <button
                   key={st.id}
                   onClick={() => setSectionTypeId(st.id)}
-                  className="block w-full rounded p-2 text-left text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-700"
+                  className="block w-full rounded-md p-2 text-left text-text-secondary hover:bg-bg-hover"
                 >
                   {st.name}
                 </button>
               ))}
               {subject && subject.noteSectionTypes.length === 0 && (
-                <p className="text-sm text-slate-400 dark:text-slate-500">Keine Notizbereiche.</p>
+                <p className="text-sm text-text-tertiary">Keine Notizbereiche.</p>
               )}
             </div>
           )}
@@ -230,7 +222,7 @@ export function StoffBrowser({
                 <button
                   onClick={() => void selectWholeSectionType()}
                   disabled={bulkLoading}
-                  className="mb-1 block w-full rounded border border-dashed border-blue-300 p-2 text-left text-sm text-blue-600 hover:bg-blue-50 disabled:opacity-50 dark:border-blue-700 dark:text-blue-400 dark:hover:bg-blue-950"
+                  className="mb-1 block w-full rounded-md border border-dashed border-accent/40 p-2 text-left text-sm text-accent hover:bg-accent/10 disabled:opacity-50"
                 >
                   {bulkLoading ? 'Lädt...' : 'Alle Themen dieses Hefts auswählen'}
                 </button>
@@ -239,18 +231,16 @@ export function StoffBrowser({
                 <button
                   key={t.id}
                   onClick={() => setTopicId(t.id)}
-                  className="flex w-full items-center justify-between rounded p-2 text-left text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-700"
+                  className="flex w-full items-center justify-between rounded-md p-2 text-left text-text-secondary hover:bg-bg-hover"
                 >
                   <span>{t.name}</span>
-                  <span className="text-xs text-slate-400 dark:text-slate-500">
+                  <span className="text-xs text-text-tertiary">
                     {t.gradeLevels.length > 0 ? `${formatGradeLevels(t.gradeLevels)} · ` : ''}
                     {t.notes?.length ?? 0} Notiz(en)
                   </span>
                 </button>
               ))}
-              {topics?.length === 0 && (
-                <p className="text-sm text-slate-400 dark:text-slate-500">Keine Themen.</p>
-              )}
+              {topics?.length === 0 && <p className="text-sm text-text-tertiary">Keine Themen.</p>}
             </div>
           )}
 
@@ -259,7 +249,7 @@ export function StoffBrowser({
               {notes && notes.length > 0 && (
                 <button
                   onClick={() => selectWholeTopic(notes)}
-                  className="mb-1 block w-full rounded border border-dashed border-blue-300 p-2 text-left text-sm text-blue-600 hover:bg-blue-50 dark:border-blue-700 dark:text-blue-400 dark:hover:bg-blue-950"
+                  className="mb-1 block w-full rounded-md border border-dashed border-accent/40 p-2 text-left text-sm text-accent hover:bg-accent/10"
                 >
                   Alle Notizen dieses Themas auswählen
                 </button>
@@ -268,34 +258,32 @@ export function StoffBrowser({
                 <button
                   key={n.id}
                   onClick={() => setNoteId(n.id)}
-                  className="flex w-full items-center justify-between rounded p-2 text-left text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-700"
+                  className="flex w-full items-center justify-between rounded-md p-2 text-left text-text-secondary hover:bg-bg-hover"
                 >
                   <span>{n.title}</span>
                   {(selection.get(n.id)?.size ?? 0) > 0 && (
-                    <span className="rounded-full bg-blue-100 px-2 py-0.5 text-xs text-blue-700 dark:bg-blue-900 dark:text-blue-300">
+                    <span className="rounded-full bg-accent/15 px-2 py-0.5 text-xs text-accent">
                       {selection.get(n.id)?.size} ausgewählt
                     </span>
                   )}
                 </button>
               ))}
-              {notes?.length === 0 && (
-                <p className="text-sm text-slate-400 dark:text-slate-500">Keine Notizen.</p>
-              )}
+              {notes?.length === 0 && <p className="text-sm text-text-tertiary">Keine Notizen.</p>}
             </div>
           )}
 
           {note && <NotePreview note={note} selection={selection} onToggle={toggleSection} />}
         </div>
 
-        <div className="flex items-center justify-between border-t border-slate-200 p-4 dark:border-slate-700">
-          <span className="text-sm text-slate-500 dark:text-slate-400">
+        <div className="flex items-center justify-between border-t border-border p-4">
+          <span className="text-sm text-text-tertiary">
             {selectedCount} Abschnitt(e) ausgewählt
-            {saveError && <span className="ml-2 text-red-600 dark:text-red-400">{saveError}</span>}
+            {saveError && <span className="ml-2 text-red-400">{saveError}</span>}
           </span>
           <button
             onClick={() => void handleFinish()}
             disabled={saving}
-            className="rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+            className="rounded-md bg-accent px-4 py-2 text-sm font-semibold text-accent-ink disabled:opacity-50"
           >
             Fertig
           </button>
@@ -318,17 +306,14 @@ function NotePreview({
   const selectedForNote = selection.get(note.id) ?? new Map()
 
   if (sections.length === 0) {
-    return <p className="text-sm text-slate-400 dark:text-slate-500">Diese Notiz ist leer.</p>
+    return <p className="text-sm text-text-tertiary">Diese Notiz ist leer.</p>
   }
 
   return (
     <div className="space-y-3">
       {sections.map((section) => (
-        <div
-          key={section.index}
-          className="rounded-lg border border-slate-200 p-3 dark:border-slate-700"
-        >
-          <label className="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-200">
+        <div key={section.index} className="rounded-lg border border-border-subtle p-3">
+          <label className="flex items-center gap-2 text-sm font-medium text-text-secondary">
             <input
               type="checkbox"
               checked={selectedForNote.has(section.index)}

@@ -45,11 +45,11 @@ export function RichTextEditor({ content, onChange }: RichTextEditorProps) {
   })
 
   return (
-    <div className="rounded-lg border border-slate-300 bg-white dark:border-slate-600 dark:bg-slate-800">
+    <div className="rounded-lg border border-border bg-bg-1">
       <EditorToolbar editor={editor} />
       <EditorContent
         editor={editor}
-        className="prose prose-sm max-w-none px-4 py-3 focus:outline-none dark:prose-invert"
+        className="prose prose-sm prose-invert max-w-none px-4 py-3 focus:outline-none"
       />
     </div>
   )
@@ -109,17 +109,17 @@ function EditorToolbar({ editor }: { editor: Editor | null }) {
   const inTable = editor.isActive('table')
 
   return (
-    <div className="border-b border-slate-200 dark:border-slate-700">
+    <div className="border-b border-border">
       <div className="flex flex-wrap items-center gap-1 p-2">
         {buttons.map((btn) => (
           <button
             key={btn.label}
             type="button"
             onClick={btn.onClick}
-            className={`rounded px-2 py-1 text-xs ${
+            className={`rounded-md px-2 py-1 text-xs ${
               btn.isActive
-                ? 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300'
-                : 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-700'
+                ? 'bg-accent/15 text-accent'
+                : 'text-text-secondary hover:bg-bg-hover'
             }`}
           >
             {btn.label}
@@ -130,10 +130,8 @@ function EditorToolbar({ editor }: { editor: Editor | null }) {
           <button
             type="button"
             onClick={() => setShowTablePicker((v) => !v)}
-            className={`rounded px-2 py-1 text-xs ${
-              inTable
-                ? 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300'
-                : 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-700'
+            className={`rounded-md px-2 py-1 text-xs ${
+              inTable ? 'bg-accent/15 text-accent' : 'text-text-secondary hover:bg-bg-hover'
             }`}
           >
             Tabelle
@@ -141,9 +139,9 @@ function EditorToolbar({ editor }: { editor: Editor | null }) {
           {showTablePicker && (
             <form
               onSubmit={insertTable}
-              className="absolute left-0 top-full z-10 mt-1 flex items-end gap-2 rounded-lg border border-slate-200 bg-white p-3 shadow-lg dark:border-slate-700 dark:bg-slate-800"
+              className="absolute left-0 top-full z-10 mt-1 flex items-end gap-2 rounded-lg border border-border bg-bg-2 p-3 shadow-lg"
             >
-              <label className="text-xs text-slate-600 dark:text-slate-300">
+              <label className="text-xs text-text-secondary">
                 Zeilen
                 <input
                   type="number"
@@ -151,10 +149,10 @@ function EditorToolbar({ editor }: { editor: Editor | null }) {
                   max={20}
                   value={rows}
                   onChange={(e) => setRows(Math.min(20, Math.max(1, Number(e.target.value))))}
-                  className="mt-1 block w-16 rounded border border-slate-300 bg-white px-2 py-1 text-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+                  className="mt-1 block w-16 rounded-md border border-border bg-bg-muted px-2 py-1 text-sm text-text-primary"
                 />
               </label>
-              <label className="text-xs text-slate-600 dark:text-slate-300">
+              <label className="text-xs text-text-secondary">
                 Spalten
                 <input
                   type="number"
@@ -162,19 +160,19 @@ function EditorToolbar({ editor }: { editor: Editor | null }) {
                   max={10}
                   value={cols}
                   onChange={(e) => setCols(Math.min(10, Math.max(1, Number(e.target.value))))}
-                  className="mt-1 block w-16 rounded border border-slate-300 bg-white px-2 py-1 text-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+                  className="mt-1 block w-16 rounded-md border border-border bg-bg-muted px-2 py-1 text-sm text-text-primary"
                 />
               </label>
               <button
                 type="submit"
-                className="rounded bg-blue-600 px-2 py-1 text-xs font-medium text-white"
+                className="rounded-md bg-accent px-2 py-1 text-xs font-semibold text-accent-ink"
               >
                 Einfügen
               </button>
               <button
                 type="button"
                 onClick={() => setShowTablePicker(false)}
-                className="rounded px-2 py-1 text-xs text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-700"
+                className="rounded-md px-2 py-1 text-xs text-text-muted hover:bg-bg-hover"
               >
                 Abbrechen
               </button>
@@ -184,40 +182,40 @@ function EditorToolbar({ editor }: { editor: Editor | null }) {
       </div>
 
       {inTable && (
-        <div className="flex flex-wrap items-center gap-1 border-t border-slate-200 bg-slate-50 p-2 dark:border-slate-700 dark:bg-slate-900/50">
-          <span className="text-xs text-slate-400 dark:text-slate-500">Tabelle:</span>
+        <div className="flex flex-wrap items-center gap-1 border-t border-border bg-bg-muted p-2">
+          <span className="text-xs text-text-tertiary">Tabelle:</span>
           <button
             type="button"
             onClick={() => editor.chain().focus().addRowAfter().run()}
-            className="rounded px-2 py-1 text-xs text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-700"
+            className="rounded-md px-2 py-1 text-xs text-text-secondary hover:bg-bg-hover"
           >
             Zeile +
           </button>
           <button
             type="button"
             onClick={() => editor.chain().focus().deleteRow().run()}
-            className="rounded px-2 py-1 text-xs text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-700"
+            className="rounded-md px-2 py-1 text-xs text-text-secondary hover:bg-bg-hover"
           >
             Zeile −
           </button>
           <button
             type="button"
             onClick={() => editor.chain().focus().addColumnAfter().run()}
-            className="rounded px-2 py-1 text-xs text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-700"
+            className="rounded-md px-2 py-1 text-xs text-text-secondary hover:bg-bg-hover"
           >
             Spalte +
           </button>
           <button
             type="button"
             onClick={() => editor.chain().focus().deleteColumn().run()}
-            className="rounded px-2 py-1 text-xs text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-700"
+            className="rounded-md px-2 py-1 text-xs text-text-secondary hover:bg-bg-hover"
           >
             Spalte −
           </button>
           <button
             type="button"
             onClick={() => editor.chain().focus().deleteTable().run()}
-            className="rounded px-2 py-1 text-xs text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950"
+            className="rounded-md px-2 py-1 text-xs text-red-400 hover:bg-red-950/40"
           >
             Tabelle löschen
           </button>

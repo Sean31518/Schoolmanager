@@ -50,7 +50,7 @@ export function SubjectDropdown({
         className={
           selected
             ? 'block h-full w-full px-2 py-3 text-left text-sm font-medium'
-            : 'block h-full w-full bg-white px-2 py-3 text-left text-sm text-slate-800 dark:bg-slate-900 dark:text-slate-100'
+            : 'block h-full w-full bg-bg-1 px-2 py-3 text-left text-sm text-text-secondary'
         }
         style={
           selected
@@ -62,11 +62,11 @@ export function SubjectDropdown({
       </button>
 
       {open && (
-        <div className="absolute left-0 top-full z-20 mt-0.5 max-h-56 w-48 overflow-y-auto rounded border border-slate-200 bg-white py-1 text-sm shadow-lg dark:border-slate-700 dark:bg-slate-800">
+        <div className="absolute left-0 top-full z-20 mt-0.5 max-h-56 w-48 overflow-y-auto rounded-md border border-border bg-bg-2 py-1 text-sm shadow-lg">
           <button
             type="button"
             onClick={() => pick(null)}
-            className="block w-full px-3 py-1.5 text-left text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-700"
+            className="block w-full px-3 py-1.5 text-left text-text-tertiary hover:bg-bg-hover"
           >
             – (kein Fach)
           </button>

@@ -12,5 +12,6 @@ subjectsRouter.post("/", asyncHandler(subjectsController.create));
 subjectsRouter.get("/:id", asyncHandler(subjectsController.getOne));
 subjectsRouter.patch("/:id", asyncHandler(subjectsController.update));
 subjectsRouter.delete("/:id", asyncHandler(subjectsController.remove));
+subjectsRouter.get("/:subjectId/notes", asyncHandler(subjectsController.listNotes));
 
 subjectsRouter.use("/:subjectId/section-types", sectionTypesRouter);

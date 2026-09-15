@@ -2,6 +2,38 @@
 @plugin "@tailwindcss/typography";
 @custom-variant dark (&:where(.dark, .dark *));
 
+@theme {
+  --font-sans: 'Figtree', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'Azeret Mono', ui-monospace, monospace;
+
+  /* Werkstatt Corporate Design - warmes Graphit + Ocker-Akzent */
+  --color-bg-0: #0a0a09;
+  --color-bg-1: #121211;
+  --color-bg-2: #1a1a18;
+  --color-bg-3: #1e1e1b;
+  --color-bg-hover: #24241f;
+  --color-bg-muted: #171715;
+
+  --color-border: #32322e;
+  --color-border-subtle: #262622;
+
+  --color-text-primary: #edebe4;
+  --color-text-secondary: #b6b3a8;
+  --color-text-tertiary: #8a887f;
+  --color-text-muted: #6f6d65;
+  --color-text-disabled: #4a4841;
+
+  --color-accent: #dfa24a;
+  --color-accent-hover: #b87f2e;
+  --color-accent-ink: #1a1408;
+}
+
+body {
+  background-color: var(--color-bg-0);
+  color: var(--color-text-primary);
+  font-family: var(--font-sans);
+}
+
 /* Typography's default list-item bullet also applies to TipTap's task list;
    task items get their own checkbox instead. */
 .prose ul[data-type='taskList'] {
@@ -32,18 +64,9 @@
 }
 .prose th,
 .prose td {
-  border: 1px solid #cbd5e1;
+  border: 1px solid var(--color-border);
   padding: 0.375rem 0.75rem;
 }
 .prose th {
-  background-color: #f1f5f9;
-}
-@variant dark {
-  .prose th,
-  .prose td {
-    border-color: #475569;
-  }
-  .prose th {
-    background-color: #334155;
-  }
+  background-color: var(--color-bg-2);
 }

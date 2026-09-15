@@ -10,7 +10,7 @@ export function ExamPage() {
   const { data, isLoading } = useExamPrep(eventId)
 
   if (isLoading) {
-    return <p className="text-slate-400 dark:text-slate-500">Lädt...</p>
+    return <p className="text-text-tertiary">Lädt...</p>
   }
 
   if (!data || data.items.length === 0) {

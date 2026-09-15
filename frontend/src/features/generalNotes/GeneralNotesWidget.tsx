@@ -6,25 +6,23 @@ export function GeneralNotesWidget({ notes }: { notes: GeneralNoteDto[] }) {
   const createNote = useCreateGeneralNote()
 
   return (
-    <div>
-      <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-100">Notizen</h2>
+    <div className="rounded-lg border border-border bg-bg-1">
+      <div className="flex items-center justify-between border-b border-border px-3 py-2">
+        <span className="font-mono text-[10px] tracking-wider text-text-tertiary">NOTIZEN</span>
         <button
           onClick={() =>
             void createNote.mutateAsync({ contentJson: { type: 'doc', content: [] } })
           }
-          className="rounded bg-blue-600 px-3 py-1.5 text-sm font-medium text-white"
+          className="rounded-md bg-accent px-2.5 py-1 text-xs font-semibold text-accent-ink"
         >
           Neue Notiz
         </button>
       </div>
-      <div className="mt-3 space-y-3">
+      <div className="space-y-2 p-2.5">
         {notes.map((note) => (
           <GeneralNoteCard key={note.id} note={note} />
         ))}
-        {notes.length === 0 && (
-          <p className="text-sm text-slate-400 dark:text-slate-500">Noch keine Notizen.</p>
-        )}
+        {notes.length === 0 && <p className="text-sm text-text-tertiary">Noch keine Notizen.</p>}
       </div>
     </div>
   )

@@ -1,7 +1,25 @@
 import { useState, type FormEvent } from 'react'
 import { ApiRequestError } from '../../lib/apiClient'
+import { SUBJECT_PALETTE } from '../../lib/subjectPalette'
 import { useCreateSubject, useDeleteSubject, useSubjects, useUpdateSubject } from './hooks'
 import type { SubjectDto } from './types'
+
+function PaletteSwatches({ onPick }: { onPick: (color: string) => void }) {
+  return (
+    <div className="mt-1 flex flex-wrap gap-1">
+      {SUBJECT_PALETTE.map((hex) => (
+        <button
+          key={hex}
+          type="button"
+          title={hex}
+          onClick={() => onPick(hex)}
+          className="h-4 w-4 rounded-sm ring-1 ring-inset ring-black/10 dark:ring-white/10"
+          style={{ backgroundColor: hex }}
+        />
+      ))}
+    </div>
+  )
+}
 
 export function SubjectManager() {
   const { data: subjects, isLoading } = useSubjects()
@@ -43,6 +61,7 @@ export function SubjectManager() {
             onChange={(e) => setColor(e.target.value)}
             className="mt-1 block h-9 w-14 rounded border border-slate-300 dark:border-slate-600"
           />
+          <PaletteSwatches onPick={setColor} />
         </label>
         <button
           type="submit"
@@ -125,6 +144,7 @@ function SubjectManagerRow({ subject }: { subject: SubjectDto }) {
               onChange={(e) => setColor(e.target.value)}
               className="mt-1 block h-9 w-14 rounded border border-slate-300 dark:border-slate-600"
             />
+            <PaletteSwatches onPick={setColor} />
           </label>
           <button
             type="submit"

@@ -24,6 +24,11 @@ export async function update(req: Request, res: Response) {
   res.json(subject);
 }
 
+export async function listNotes(req: Request, res: Response) {
+  const notes = await subjectsService.listNotesForSubject(req.user!.id, req.params.subjectId);
+  res.json(notes);
+}
+
 export async function remove(req: Request, res: Response) {
   await subjectsService.deleteSubject(req.user!.id, req.params.id);
   res.status(204).send();

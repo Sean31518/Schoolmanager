@@ -2,11 +2,12 @@ import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { formatGradeLevels } from '../../lib/gradeLevel'
 import { useExams } from '../calendar/hooks'
+import { FlashcardManager } from '../flashcards/FlashcardManager'
 import { useExamPrep, useSaveExamPrep } from './hooks'
 import { SectionContent } from './SectionContent'
 import { extractSections } from './sections'
 import { StoffBrowser, type StoffSelection } from './StoffBrowser'
-import type { SaveExamPrepItem } from './types'
+import type { ExamPrepItemDto, SaveExamPrepItem } from './types'
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('de-DE', {
@@ -14,6 +15,20 @@ function formatDate(iso: string) {
     month: '2-digit',
     year: 'numeric',
   })
+}
+
+function groupByTopic(items: ExamPrepItemDto[]) {
+  const map = new Map<string, { topicId: string; topicName: string; subjectColor: string }>()
+  for (const item of items) {
+    if (!map.has(item.topicId)) {
+      map.set(item.topicId, {
+        topicId: item.topicId,
+        topicName: item.topicName,
+        subjectColor: item.subjectColor,
+      })
+    }
+  }
+  return [...map.values()]
 }
 
 export function ExamPrepPage() {
@@ -47,85 +62,97 @@ export function ExamPrepPage() {
   }
 
   if (isLoading) {
-    return <p className="text-slate-400 dark:text-slate-500">Lädt...</p>
+    return <p className="text-text-tertiary">Lädt...</p>
   }
+
+  const topics = groupByTopic(existing?.items ?? [])
 
   return (
     <div className="space-y-6">
       <div>
-        <Link to="/exams" className="text-sm text-blue-600 hover:underline dark:text-blue-400">
+        <Link to="/exams" className="text-sm text-accent hover:underline">
           ← Klausuren
         </Link>
-        <h1 className="mt-1 text-2xl font-semibold text-slate-800 dark:text-slate-100">
+        <h1 className="mt-1 text-[15px] font-semibold text-text-primary">
           {exam ? exam.title : 'Klausurvorbereitung'}
         </h1>
-        {exam && (
-          <p className="text-sm text-slate-500 dark:text-slate-400">{formatDate(exam.startDate)}</p>
-        )}
+        {exam && <p className="text-sm text-text-tertiary">{formatDate(exam.startDate)}</p>}
       </div>
 
       <div className="flex items-center gap-3">
         <button
           onClick={() => setBrowserOpen(true)}
-          className="rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white"
+          className="rounded-md bg-accent px-4 py-2 text-sm font-semibold text-accent-ink"
         >
           + Stoff hinzufügen
         </button>
         {(existing?.items.length ?? 0) > 0 && (
-          <Link
-            to={`/exams/${eventId}`}
-            className="text-sm text-blue-600 hover:underline dark:text-blue-400"
-          >
+          <Link to={`/exams/${eventId}`} className="text-sm text-accent hover:underline">
             Zur Lernansicht →
           </Link>
         )}
       </div>
 
       {!existing || existing.items.length === 0 ? (
-        <p className="text-slate-400 dark:text-slate-500">
+        <p className="text-text-tertiary">
           Noch kein Stoff ausgewählt. Mit "Stoff hinzufügen" durch deine Hefte browsen.
         </p>
       ) : (
-        <div className="space-y-3">
-          {existing.items.map((item) => {
-            const sections = extractSections(item.blocks)
-            const section = sections[item.sectionIndex]
-            return (
-              <div key={item.id} className="rounded-lg bg-white p-4 shadow-sm dark:bg-slate-800">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex items-center gap-2">
-                    <span
-                      className="h-3 w-3 flex-shrink-0 rounded-full"
-                      style={{ backgroundColor: item.subjectColor }}
-                    />
-                    <div>
-                      <div className="font-medium text-slate-800 dark:text-slate-100">
-                        {item.subjectName} · {item.sectionTypeName} · {item.topicName} · {item.title}
-                        {item.gradeLevels.length > 0
-                          ? ` · ${formatGradeLevels(item.gradeLevels)}`
-                          : ''}
-                      </div>
-                      <div className="text-sm text-slate-500 dark:text-slate-400">
-                        {item.sectionLabel}
+        <>
+          <div className="space-y-3">
+            {existing.items.map((item) => {
+              const sections = extractSections(item.blocks)
+              const section = sections[item.sectionIndex]
+              return (
+                <div key={item.id} className="rounded-lg border border-border bg-bg-1 p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-center gap-2">
+                      <span
+                        className="h-[9px] w-[9px] shrink-0 rounded-[2px]"
+                        style={{ backgroundColor: item.subjectColor }}
+                      />
+                      <div>
+                        <div className="font-medium text-text-primary">
+                          {item.subjectName} · {item.sectionTypeName} · {item.topicName} ·{' '}
+                          {item.title}
+                          {item.gradeLevels.length > 0
+                            ? ` · ${formatGradeLevels(item.gradeLevels)}`
+                            : ''}
+                        </div>
+                        <div className="text-sm text-text-tertiary">{item.sectionLabel}</div>
                       </div>
                     </div>
+                    <button
+                      onClick={() => void removeItem(item.id)}
+                      className="shrink-0 text-sm text-text-muted hover:text-red-400"
+                    >
+                      Entfernen
+                    </button>
                   </div>
-                  <button
-                    onClick={() => void removeItem(item.id)}
-                    className="flex-shrink-0 text-sm text-slate-400 hover:text-red-600 dark:text-slate-500 dark:hover:text-red-400"
-                  >
-                    Entfernen
-                  </button>
+                  {section && (
+                    <div className="mt-2 max-h-64 overflow-y-auto">
+                      <SectionContent section={section} />
+                    </div>
+                  )}
                 </div>
-                {section && (
-                  <div className="mt-2 max-h-64 overflow-y-auto">
-                    <SectionContent section={section} />
-                  </div>
-                )}
-              </div>
-            )
-          })}
-        </div>
+              )
+            })}
+          </div>
+
+          <div>
+            <h2 className="mb-2 text-[13px] font-semibold text-text-primary">Karteikarten</h2>
+            <div className="space-y-2">
+              {topics.map((topic) => (
+                <FlashcardManager
+                  key={topic.topicId}
+                  topicId={topic.topicId}
+                  topicName={topic.topicName}
+                  subjectColor={topic.subjectColor}
+                />
+              ))}
+            </div>
+          </div>
+        </>
       )}
 
       {browserOpen && (
