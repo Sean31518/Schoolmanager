@@ -6,6 +6,10 @@ export function listCalendarEvents(params: { from: string; to: string }) {
   return apiFetch<CalendarEventDto[]>(`/calendar-events?${query.toString()}`)
 }
 
+export function listExams() {
+  return apiFetch<CalendarEventDto[]>('/calendar-events?type=EXAM')
+}
+
 export function createCalendarEvent(data: {
   title: string
   type: Extract<CalendarEventType, 'MANUAL' | 'EXAM'>

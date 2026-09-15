@@ -15,7 +15,7 @@ interface RichTextEditorProps {
   onChange: (content: JSONContent) => void
 }
 
-const EXTENSIONS = [
+export const EXTENSIONS = [
   StarterKit,
   Link.configure({ openOnClick: false }),
   Placeholder.configure({ placeholder: 'Hier tippen...' }),

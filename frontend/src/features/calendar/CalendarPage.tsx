@@ -1,6 +1,7 @@
 import { useMemo, useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { ApiRequestError } from '../../lib/apiClient'
+import { useSubjects } from '../subjects/hooks'
 import { useCalendarEvents, useCreateCalendarEvent, useDeleteCalendarEvent } from './hooks'
 import type { CalendarEventDto, CalendarEventType } from './types'
 
@@ -57,12 +58,14 @@ export function CalendarPage() {
   const rangeTo = toDateKey(monthGrid[monthGrid.length - 1])
 
   const { data: events, isLoading } = useCalendarEvents({ from: rangeFrom, to: rangeTo })
+  const { data: subjects } = useSubjects()
   const createEvent = useCreateCalendarEvent()
   const deleteEvent = useDeleteCalendarEvent()
 
   const [title, setTitle] = useState('')
   const [type, setType] = useState<'MANUAL' | 'EXAM'>('MANUAL')
   const [startDate, setStartDate] = useState('')
+  const [subjectId, setSubjectId] = useState('')
   const [error, setError] = useState<string | null>(null)
 
   function goToMonth(delta: number) {
@@ -75,9 +78,10 @@ export function CalendarPage() {
     e.preventDefault()
     setError(null)
     try {
-      await createEvent.mutateAsync({ title, type, startDate })
+      await createEvent.mutateAsync({ title, type, startDate, subjectId: subjectId || null })
       setTitle('')
       setStartDate('')
+      setSubjectId('')
     } catch (err) {
       setError(
         err instanceof ApiRequestError ? err.message : 'Termin konnte nicht angelegt werden',
@@ -164,6 +168,21 @@ export function CalendarPage() {
               className="mt-1 block rounded border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
             />
           </label>
+          <label className="text-sm text-slate-600 dark:text-slate-300">
+            Fach (optional)
+            <select
+              value={subjectId}
+              onChange={(e) => setSubjectId(e.target.value)}
+              className="mt-1 block rounded border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+            >
+              <option value="">–</option>
+              {(subjects ?? []).map((subject) => (
+                <option key={subject.id} value={subject.id}>
+                  {subject.name}
+                </option>
+              ))}
+            </select>
+          </label>
           <button
             type="submit"
             disabled={createEvent.isPending}
@@ -214,25 +233,47 @@ export function CalendarPage() {
                       {day.getUTCDate()}
                     </div>
                     <div className="mt-1 space-y-0.5">
-                      {dayEvents.slice(0, 3).map((event) => (
-                        <div
-                          key={event.id}
-                          title={`${event.title}${event.endDate ? ` – ${formatDay(event.endDate)}` : ''}`}
-                          className="group flex items-center gap-1 truncate rounded px-1 py-0.5 text-[11px] font-medium text-white"
-                          style={{ backgroundColor: TYPE_COLORS[event.type] }}
-                        >
-                          <span className="truncate">{event.title}</span>
-                          {(event.type === 'MANUAL' || event.type === 'EXAM') && (
+                      {dayEvents.slice(0, 3).map((event) =>
+                        event.type === 'EXAM' ? (
+                          <Link
+                            key={event.id}
+                            to={`/exams/${event.id}`}
+                            title={`${event.title} – Klausurvorbereitung öffnen`}
+                            className="group flex items-center gap-1 truncate rounded px-1 py-0.5 text-[11px] font-medium text-white"
+                            style={{ backgroundColor: TYPE_COLORS[event.type] }}
+                          >
+                            <span className="truncate">{event.title}</span>
                             <button
-                              onClick={() => void deleteEvent.mutateAsync(event.id)}
+                              onClick={(e) => {
+                                e.preventDefault()
+                                void deleteEvent.mutateAsync(event.id)
+                              }}
                               className="ml-auto hidden flex-shrink-0 group-hover:inline"
                               aria-label="Löschen"
                             >
                               ×
                             </button>
-                          )}
-                        </div>
-                      ))}
+                          </Link>
+                        ) : (
+                          <div
+                            key={event.id}
+                            title={`${event.title}${event.endDate ? ` – ${formatDay(event.endDate)}` : ''}`}
+                            className="group flex items-center gap-1 truncate rounded px-1 py-0.5 text-[11px] font-medium text-white"
+                            style={{ backgroundColor: TYPE_COLORS[event.type] }}
+                          >
+                            <span className="truncate">{event.title}</span>
+                            {event.type === 'MANUAL' && (
+                              <button
+                                onClick={() => void deleteEvent.mutateAsync(event.id)}
+                                className="ml-auto hidden flex-shrink-0 group-hover:inline"
+                                aria-label="Löschen"
+                              >
+                                ×
+                              </button>
+                            )}
+                          </div>
+                        ),
+                      )}
                       {dayEvents.length > 3 && (
                         <div className="text-[11px] text-slate-400 dark:text-slate-500">
                           +{dayEvents.length - 3} mehr

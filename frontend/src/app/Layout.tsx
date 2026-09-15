@@ -27,6 +27,9 @@ export function Layout() {
               <Link to="/calendar" className="hover:text-blue-600 dark:hover:text-blue-400">
                 Kalender
               </Link>
+              <Link to="/exams" className="hover:text-blue-600 dark:hover:text-blue-400">
+                Klausuren
+              </Link>
             </nav>
           </div>
           <div className="flex items-center gap-3 text-sm text-slate-500 dark:text-slate-400">

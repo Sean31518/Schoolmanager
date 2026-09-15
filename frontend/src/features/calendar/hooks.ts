@@ -8,6 +8,10 @@ export function useCalendarEvents(range: { from: string; to: string }) {
   })
 }
 
+export function useExams() {
+  return useQuery({ queryKey: ['calendar-events', 'EXAM'], queryFn: api.listExams })
+}
+
 export function useCreateCalendarEvent() {
   const queryClient = useQueryClient()
   return useMutation({

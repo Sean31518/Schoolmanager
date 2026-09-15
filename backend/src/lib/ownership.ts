@@ -18,3 +18,21 @@ export async function requireOwnedSectionType(userId: string, sectionTypeId: str
   }
   return sectionType;
 }
+
+export async function requireOwnedCalendarEvent(userId: string, eventId: string) {
+  const event = await prisma.calendarEvent.findFirst({ where: { id: eventId, userId } });
+  if (!event) {
+    throw new NotFoundError("Termin nicht gefunden");
+  }
+  return event;
+}
+
+export async function requireOwnedNote(userId: string, noteId: string) {
+  const note = await prisma.note.findFirst({
+    where: { id: noteId, noteSectionType: { subject: { userId } } },
+  });
+  if (!note) {
+    throw new NotFoundError("Notiz nicht gefunden");
+  }
+  return note;
+}

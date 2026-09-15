@@ -98,6 +98,8 @@ model Note {
   createdAt         DateTime        @default(now())
   updatedAt         DateTime        @updatedAt
 
+  examPrepItems ExamPrepItem[]
+
   @@unique([noteSectionTypeId, gradeLevel])
   @@index([noteSectionTypeId])
 }
@@ -153,8 +155,25 @@ model CalendarEvent {
   createdAt   DateTime          @default(now())
   updatedAt   DateTime          @updatedAt
 
+  examPrepItems ExamPrepItem[]
+
   @@unique([userId, externalRef])
   @@index([userId, startDate])
+}
+
+model ExamPrepItem {
+  id              String        @id @default(cuid())
+  calendarEventId String
+  calendarEvent   CalendarEvent @relation(fields: [calendarEventId], references: [id], onDelete: Cascade)
+  noteId          String
+  note            Note          @relation(fields: [noteId], references: [id], onDelete: Cascade)
+  sectionIndex    Int
+  sectionLabel    String
+  createdAt       DateTime      @default(now())
+
+  @@unique([calendarEventId, noteId, sectionIndex])
+  @@index([calendarEventId])
+  @@index([noteId])
 }
 
 model Homework {

@@ -1,5 +1,6 @@
 import type { z } from "zod";
 import { NotFoundError } from "../../lib/errors.js";
+import { requireOwnedCalendarEvent } from "../../lib/ownership.js";
 import { prisma } from "../../lib/prisma.js";
 import type {
   createCalendarEventSchema,
@@ -57,14 +58,6 @@ export async function createCalendarEvent(
     },
     include: { subject: true },
   });
-}
-
-async function requireOwnedCalendarEvent(userId: string, id: string) {
-  const event = await prisma.calendarEvent.findFirst({ where: { id, userId } });
-  if (!event) {
-    throw new NotFoundError("Termin nicht gefunden");
-  }
-  return event;
 }
 
 export async function updateCalendarEvent(

@@ -5,6 +5,9 @@ import { LoginPage } from '../features/auth/LoginPage'
 import { RegisterPage } from '../features/auth/RegisterPage'
 import { CalendarPage } from '../features/calendar/CalendarPage'
 import { DashboardPage } from '../features/dashboard/DashboardPage'
+import { ExamPrepPage } from '../features/examPrep/ExamPrepPage'
+import { ExamsListPage } from '../features/examPrep/ExamsListPage'
+import { ExamStudyPage } from '../features/examPrep/ExamStudyPage'
 import { NoteEditorPage } from '../features/notes/NoteEditorPage'
 import { SectionTypeOverviewPage } from '../features/notes/SectionTypeOverviewPage'
 import { SettingsPage } from '../features/settings/SettingsPage'
@@ -46,6 +49,9 @@ export function AppRouter() {
         <Route path="/" element={<DashboardPage />} />
         <Route path="/timetable" element={<TimetablePage />} />
         <Route path="/calendar" element={<CalendarPage />} />
+        <Route path="/exams" element={<ExamsListPage />} />
+        <Route path="/exams/:eventId" element={<ExamPrepPage />} />
+        <Route path="/exams/:eventId/study" element={<ExamStudyPage />} />
         <Route path="/settings" element={<SettingsPage />} />
         <Route path="/subjects" element={<SubjectsPage />} />
         <Route path="/subjects/:subjectId" element={<SubjectDetailPage />} />
