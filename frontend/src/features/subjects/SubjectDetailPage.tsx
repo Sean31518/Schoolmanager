@@ -1,10 +1,13 @@
 import { useState, type FormEvent } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import { ApiRequestError } from '../../lib/apiClient'
+import { useAuth } from '../auth/AuthContext'
 import { useCreateSectionType, useDeleteSectionType, useSubject } from './hooks'
 
 export function SubjectDetailPage() {
   const { subjectId = '' } = useParams()
+  const navigate = useNavigate()
+  const { settings } = useAuth()
   const { data: subject, isLoading } = useSubject(subjectId)
   const createSectionType = useCreateSectionType(subjectId)
   const deleteSectionType = useDeleteSectionType(subjectId)
@@ -15,8 +18,9 @@ export function SubjectDetailPage() {
     e.preventDefault()
     setError(null)
     try {
-      await createSectionType.mutateAsync({ name })
-      setName('')
+      const sectionType = await createSectionType.mutateAsync({ name })
+      const gradeLevel = settings?.currentGradeLevel ?? 5
+      navigate(`/subjects/${subjectId}/sections/${sectionType.id}/${gradeLevel}`)
     } catch (err) {
       setError(
         err instanceof ApiRequestError
