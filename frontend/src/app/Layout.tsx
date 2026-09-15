@@ -15,9 +15,6 @@ export function Layout() {
               Schulmanager
             </Link>
             <nav className="flex gap-4 text-sm text-slate-600 dark:text-slate-300">
-              <Link to="/" className="hover:text-blue-600 dark:hover:text-blue-400">
-                Dashboard
-              </Link>
               <Link to="/subjects" className="hover:text-blue-600 dark:hover:text-blue-400">
                 Fächer
               </Link>
