@@ -10,19 +10,43 @@ export interface QuickLinkDto {
   hasContent: boolean
 }
 
-export interface CalendarEventDto {
+export interface ReminderDto {
+  kind: 'homework' | 'event'
   id: string
   title: string
-  type: string
-  startDate: string
-  endDate: string | null
-  allDay: boolean
+  date: string
+  subjectName: string | null
+  subjectColor: string | null
+}
+
+export interface TimetableSlotSummaryDto {
+  label: string
+  startTime: string
+  endTime: string
+  subjectName: string
+  subjectColor: string
+}
+
+export interface RecentlyViewedNoteDto {
+  id: string
+  title: string
+  lastViewedAt: string
+  topicId: string
+  topicName: string
+  sectionTypeId: string
+  sectionTypeName: string
+  subjectId: string
+  subjectName: string
+  subjectColor: string
 }
 
 export interface DashboardDto {
   currentGradeLevel: number
   quickLinks: QuickLinkDto[]
   upcomingHomework: HomeworkDto[]
-  upcomingEvents: CalendarEventDto[]
   generalNotes: GeneralNoteDto[]
+  upcomingReminders: ReminderDto[]
+  todayTimetable: TimetableSlotSummaryDto[]
+  tomorrowTimetable: TimetableSlotSummaryDto[]
+  recentlyViewedNotes: RecentlyViewedNoteDto[]
 }

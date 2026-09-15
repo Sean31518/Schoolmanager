@@ -31,7 +31,11 @@ export async function listNotes(userId: string, topicId: string) {
 
 export async function getNote(userId: string, noteId: string) {
   await requireOwnedNote(userId, noteId);
-  const note = await prisma.note.findUniqueOrThrow({ where: { id: noteId }, include: blocksInclude });
+  const note = await prisma.note.update({
+    where: { id: noteId },
+    data: { lastViewedAt: new Date() },
+    include: blocksInclude,
+  });
   return mapNote(note);
 }
 
