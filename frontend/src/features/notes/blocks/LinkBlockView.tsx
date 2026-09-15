@@ -14,7 +14,7 @@ export function LinkBlockView({ url }: { url: string }) {
 
   if (embed) {
     return (
-      <div className="aspect-video w-full max-w-2xl overflow-hidden rounded-lg bg-black">
+      <div className="mx-auto aspect-video w-full max-w-2xl overflow-hidden rounded-lg bg-black">
         <iframe
           src={embed}
           title={url}

@@ -204,7 +204,9 @@ export function CalendarPage() {
               ))}
             </div>
             <div className="mt-3 flex flex-wrap gap-3 text-xs text-slate-500 dark:text-slate-400">
-              {(Object.keys(TYPE_LABELS) as CalendarEventType[]).map((t) => (
+              {(Object.keys(TYPE_LABELS) as CalendarEventType[])
+                .filter((t) => t !== 'MANUAL' && t !== 'EXAM')
+                .map((t) => (
                 <span key={t} className="flex items-center gap-1.5">
                   <span
                     className="h-2.5 w-2.5 rounded-full"

@@ -39,7 +39,7 @@ export function PdfPageView({ fileId, pageNumber }: { fileId: string; pageNumber
   }
 
   return (
-    <div className="max-w-full overflow-x-auto rounded-lg border border-slate-200 bg-white p-2 dark:border-slate-700 dark:bg-slate-900">
+    <div className="mx-auto w-fit max-w-full overflow-x-auto rounded-lg border border-slate-200 bg-white p-2 dark:border-slate-700 dark:bg-slate-900">
       <canvas ref={canvasRef} className="max-w-full" />
       <p className="mt-1 text-center text-xs text-slate-400 dark:text-slate-500">
         Seite {pageNumber}
