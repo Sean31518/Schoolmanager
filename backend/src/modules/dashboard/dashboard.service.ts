@@ -36,7 +36,7 @@ export async function getDashboard(userId: string) {
   const [upcomingHomework, upcomingEvents, generalNotesRaw] = await Promise.all([
     prisma.homework.findMany({
       where: { userId, done: false },
-      include: { subject: true },
+      include: { subject: true, subtasks: { orderBy: { sortOrder: "asc" } } },
       orderBy: [{ dueDate: "asc" }],
       take: 10,
     }),

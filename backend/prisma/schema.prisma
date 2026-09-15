@@ -190,7 +190,22 @@ model Homework {
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 
+  subtasks HomeworkSubtask[]
+
   @@index([userId, dueDate])
+}
+
+model HomeworkSubtask {
+  id         String   @id @default(cuid())
+  homeworkId String
+  homework   Homework @relation(fields: [homeworkId], references: [id], onDelete: Cascade)
+  title      String
+  done       Boolean  @default(false)
+  sortOrder  Int      @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([homeworkId])
 }
 
 model GeneralNote {

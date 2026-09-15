@@ -1,3 +1,11 @@
+export interface HomeworkSubtaskDto {
+  id: string
+  homeworkId: string
+  title: string
+  done: boolean
+  sortOrder: number
+}
+
 export interface HomeworkDto {
   id: string
   title: string
@@ -6,4 +14,5 @@ export interface HomeworkDto {
   dueDate: string | null
   done: boolean
   note: string | null
+  subtasks: HomeworkSubtaskDto[]
 }

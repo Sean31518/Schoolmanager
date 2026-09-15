@@ -10,3 +10,7 @@ homeworkRouter.get("/", asyncHandler(homeworkController.list));
 homeworkRouter.post("/", asyncHandler(homeworkController.create));
 homeworkRouter.patch("/:id", asyncHandler(homeworkController.update));
 homeworkRouter.delete("/:id", asyncHandler(homeworkController.remove));
+
+homeworkRouter.post("/:homeworkId/subtasks", asyncHandler(homeworkController.createSubtask));
+homeworkRouter.patch("/subtasks/:subtaskId", asyncHandler(homeworkController.updateSubtask));
+homeworkRouter.delete("/subtasks/:subtaskId", asyncHandler(homeworkController.removeSubtask));
