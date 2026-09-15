@@ -92,10 +92,17 @@ export function CalendarPage() {
   const eventsByDay = useMemo(() => {
     const map = new Map<string, CalendarEventDto[]>()
     for (const event of events ?? []) {
-      const key = event.startDate.slice(0, 10)
-      const list = map.get(key) ?? []
-      list.push(event)
-      map.set(key, list)
+      const startKey = event.startDate.slice(0, 10)
+      const endKey = (event.endDate ?? event.startDate).slice(0, 10)
+      const cursor = new Date(`${startKey}T00:00:00.000Z`)
+      const end = new Date(`${endKey}T00:00:00.000Z`)
+      while (cursor <= end) {
+        const key = toDateKey(cursor)
+        const list = map.get(key) ?? []
+        list.push(event)
+        map.set(key, list)
+        cursor.setUTCDate(cursor.getUTCDate() + 1)
+      }
     }
     return map
   }, [events])
