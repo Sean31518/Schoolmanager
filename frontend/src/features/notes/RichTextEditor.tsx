@@ -8,7 +8,8 @@ import TaskItem from '@tiptap/extension-task-item'
 import TaskList from '@tiptap/extension-task-list'
 import { EditorContent, useEditor, type Editor, type JSONContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
-import { useEffect } from 'react'
+import 'tippy.js/dist/tippy.css'
+import { SlashCommand } from './SlashCommand'
 
 interface RichTextEditorProps {
   content: JSONContent
@@ -18,37 +19,36 @@ interface RichTextEditorProps {
 export const EXTENSIONS = [
   StarterKit,
   Link.configure({ openOnClick: false }),
-  Placeholder.configure({ placeholder: 'Hier tippen...' }),
+  Placeholder.configure({ placeholder: 'Hier tippen... ("/" für Befehle)' }),
   Table.configure({ resizable: true }),
   TableRow,
   TableHeader,
   TableCell,
   TaskList,
   TaskItem.configure({ nested: true }),
+  SlashCommand,
 ]
 
 export function RichTextEditor({ content, onChange }: RichTextEditorProps) {
+  // `content` is only used as the editor's initial value on mount, deliberately
+  // never re-synced afterward: TipTap fires onUpdate per transaction (i.e. per
+  // keystroke), so feeding `content` back in via setContent on every prop
+  // change raced against live typing and clobbered just-typed characters and
+  // structural changes (headings/lists) with a stale snapshot. Callers that
+  // need to load a different document into a fresh editor (e.g. switching
+  // notes) should remount this component with a different `key` instead.
   const editor = useEditor({
     extensions: EXTENSIONS,
     content,
     onUpdate: ({ editor }) => onChange(editor.getJSON()),
   })
 
-  useEffect(() => {
-    if (!editor) return
-    const current = JSON.stringify(editor.getJSON())
-    const next = JSON.stringify(content)
-    if (current !== next) {
-      editor.commands.setContent(content, false)
-    }
-  }, [content, editor])
-
   return (
     <div className="rounded-lg border border-slate-300 bg-white dark:border-slate-600 dark:bg-slate-800">
       <EditorToolbar editor={editor} />
       <EditorContent
         editor={editor}
-        className="prose prose-sm max-w-none px-4 py-3 text-slate-800 focus:outline-none dark:text-slate-100"
+        className="prose prose-sm max-w-none px-4 py-3 focus:outline-none dark:prose-invert"
       />
     </div>
   )

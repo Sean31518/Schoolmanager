@@ -1,2 +1,25 @@
 @import "tailwindcss";
+@plugin "@tailwindcss/typography";
 @custom-variant dark (&:where(.dark, .dark *));
+
+/* Typography's default list-item bullet also applies to TipTap's task list;
+   task items get their own checkbox instead. */
+.prose ul[data-type='taskList'] {
+  list-style: none;
+  padding-left: 0;
+}
+.prose ul[data-type='taskList'] li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+.prose ul[data-type='taskList'] li > label {
+  margin-top: 0.35em;
+  user-select: none;
+}
+.prose ul[data-type='taskList'] li > div {
+  flex: 1;
+}
+.prose ul[data-type='taskList'] li > div > p {
+  margin: 0;
+}

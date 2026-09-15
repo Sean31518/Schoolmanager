@@ -106,7 +106,7 @@ export function NoteEditorPage() {
       </div>
 
       <div className="mt-4">
-        <RichTextEditor content={content} onChange={handleChange} />
+        <RichTextEditor key={noteId} content={content} onChange={handleChange} />
       </div>
     </div>
   )

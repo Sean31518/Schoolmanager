@@ -11,7 +11,7 @@ export function ReadOnlyContent({ content }: { content: JSONContent }) {
   return (
     <EditorContent
       editor={editor}
-      className="prose prose-sm max-w-none text-slate-800 dark:text-slate-100"
+      className="prose prose-sm max-w-none dark:prose-invert"
     />
   )
 }
