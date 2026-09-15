@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { formatGradeLevels } from '../../lib/gradeLevel'
+import { listNotes } from '../notes/api'
 import { useNotes, useTopics } from '../notes/hooks'
 import type { NoteDto } from '../notes/types'
 import { useSubjects } from '../subjects/hooks'
@@ -9,6 +10,20 @@ import { SectionContent } from './SectionContent'
 import type { SaveExamPrepItem } from './types'
 
 export type StoffSelection = Map<string, Map<number, string>>
+
+function mergeAllSections(selection: StoffSelection, notes: NoteDto[]): StoffSelection {
+  const next = new Map(selection)
+  for (const note of notes) {
+    const sections = extractSections(note.blocks)
+    if (sections.length === 0) continue
+    const forNote = new Map(next.get(note.id) ?? [])
+    for (const section of sections) {
+      forNote.set(section.index, section.label)
+    }
+    next.set(note.id, forNote)
+  }
+  return next
+}
 
 export function StoffBrowser({
   eventId,
@@ -36,6 +51,22 @@ export function StoffBrowser({
 
   const saveExamPrep = useSaveExamPrep(eventId)
   const [saving, setSaving] = useState(false)
+  const [bulkLoading, setBulkLoading] = useState(false)
+
+  function selectWholeTopic(topicNotes: NoteDto[]) {
+    setSelection((prev) => mergeAllSections(prev, topicNotes))
+  }
+
+  async function selectWholeSectionType() {
+    if (!topics || topics.length === 0) return
+    setBulkLoading(true)
+    try {
+      const notesPerTopic = await Promise.all(topics.map((t) => listNotes(t.id)))
+      setSelection((prev) => mergeAllSections(prev, notesPerTopic.flat()))
+    } finally {
+      setBulkLoading(false)
+    }
+  }
 
   function toggleSection(targetNoteId: string, sectionIndex: number, label: string) {
     setSelection((prev) => {
@@ -195,6 +226,15 @@ export function StoffBrowser({
 
           {sectionTypeId && !topicId && (
             <div className="space-y-1">
+              {topics && topics.length > 0 && (
+                <button
+                  onClick={() => void selectWholeSectionType()}
+                  disabled={bulkLoading}
+                  className="mb-1 block w-full rounded border border-dashed border-blue-300 p-2 text-left text-sm text-blue-600 hover:bg-blue-50 disabled:opacity-50 dark:border-blue-700 dark:text-blue-400 dark:hover:bg-blue-950"
+                >
+                  {bulkLoading ? 'Lädt...' : 'Alle Themen dieses Hefts auswählen'}
+                </button>
+              )}
               {(topics ?? []).map((t) => (
                 <button
                   key={t.id}
@@ -216,6 +256,14 @@ export function StoffBrowser({
 
           {topicId && !noteId && (
             <div className="space-y-1">
+              {notes && notes.length > 0 && (
+                <button
+                  onClick={() => selectWholeTopic(notes)}
+                  className="mb-1 block w-full rounded border border-dashed border-blue-300 p-2 text-left text-sm text-blue-600 hover:bg-blue-50 dark:border-blue-700 dark:text-blue-400 dark:hover:bg-blue-950"
+                >
+                  Alle Notizen dieses Themas auswählen
+                </button>
+              )}
               {(notes ?? []).map((n) => (
                 <button
                   key={n.id}

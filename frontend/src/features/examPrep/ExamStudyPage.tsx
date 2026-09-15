@@ -29,7 +29,7 @@ export function ExamStudyPage() {
     <div className="space-y-6">
       <div>
         <Link
-          to={`/exams/${eventId}`}
+          to={`/exams/${eventId}/edit`}
           className="text-sm text-blue-600 hover:underline dark:text-blue-400"
         >
           ← Auswahl bearbeiten
@@ -43,7 +43,7 @@ export function ExamStudyPage() {
         <p className="text-slate-400 dark:text-slate-500">
           Noch keine Inhalte ausgewählt.{' '}
           <Link
-            to={`/exams/${eventId}`}
+            to={`/exams/${eventId}/edit`}
             className="text-blue-600 hover:underline dark:text-blue-400"
           >
             Jetzt auswählen

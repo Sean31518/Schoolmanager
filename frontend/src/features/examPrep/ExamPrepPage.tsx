@@ -73,7 +73,7 @@ export function ExamPrepPage() {
         </button>
         {(existing?.items.length ?? 0) > 0 && (
           <Link
-            to={`/exams/${eventId}/study`}
+            to={`/exams/${eventId}`}
             className="text-sm text-blue-600 hover:underline dark:text-blue-400"
           >
             Zur Lernansicht →
