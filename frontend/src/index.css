@@ -23,3 +23,27 @@
 .prose ul[data-type='taskList'] li > div > p {
   margin: 0;
 }
+
+/* Tailwind Typography only draws a thin row separator by default, leaving
+   the table's outer edge and column boundaries invisible. */
+.prose table {
+  border-collapse: collapse;
+  width: 100%;
+}
+.prose th,
+.prose td {
+  border: 1px solid #cbd5e1;
+  padding: 0.375rem 0.75rem;
+}
+.prose th {
+  background-color: #f1f5f9;
+}
+@variant dark {
+  .prose th,
+  .prose td {
+    border-color: #475569;
+  }
+  .prose th {
+    background-color: #334155;
+  }
+}
