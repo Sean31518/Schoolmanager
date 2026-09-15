@@ -1,5 +1,6 @@
 import type { JSONContent } from '@tiptap/react'
 import { Link, useParams } from 'react-router-dom'
+import { formatGradeLevels } from '../../lib/gradeLevel'
 import { ReadOnlyContent } from '../notes/ReadOnlyContent'
 import { useExamPrep } from './hooks'
 import { extractSections, type NoteSection } from './sections'
@@ -62,7 +63,7 @@ export function ExamStudyPage() {
                   style={{ backgroundColor: item.subjectColor }}
                 />
                 {item.subjectName} · {item.sectionTypeName} · {item.topicName} · {item.title}
-                {item.gradeLevel ? ` · Klasse ${item.gradeLevel}` : ''}
+                {item.gradeLevels.length > 0 ? ` · ${formatGradeLevels(item.gradeLevels)}` : ''}
               </div>
               <h2 className="mt-1 text-lg font-semibold text-slate-800 dark:text-slate-100">
                 {section.label}

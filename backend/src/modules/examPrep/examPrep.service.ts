@@ -5,7 +5,12 @@ import { prisma } from "../../lib/prisma.js";
 import type { saveExamPrepSchema } from "./examPrep.schema.js";
 
 const noteWithContext = {
-  topic: { include: { noteSectionType: { include: { subject: true } } } },
+  topic: {
+    include: {
+      noteSectionType: { include: { subject: true } },
+      gradeLevels: { orderBy: { gradeLevel: "asc" } },
+    },
+  },
 } as const;
 
 function mapNote(note: {
@@ -15,7 +20,7 @@ function mapNote(note: {
   topic: {
     id: string;
     name: string;
-    gradeLevel: number | null;
+    gradeLevels: { gradeLevel: number }[];
     noteSectionType: { id: string; name: string; subject: { id: string; name: string; color: string } };
   };
 }) {
@@ -24,7 +29,7 @@ function mapNote(note: {
     title: note.title,
     topicId: note.topic.id,
     topicName: note.topic.name,
-    gradeLevel: note.topic.gradeLevel,
+    gradeLevels: note.topic.gradeLevels.map((g) => g.gradeLevel),
     contentJson: JSON.parse(note.contentJson) as unknown,
     sectionTypeId: note.topic.noteSectionType.id,
     sectionTypeName: note.topic.noteSectionType.name,
@@ -106,7 +111,7 @@ export async function getExamPrepCandidates(userId: string, eventId: string, all
     include: noteWithContext,
     orderBy: [
       { topic: { noteSectionType: { subject: { name: "asc" } } } },
-      { topic: { gradeLevel: "asc" } },
+      { topic: { name: "asc" } },
     ],
   });
 

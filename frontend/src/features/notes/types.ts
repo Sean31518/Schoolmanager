@@ -2,7 +2,7 @@ export interface TopicDto {
   id: string
   noteSectionTypeId: string
   name: string
-  gradeLevel: number | null
+  gradeLevels: number[]
   sortOrder: number
   notes?: { id: string }[]
 }

@@ -7,7 +7,7 @@ export function listTopics(sectionTypeId: string) {
 
 export function createTopic(
   sectionTypeId: string,
-  data: { name: string; gradeLevel?: number | null },
+  data: { name: string; gradeLevels?: number[] },
 ) {
   return apiFetch<TopicDto>(`/section-types/${sectionTypeId}/topics`, {
     method: 'POST',
@@ -17,7 +17,7 @@ export function createTopic(
 
 export function updateTopic(
   topicId: string,
-  data: Partial<{ name: string; gradeLevel: number | null }>,
+  data: Partial<{ name: string; gradeLevels: number[] }>,
 ) {
   return apiFetch<TopicDto>(`/topics/${topicId}`, { method: 'PATCH', body: JSON.stringify(data) })
 }

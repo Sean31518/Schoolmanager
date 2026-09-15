@@ -2,7 +2,7 @@ import { z } from "zod";
 
 export const createTopicSchema = z.object({
   name: z.string().min(1).max(80),
-  gradeLevel: z.number().int().min(1).max(13).nullable().optional(),
+  gradeLevels: z.array(z.number().int().min(1).max(13)).optional(),
 });
 
 export const updateTopicSchema = createTopicSchema.partial();

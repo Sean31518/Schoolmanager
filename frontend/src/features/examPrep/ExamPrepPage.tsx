@@ -1,6 +1,7 @@
 import type { JSONContent } from '@tiptap/react'
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
+import { formatGradeLevels } from '../../lib/gradeLevel'
 import { useExams } from '../calendar/hooks'
 import { useExamPrep, useExamPrepCandidates, useSaveExamPrep } from './hooks'
 import { extractSections } from './sections'
@@ -150,7 +151,9 @@ export function ExamPrepPage() {
                     </div>
                     <div className="text-xs text-slate-400 dark:text-slate-500">
                       {candidate.title}
-                      {candidate.gradeLevel ? ` · Klasse ${candidate.gradeLevel}` : ''}
+                      {candidate.gradeLevels.length > 0
+                        ? ` · ${formatGradeLevels(candidate.gradeLevels)}`
+                        : ''}
                     </div>
                   </div>
                 </div>

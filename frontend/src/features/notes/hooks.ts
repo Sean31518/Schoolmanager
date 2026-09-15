@@ -12,7 +12,7 @@ export function useTopics(sectionTypeId: string) {
 export function useCreateTopic(sectionTypeId: string) {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (data: { name: string; gradeLevel?: number | null }) =>
+    mutationFn: (data: { name: string; gradeLevels?: number[] }) =>
       api.createTopic(sectionTypeId, data),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['topics', sectionTypeId] }),
   })

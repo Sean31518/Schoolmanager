@@ -5,7 +5,7 @@ import { app, registerUser } from "./helpers.js";
 async function setupSubjectWithNote(
   headers: Record<string, string>,
   noteContent: unknown,
-  gradeLevel = 7,
+  gradeLevels = [7],
 ) {
   const subjectRes = await request(app)
     .post("/api/subjects")
@@ -22,7 +22,7 @@ async function setupSubjectWithNote(
   const topicRes = await request(app)
     .post(`/api/section-types/${sectionTypeId}/topics`)
     .set(headers)
-    .send({ name: "Wellen", gradeLevel });
+    .send({ name: "Wellen", gradeLevels });
   const topicId = topicRes.body.id as string;
 
   const noteRes = await request(app)
@@ -114,7 +114,7 @@ describe("Exam prep", () => {
     const otherTopicRes = await request(app)
       .post(`/api/section-types/${otherSectionRes.body.id}/topics`)
       .set(headers)
-      .send({ name: "Grammatik", gradeLevel: 7 });
+      .send({ name: "Grammatik", gradeLevels: [7] });
     await request(app)
       .post(`/api/topics/${otherTopicRes.body.id}/notes`)
       .set(headers)

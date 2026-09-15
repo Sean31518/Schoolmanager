@@ -94,14 +94,24 @@ model Topic {
   noteSectionTypeId String
   noteSectionType   NoteSectionType @relation(fields: [noteSectionTypeId], references: [id], onDelete: Cascade)
   name              String
-  gradeLevel        Int?
   sortOrder         Int             @default(0)
   createdAt         DateTime        @default(now())
   updatedAt         DateTime        @updatedAt
 
-  notes Note[]
+  notes       Note[]
+  gradeLevels TopicGradeLevel[]
 
   @@index([noteSectionTypeId])
+}
+
+model TopicGradeLevel {
+  id         String @id @default(cuid())
+  topicId    String
+  topic      Topic  @relation(fields: [topicId], references: [id], onDelete: Cascade)
+  gradeLevel Int
+
+  @@unique([topicId, gradeLevel])
+  @@index([topicId])
 }
 
 model Note {

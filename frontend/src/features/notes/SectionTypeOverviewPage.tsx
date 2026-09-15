@@ -1,11 +1,50 @@
 import { useState, type FormEvent } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { ApiRequestError } from '../../lib/apiClient'
+import { formatGradeLevel, formatGradeLevels } from '../../lib/gradeLevel'
 import { useAuth } from '../auth/AuthContext'
 import { useCreateTopic, useDeleteTopic, useTopics, useUpdateTopic } from './hooks'
 import type { TopicDto } from './types'
 
 const GRADE_LEVELS = Array.from({ length: 13 }, (_, i) => i + 1)
+
+function GradeLevelPicker({
+  selected,
+  onChange,
+}: {
+  selected: number[]
+  onChange: (levels: number[]) => void
+}) {
+  function toggle(level: number) {
+    onChange(
+      selected.includes(level) ? selected.filter((l) => l !== level) : [...selected, level],
+    )
+  }
+
+  return (
+    <div className="flex flex-wrap gap-1.5">
+      {GRADE_LEVELS.map((level) => {
+        const isSelected = selected.includes(level)
+        return (
+          <button
+            key={level}
+            type="button"
+            onClick={() => toggle(level)}
+            aria-pressed={isSelected}
+            className={
+              'rounded border px-2 py-1 text-xs font-medium ' +
+              (isSelected
+                ? 'border-blue-600 bg-blue-600 text-white'
+                : 'border-slate-300 bg-white text-slate-600 hover:bg-slate-100 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-700')
+            }
+          >
+            {formatGradeLevel(level)}
+          </button>
+        )
+      })}
+    </div>
+  )
+}
 
 export function SectionTypeOverviewPage() {
   const { subjectId = '', sectionTypeId = '' } = useParams()
@@ -13,14 +52,16 @@ export function SectionTypeOverviewPage() {
   const { data: topics, isLoading } = useTopics(sectionTypeId)
   const createTopic = useCreateTopic(sectionTypeId)
   const [name, setName] = useState('')
-  const [gradeLevel, setGradeLevel] = useState(settings?.currentGradeLevel ?? 5)
+  const [gradeLevels, setGradeLevels] = useState<number[]>(
+    settings?.currentGradeLevel ? [settings.currentGradeLevel] : [],
+  )
   const [error, setError] = useState<string | null>(null)
 
   async function handleCreate(e: FormEvent) {
     e.preventDefault()
     setError(null)
     try {
-      await createTopic.mutateAsync({ name, gradeLevel })
+      await createTopic.mutateAsync({ name, gradeLevels })
       setName('')
     } catch (err) {
       setError(
@@ -46,20 +87,12 @@ export function SectionTypeOverviewPage() {
             className="mt-1 block rounded border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
           />
         </label>
-        <label className="text-sm text-slate-600 dark:text-slate-300">
-          Klassenstufe
-          <select
-            value={gradeLevel}
-            onChange={(e) => setGradeLevel(Number(e.target.value))}
-            className="mt-1 block rounded border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
-          >
-            {GRADE_LEVELS.map((level) => (
-              <option key={level} value={level}>
-                Klasse {level}
-              </option>
-            ))}
-          </select>
-        </label>
+        <div className="text-sm text-slate-600 dark:text-slate-300">
+          Klassenstufe(n)
+          <div className="mt-1">
+            <GradeLevelPicker selected={gradeLevels} onChange={setGradeLevels} />
+          </div>
+        </div>
         <button
           type="submit"
           disabled={createTopic.isPending}
@@ -98,12 +131,12 @@ function TopicRow({
   const deleteTopic = useDeleteTopic(sectionTypeId)
   const [isEditing, setIsEditing] = useState(false)
   const [name, setName] = useState(topic.name)
-  const [gradeLevel, setGradeLevel] = useState(topic.gradeLevel ?? '')
+  const [gradeLevels, setGradeLevels] = useState<number[]>(topic.gradeLevels)
   const [error, setError] = useState<string | null>(null)
 
   function startEditing() {
     setName(topic.name)
-    setGradeLevel(topic.gradeLevel ?? '')
+    setGradeLevels(topic.gradeLevels)
     setError(null)
     setIsEditing(true)
   }
@@ -114,7 +147,7 @@ function TopicRow({
     try {
       await updateTopic.mutateAsync({
         topicId: topic.id,
-        data: { name, gradeLevel: gradeLevel === '' ? null : Number(gradeLevel) },
+        data: { name, gradeLevels },
       })
       setIsEditing(false)
     } catch (err) {
@@ -144,21 +177,12 @@ function TopicRow({
               className="mt-1 block rounded border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
             />
           </label>
-          <label className="text-sm text-slate-600 dark:text-slate-300">
-            Klassenstufe
-            <select
-              value={gradeLevel}
-              onChange={(e) => setGradeLevel(e.target.value === '' ? '' : Number(e.target.value))}
-              className="mt-1 block rounded border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
-            >
-              <option value="">–</option>
-              {GRADE_LEVELS.map((level) => (
-                <option key={level} value={level}>
-                  Klasse {level}
-                </option>
-              ))}
-            </select>
-          </label>
+          <div className="text-sm text-slate-600 dark:text-slate-300">
+            Klassenstufe(n)
+            <div className="mt-1">
+              <GradeLevelPicker selected={gradeLevels} onChange={setGradeLevels} />
+            </div>
+          </div>
           <button
             type="submit"
             disabled={updateTopic.isPending}
@@ -187,7 +211,7 @@ function TopicRow({
       >
         <span className="font-medium text-slate-800 dark:text-slate-100">{topic.name}</span>
         <span className="ml-auto text-xs text-slate-400 dark:text-slate-500">
-          {topic.gradeLevel ? `Klasse ${topic.gradeLevel} · ` : ''}
+          {topic.gradeLevels.length > 0 ? `${formatGradeLevels(topic.gradeLevels)} · ` : ''}
           {topic.notes?.length ?? 0} Notiz(en)
         </span>
       </Link>

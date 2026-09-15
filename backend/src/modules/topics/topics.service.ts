@@ -8,13 +8,21 @@ import type {
   updateTopicSchema,
 } from "./topics.schema.js";
 
+function mapTopic<T extends { gradeLevels: { gradeLevel: number }[] }>(topic: T) {
+  return { ...topic, gradeLevels: topic.gradeLevels.map((g) => g.gradeLevel) };
+}
+
 export async function listTopics(userId: string, sectionTypeId: string) {
   await requireOwnedSectionType(userId, sectionTypeId);
-  return prisma.topic.findMany({
+  const topics = await prisma.topic.findMany({
     where: { noteSectionTypeId: sectionTypeId },
     orderBy: { sortOrder: "asc" },
-    include: { notes: { select: { id: true }, orderBy: { sortOrder: "asc" } } },
+    include: {
+      notes: { select: { id: true }, orderBy: { sortOrder: "asc" } },
+      gradeLevels: { orderBy: { gradeLevel: "asc" } },
+    },
   });
+  return topics.map(mapTopic);
 }
 
 export async function createTopic(
@@ -24,14 +32,18 @@ export async function createTopic(
 ) {
   await requireOwnedSectionType(userId, sectionTypeId);
   const count = await prisma.topic.count({ where: { noteSectionTypeId: sectionTypeId } });
-  return prisma.topic.create({
+  const topic = await prisma.topic.create({
     data: {
       noteSectionTypeId: sectionTypeId,
       name: data.name,
-      gradeLevel: data.gradeLevel ?? null,
       sortOrder: count,
+      gradeLevels: {
+        create: (data.gradeLevels ?? []).map((gradeLevel) => ({ gradeLevel })),
+      },
     },
+    include: { gradeLevels: { orderBy: { gradeLevel: "asc" } } },
   });
+  return mapTopic(topic);
 }
 
 export async function updateTopic(
@@ -40,7 +52,23 @@ export async function updateTopic(
   data: z.infer<typeof updateTopicSchema>,
 ) {
   await requireOwnedTopic(userId, topicId);
-  return prisma.topic.update({ where: { id: topicId }, data });
+  const { gradeLevels, ...rest } = data;
+  const topic = await prisma.topic.update({
+    where: { id: topicId },
+    data: {
+      ...rest,
+      ...(gradeLevels !== undefined
+        ? {
+            gradeLevels: {
+              deleteMany: {},
+              create: gradeLevels.map((gradeLevel) => ({ gradeLevel })),
+            },
+          }
+        : {}),
+    },
+    include: { gradeLevels: { orderBy: { gradeLevel: "asc" } } },
+  });
+  return mapTopic(topic);
 }
 
 export async function deleteTopic(userId: string, topicId: string) {

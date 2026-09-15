@@ -3,7 +3,7 @@ export interface ExamPrepCandidateDto {
   title: string
   topicId: string
   topicName: string
-  gradeLevel: number | null
+  gradeLevels: number[]
   contentJson: unknown
   sectionTypeId: string
   sectionTypeName: string
