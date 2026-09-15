@@ -3,8 +3,9 @@ import { Link } from 'react-router-dom'
 import { ApiRequestError } from '../../lib/apiClient'
 import { useSubjects } from '../subjects/hooks'
 import { EventEditModal } from './EventEditModal'
-import { TYPE_COLORS, TYPE_LABELS, getEffectiveColor } from './eventColors'
+import { TYPE_COLORS, TYPE_LABELS } from './eventColors'
 import { useCalendarEvents, useCreateCalendarEvent } from './hooks'
+import { WeekRow } from './WeekRow'
 import type { CalendarEventDto, CalendarEventType } from './types'
 
 const WEEKDAY_LABELS = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So']
@@ -73,23 +74,13 @@ export function CalendarPage() {
     }
   }
 
-  const eventsByDay = useMemo(() => {
-    const map = new Map<string, CalendarEventDto[]>()
-    for (const event of events ?? []) {
-      const startKey = event.startDate.slice(0, 10)
-      const endKey = (event.endDate ?? event.startDate).slice(0, 10)
-      const cursor = new Date(`${startKey}T00:00:00.000Z`)
-      const end = new Date(`${endKey}T00:00:00.000Z`)
-      while (cursor <= end) {
-        const key = toDateKey(cursor)
-        const list = map.get(key) ?? []
-        list.push(event)
-        map.set(key, list)
-        cursor.setUTCDate(cursor.getUTCDate() + 1)
-      }
+  const weeks = useMemo(() => {
+    const result: Date[][] = []
+    for (let i = 0; i < monthGrid.length; i += 7) {
+      result.push(monthGrid.slice(i, i + 7))
     }
-    return map
-  }, [events])
+    return result
+  }, [monthGrid])
 
   const monthLabel = new Date(Date.UTC(year, month, 1)).toLocaleDateString('de-DE', {
     month: 'long',
@@ -190,61 +181,27 @@ export function CalendarPage() {
           <p className="text-slate-400 dark:text-slate-500">Lädt...</p>
         ) : (
           <>
-            <div className="grid grid-cols-7 gap-px overflow-hidden rounded border border-slate-200 bg-slate-200 text-xs font-semibold text-slate-500 dark:border-slate-700 dark:bg-slate-700 dark:text-slate-400">
+            <div className="grid grid-cols-7 rounded-t border border-b-0 border-slate-200 text-xs font-semibold text-slate-500 dark:border-slate-700 dark:text-slate-400">
               {WEEKDAY_LABELS.map((label) => (
-                <div key={label} className="bg-slate-50 px-2 py-1 text-center dark:bg-slate-800">
+                <div
+                  key={label}
+                  className="bg-slate-50 px-2 py-1 text-center dark:bg-slate-900"
+                >
                   {label}
                 </div>
               ))}
             </div>
-            <div className="grid grid-cols-7 gap-px overflow-hidden rounded border border-t-0 border-slate-200 bg-slate-200 dark:border-slate-700 dark:bg-slate-700">
-              {monthGrid.map((day) => {
-                const dayKey = toDateKey(day)
-                const isCurrentMonth = day.getUTCMonth() === month
-                const dayEvents = eventsByDay.get(dayKey) ?? []
-                const isToday = dayKey === todayKey
-                return (
-                  <div
-                    key={dayKey}
-                    className={
-                      isCurrentMonth
-                        ? 'min-h-[6rem] bg-white p-1.5 dark:bg-slate-800'
-                        : 'min-h-[6rem] bg-slate-50 p-1.5 dark:bg-slate-900'
-                    }
-                  >
-                    <div
-                      className={
-                        isToday
-                          ? 'inline-flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-xs font-semibold text-white'
-                          : isCurrentMonth
-                            ? 'text-xs font-medium text-slate-600 dark:text-slate-300'
-                            : 'text-xs font-medium text-slate-300 dark:text-slate-600'
-                      }
-                    >
-                      {day.getUTCDate()}
-                    </div>
-                    <div className="mt-1 space-y-0.5">
-                      {dayEvents.slice(0, 3).map((event) => (
-                        <button
-                          key={event.id}
-                          type="button"
-                          onClick={() => setEditingEvent(event)}
-                          title={event.title}
-                          className="block w-full truncate rounded px-1 py-0.5 text-left text-[11px] font-medium text-white"
-                          style={{ backgroundColor: getEffectiveColor(event) }}
-                        >
-                          {event.title}
-                        </button>
-                      ))}
-                      {dayEvents.length > 3 && (
-                        <div className="text-[11px] text-slate-400 dark:text-slate-500">
-                          +{dayEvents.length - 3} mehr
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )
-              })}
+            <div className="overflow-hidden rounded-b border border-slate-200 dark:border-slate-700">
+              {weeks.map((week) => (
+                <WeekRow
+                  key={toDateKey(week[0])}
+                  week={week}
+                  month={month}
+                  todayKey={todayKey}
+                  events={events ?? []}
+                  onEventClick={setEditingEvent}
+                />
+              ))}
             </div>
             <div className="mt-3 flex flex-wrap gap-3 text-xs text-slate-500 dark:text-slate-400">
               {(Object.keys(TYPE_LABELS) as CalendarEventType[]).map((t) => (
