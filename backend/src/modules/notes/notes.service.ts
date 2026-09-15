@@ -4,12 +4,19 @@ import { requireOwnedNote, requireOwnedTopic } from "../../lib/ownership.js";
 import { prisma } from "../../lib/prisma.js";
 import type { createNoteSchema, reorderNotesSchema, updateNoteSchema } from "./notes.schema.js";
 
-function serializeContent(contentJson: unknown) {
-  return JSON.stringify(contentJson ?? { type: "doc", content: [] });
-}
+const fileSelect = { id: true, originalName: true, mimeType: true, size: true } as const;
+const blocksInclude = {
+  blocks: { orderBy: { sortOrder: "asc" as const }, include: { file: { select: fileSelect } } },
+};
 
-function mapNote<T extends { contentJson: string }>(note: T) {
-  return { ...note, contentJson: JSON.parse(note.contentJson) as unknown };
+function mapNote<T extends { blocks: { contentJson: string | null }[] }>(note: T) {
+  return {
+    ...note,
+    blocks: note.blocks.map((block) => ({
+      ...block,
+      contentJson: block.contentJson !== null ? (JSON.parse(block.contentJson) as unknown) : null,
+    })),
+  };
 }
 
 export async function listNotes(userId: string, topicId: string) {
@@ -17,12 +24,14 @@ export async function listNotes(userId: string, topicId: string) {
   const notes = await prisma.note.findMany({
     where: { topicId },
     orderBy: { sortOrder: "asc" },
+    include: blocksInclude,
   });
   return notes.map(mapNote);
 }
 
 export async function getNote(userId: string, noteId: string) {
-  const note = await requireOwnedNote(userId, noteId);
+  await requireOwnedNote(userId, noteId);
+  const note = await prisma.note.findUniqueOrThrow({ where: { id: noteId }, include: blocksInclude });
   return mapNote(note);
 }
 
@@ -37,9 +46,12 @@ export async function createNote(
     data: {
       topicId,
       title: data.title,
-      contentJson: serializeContent(data.contentJson),
       sortOrder: count,
+      blocks: {
+        create: [{ type: "TEXT", sortOrder: 0, contentJson: JSON.stringify({ type: "doc", content: [] }) }],
+      },
     },
+    include: blocksInclude,
   });
   return mapNote(note);
 }
@@ -54,10 +66,8 @@ export async function updateNote(
     where: { id: noteId },
     data: {
       ...(data.title !== undefined ? { title: data.title } : {}),
-      ...(data.contentJson !== undefined
-        ? { contentJson: serializeContent(data.contentJson) }
-        : {}),
     },
+    include: blocksInclude,
   });
   return mapNote(note);
 }
@@ -94,6 +104,10 @@ export async function reorderNotes(
     ),
   );
 
-  const notes = await prisma.note.findMany({ where: { topicId }, orderBy: { sortOrder: "asc" } });
+  const notes = await prisma.note.findMany({
+    where: { topicId },
+    orderBy: { sortOrder: "asc" },
+    include: blocksInclude,
+  });
   return notes.map(mapNote);
 }

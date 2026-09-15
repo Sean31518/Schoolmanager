@@ -46,3 +46,21 @@ export async function requireOwnedNote(userId: string, noteId: string) {
   }
   return note;
 }
+
+export async function requireOwnedNoteBlock(userId: string, blockId: string) {
+  const block = await prisma.noteBlock.findFirst({
+    where: { id: blockId, note: { topic: { noteSectionType: { subject: { userId } } } } },
+  });
+  if (!block) {
+    throw new NotFoundError("Block nicht gefunden");
+  }
+  return block;
+}
+
+export async function requireOwnedFile(userId: string, fileId: string) {
+  const file = await prisma.uploadedFile.findFirst({ where: { id: fileId, userId } });
+  if (!file) {
+    throw new NotFoundError("Datei nicht gefunden");
+  }
+  return file;
+}

@@ -4,6 +4,7 @@ const envSchema = z.object({
   PORT: z.coerce.number().default(6969),
   NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
   DATABASE_URL: z.string().min(1),
+  UPLOADS_DIR: z.string().default("./uploads"),
   JWT_ACCESS_SECRET: z.string().min(16),
   JWT_REFRESH_SECRET: z.string().min(16),
   JWT_ACCESS_EXPIRES_IN: z.string().default("15m"),

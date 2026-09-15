@@ -4,7 +4,10 @@ import { requireOwnedCalendarEvent, requireOwnedNote } from "../../lib/ownership
 import { prisma } from "../../lib/prisma.js";
 import type { saveExamPrepSchema } from "./examPrep.schema.js";
 
+const fileSelect = { id: true, originalName: true, mimeType: true, size: true } as const;
+
 const noteWithContext = {
+  blocks: { orderBy: { sortOrder: "asc" as const }, include: { file: { select: fileSelect } } },
   topic: {
     include: {
       noteSectionType: { include: { subject: true } },
@@ -16,7 +19,16 @@ const noteWithContext = {
 function mapNote(note: {
   id: string;
   title: string;
-  contentJson: string;
+  blocks: {
+    id: string;
+    type: string;
+    sortOrder: number;
+    contentJson: string | null;
+    fileId: string | null;
+    pageNumber: number | null;
+    url: string | null;
+    file: { id: string; originalName: string; mimeType: string; size: number } | null;
+  }[];
   topic: {
     id: string;
     name: string;
@@ -30,7 +42,10 @@ function mapNote(note: {
     topicId: note.topic.id,
     topicName: note.topic.name,
     gradeLevels: note.topic.gradeLevels.map((g) => g.gradeLevel),
-    contentJson: JSON.parse(note.contentJson) as unknown,
+    blocks: note.blocks.map((block) => ({
+      ...block,
+      contentJson: block.contentJson !== null ? (JSON.parse(block.contentJson) as unknown) : null,
+    })),
     sectionTypeId: note.topic.noteSectionType.id,
     sectionTypeName: note.topic.noteSectionType.name,
     subjectId: note.topic.noteSectionType.subject.id,

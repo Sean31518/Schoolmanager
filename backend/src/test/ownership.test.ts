@@ -30,7 +30,7 @@ describe("Ownership isolation between users", () => {
     const noteRes = await request(app)
       .post(`/api/topics/${topicId}/notes`)
       .set(aHeaders)
-      .send({ title: "Wellen Notiz", contentJson: { type: "doc", content: [] } });
+      .send({ title: "Wellen Notiz" });
     const noteId = noteRes.body.id as string;
 
     expect((await request(app).get(`/api/subjects/${subjectId}`).set(bHeaders)).status).toBe(

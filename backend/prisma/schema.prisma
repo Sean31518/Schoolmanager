@@ -31,6 +31,7 @@ model User {
   homework       Homework[]
   generalNotes   GeneralNote[]
   refreshTokens  RefreshToken[]
+  uploadedFiles  UploadedFile[]
 }
 
 model RefreshToken {
@@ -115,18 +116,56 @@ model TopicGradeLevel {
 }
 
 model Note {
-  id          String   @id @default(cuid())
-  topicId     String
-  topic       Topic    @relation(fields: [topicId], references: [id], onDelete: Cascade)
-  title       String
-  contentJson String
-  sortOrder   Int      @default(0)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id        String   @id @default(cuid())
+  topicId   String
+  topic     Topic    @relation(fields: [topicId], references: [id], onDelete: Cascade)
+  title     String
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
+  blocks        NoteBlock[]
   examPrepItems ExamPrepItem[]
 
   @@index([topicId])
+}
+
+// type: TEXT | PDF_PAGE | VIDEO | LINK (validiert in noteBlocks.schema.ts)
+// TEXT nutzt contentJson (TipTap-Dokument), PDF_PAGE/VIDEO nutzen fileId
+// (PDF_PAGE zusätzlich pageNumber, da jede Seite ein eigener Block ist -
+// das erlaubt manuelles Einfügen von Textblöcken zwischen Seiten über den
+// normalen Block-Reihenfolge-Mechanismus), LINK nutzt url.
+model NoteBlock {
+  id          String        @id @default(cuid())
+  noteId      String
+  note        Note          @relation(fields: [noteId], references: [id], onDelete: Cascade)
+  type        String
+  sortOrder   Int           @default(0)
+  contentJson String?
+  fileId      String?
+  file        UploadedFile? @relation(fields: [fileId], references: [id], onDelete: SetNull)
+  pageNumber  Int?
+  url         String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@index([noteId])
+  @@index([fileId])
+}
+
+model UploadedFile {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  originalName String
+  mimeType     String
+  size         Int
+  storagePath  String
+  createdAt    DateTime @default(now())
+
+  blocks NoteBlock[]
+
+  @@index([userId])
 }
 
 model TimeGridSlot {

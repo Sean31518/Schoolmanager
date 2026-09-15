@@ -2,11 +2,7 @@ import request from "supertest";
 import { describe, expect, it } from "vitest";
 import { app, registerUser } from "./helpers.js";
 
-async function setupSubjectWithNote(
-  headers: Record<string, string>,
-  noteContent: unknown,
-  gradeLevels = [7],
-) {
+async function setupSubjectWithNote(headers: Record<string, string>, gradeLevels = [7]) {
   const subjectRes = await request(app)
     .post("/api/subjects")
     .set(headers)
@@ -28,27 +24,16 @@ async function setupSubjectWithNote(
   const noteRes = await request(app)
     .post(`/api/topics/${topicId}/notes`)
     .set(headers)
-    .send({ title: "Wellen Notiz", contentJson: noteContent });
+    .send({ title: "Wellen Notiz" });
 
   return { subjectId, sectionTypeId, topicId, noteId: noteRes.body.id as string };
 }
-
-const SAMPLE_DOC = {
-  type: "doc",
-  content: [
-    { type: "paragraph", content: [{ type: "text", text: "Intro" }] },
-    { type: "heading", attrs: { level: 1 }, content: [{ type: "text", text: "Bruchrechnung" }] },
-    { type: "paragraph", content: [{ type: "text", text: "Regel 1" }] },
-    { type: "heading", attrs: { level: 1 }, content: [{ type: "text", text: "Prozentrechnung" }] },
-    { type: "paragraph", content: [{ type: "text", text: "Regel 2" }] },
-  ],
-};
 
 describe("Exam prep", () => {
   it("creates an exam event with a subject, saves a section selection, and reads it back", async () => {
     const user = await registerUser();
     const headers = { Authorization: `Bearer ${user.accessToken}` };
-    const { subjectId, noteId } = await setupSubjectWithNote(headers, SAMPLE_DOC);
+    const { subjectId, noteId } = await setupSubjectWithNote(headers);
 
     const eventRes = await request(app)
       .post("/api/calendar-events")
@@ -99,7 +84,7 @@ describe("Exam prep", () => {
   it("scopes candidates to the exam's subject unless allSubjects=true", async () => {
     const user = await registerUser();
     const headers = { Authorization: `Bearer ${user.accessToken}` };
-    const { subjectId, noteId } = await setupSubjectWithNote(headers, SAMPLE_DOC);
+    const { subjectId, noteId } = await setupSubjectWithNote(headers);
 
     // A second subject with its own note.
     const otherSubjectRes = await request(app)
@@ -118,7 +103,7 @@ describe("Exam prep", () => {
     await request(app)
       .post(`/api/topics/${otherTopicRes.body.id}/notes`)
       .set(headers)
-      .send({ title: "Grammatik Notiz", contentJson: SAMPLE_DOC });
+      .send({ title: "Grammatik Notiz" });
 
     const eventRes = await request(app)
       .post("/api/calendar-events")
@@ -142,7 +127,7 @@ describe("Exam prep", () => {
     const userB = await registerUser();
     const aHeaders = { Authorization: `Bearer ${userA.accessToken}` };
     const bHeaders = { Authorization: `Bearer ${userB.accessToken}` };
-    const { noteId } = await setupSubjectWithNote(aHeaders, SAMPLE_DOC);
+    const { noteId } = await setupSubjectWithNote(aHeaders);
 
     const eventRes = await request(app)
       .post("/api/calendar-events")
