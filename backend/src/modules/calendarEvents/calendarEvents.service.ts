@@ -54,6 +54,7 @@ export async function createCalendarEvent(
       endDate: data.endDate ?? null,
       allDay: data.allDay ?? true,
       subjectId: data.subjectId ?? null,
+      color: data.color ?? null,
       note: data.note ?? null,
     },
     include: { subject: true },

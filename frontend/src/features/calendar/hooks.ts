@@ -20,6 +20,15 @@ export function useCreateCalendarEvent() {
   })
 }
 
+export function useUpdateCalendarEvent() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Parameters<typeof api.updateCalendarEvent>[1] }) =>
+      api.updateCalendarEvent(id, data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['calendar-events'] }),
+  })
+}
+
 export function useDeleteCalendarEvent() {
   const queryClient = useQueryClient()
   return useMutation({

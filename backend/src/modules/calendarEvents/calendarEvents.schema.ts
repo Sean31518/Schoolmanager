@@ -2,6 +2,9 @@ import { z } from "zod";
 import { calendarEventTypeSchema, federalStateSchema } from "../../lib/enums.js";
 
 const manualEventTypeSchema = calendarEventTypeSchema.exclude(["HOLIDAY", "PUBLIC_HOLIDAY"]);
+const colorSchema = z
+  .string()
+  .regex(/^#[0-9a-fA-F]{6}$/, "Farbe muss ein Hex-Code sein, z.B. #3B82F6");
 
 export const createCalendarEventSchema = z.object({
   title: z.string().min(1).max(200),
@@ -10,6 +13,7 @@ export const createCalendarEventSchema = z.object({
   endDate: z.coerce.date().nullable().optional(),
   allDay: z.boolean().optional(),
   subjectId: z.string().nullable().optional(),
+  color: colorSchema.nullable().optional(),
   note: z.string().max(2000).nullable().optional(),
 });
 
@@ -20,6 +24,7 @@ export const updateCalendarEventSchema = z.object({
   endDate: z.coerce.date().nullable().optional(),
   allDay: z.boolean().optional(),
   subjectId: z.string().nullable().optional(),
+  color: colorSchema.nullable().optional(),
   note: z.string().max(2000).nullable().optional(),
 });
 

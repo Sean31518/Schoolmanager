@@ -16,10 +16,28 @@ export function createCalendarEvent(data: {
   startDate: string
   endDate?: string | null
   subjectId?: string | null
+  color?: string | null
   note?: string | null
 }) {
   return apiFetch<CalendarEventDto>('/calendar-events', {
     method: 'POST',
+    body: JSON.stringify(data),
+  })
+}
+
+export function updateCalendarEvent(
+  id: string,
+  data: Partial<{
+    title: string
+    type: Extract<CalendarEventType, 'MANUAL' | 'EXAM'>
+    startDate: string
+    endDate: string | null
+    subjectId: string | null
+    color: string | null
+  }>,
+) {
+  return apiFetch<CalendarEventDto>(`/calendar-events/${id}`, {
+    method: 'PATCH',
     body: JSON.stringify(data),
   })
 }

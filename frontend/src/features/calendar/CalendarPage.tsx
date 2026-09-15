@@ -2,28 +2,12 @@ import { useMemo, useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { ApiRequestError } from '../../lib/apiClient'
 import { useSubjects } from '../subjects/hooks'
-import { useCalendarEvents, useCreateCalendarEvent, useDeleteCalendarEvent } from './hooks'
+import { EventEditModal } from './EventEditModal'
+import { TYPE_COLORS, TYPE_LABELS, getEffectiveColor } from './eventColors'
+import { useCalendarEvents, useCreateCalendarEvent } from './hooks'
 import type { CalendarEventDto, CalendarEventType } from './types'
 
-const TYPE_LABELS: Record<CalendarEventType, string> = {
-  MANUAL: 'Termin',
-  EXAM: 'Klausur',
-  HOLIDAY: 'Ferien',
-  PUBLIC_HOLIDAY: 'Feiertag',
-}
-
-const TYPE_COLORS: Record<CalendarEventType, string> = {
-  MANUAL: '#3B82F6',
-  EXAM: '#EF4444',
-  HOLIDAY: '#22C55E',
-  PUBLIC_HOLIDAY: '#F59E0B',
-}
-
 const WEEKDAY_LABELS = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So']
-
-function formatDay(iso: string) {
-  return new Date(iso).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' })
-}
 
 function toDateKey(date: Date) {
   return date.toISOString().slice(0, 10)
@@ -60,13 +44,13 @@ export function CalendarPage() {
   const { data: events, isLoading } = useCalendarEvents({ from: rangeFrom, to: rangeTo })
   const { data: subjects } = useSubjects()
   const createEvent = useCreateCalendarEvent()
-  const deleteEvent = useDeleteCalendarEvent()
 
   const [title, setTitle] = useState('')
   const [type, setType] = useState<'MANUAL' | 'EXAM'>('MANUAL')
   const [startDate, setStartDate] = useState('')
   const [subjectId, setSubjectId] = useState('')
   const [error, setError] = useState<string | null>(null)
+  const [editingEvent, setEditingEvent] = useState<CalendarEventDto | null>(null)
 
   function goToMonth(delta: number) {
     const next = new Date(Date.UTC(year, month + delta, 1))
@@ -201,6 +185,10 @@ export function CalendarPage() {
         {error && <p className="mt-2 text-sm text-red-600 dark:text-red-400">{error}</p>}
       </div>
 
+      <p className="text-sm text-slate-500 dark:text-slate-400">
+        Klick auf einen Termin im Kalender öffnet ihn zum Bearbeiten.
+      </p>
+
       <div className="rounded-lg bg-white p-4 shadow-sm dark:bg-slate-800">
         {isLoading ? (
           <p className="text-slate-400 dark:text-slate-500">Lädt...</p>
@@ -240,47 +228,18 @@ export function CalendarPage() {
                       {day.getUTCDate()}
                     </div>
                     <div className="mt-1 space-y-0.5">
-                      {dayEvents.slice(0, 3).map((event) =>
-                        event.type === 'EXAM' ? (
-                          <Link
-                            key={event.id}
-                            to={`/exams/${event.id}`}
-                            title={`${event.title} – Klausurvorbereitung öffnen`}
-                            className="group flex items-center gap-1 truncate rounded px-1 py-0.5 text-[11px] font-medium text-white"
-                            style={{ backgroundColor: TYPE_COLORS[event.type] }}
-                          >
-                            <span className="truncate">{event.title}</span>
-                            <button
-                              onClick={(e) => {
-                                e.preventDefault()
-                                void deleteEvent.mutateAsync(event.id)
-                              }}
-                              className="ml-auto hidden flex-shrink-0 group-hover:inline"
-                              aria-label="Löschen"
-                            >
-                              ×
-                            </button>
-                          </Link>
-                        ) : (
-                          <div
-                            key={event.id}
-                            title={`${event.title}${event.endDate ? ` – ${formatDay(event.endDate)}` : ''}`}
-                            className="group flex items-center gap-1 truncate rounded px-1 py-0.5 text-[11px] font-medium text-white"
-                            style={{ backgroundColor: TYPE_COLORS[event.type] }}
-                          >
-                            <span className="truncate">{event.title}</span>
-                            {event.type === 'MANUAL' && (
-                              <button
-                                onClick={() => void deleteEvent.mutateAsync(event.id)}
-                                className="ml-auto hidden flex-shrink-0 group-hover:inline"
-                                aria-label="Löschen"
-                              >
-                                ×
-                              </button>
-                            )}
-                          </div>
-                        ),
-                      )}
+                      {dayEvents.slice(0, 3).map((event) => (
+                        <button
+                          key={event.id}
+                          type="button"
+                          onClick={() => setEditingEvent(event)}
+                          title={event.title}
+                          className="block w-full truncate rounded px-1 py-0.5 text-left text-[11px] font-medium text-white"
+                          style={{ backgroundColor: getEffectiveColor(event) }}
+                        >
+                          {event.title}
+                        </button>
+                      ))}
                       {dayEvents.length > 3 && (
                         <div className="text-[11px] text-slate-400 dark:text-slate-500">
                           +{dayEvents.length - 3} mehr
@@ -305,6 +264,10 @@ export function CalendarPage() {
           </>
         )}
       </div>
+
+      {editingEvent && (
+        <EventEditModal event={editingEvent} onClose={() => setEditingEvent(null)} />
+      )}
     </div>
   )
 }

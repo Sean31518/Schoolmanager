@@ -9,6 +9,7 @@ export interface CalendarEventDto {
   allDay: boolean
   subjectId: string | null
   subject: { id: string; name: string; color: string } | null
+  color: string | null
   note: string | null
 }
 
