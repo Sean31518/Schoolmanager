@@ -40,13 +40,13 @@ export function TimetableGrid() {
       <table className="w-full min-w-[640px] border-collapse text-sm">
         <thead>
           <tr>
-            <th className="w-28 border-b border-slate-200 pb-2 text-left text-slate-500 dark:border-slate-700 dark:text-slate-400">
+            <th className="w-28 border-b border-slate-200 pb-2 text-left text-xs font-semibold text-slate-500 dark:border-slate-700 dark:text-slate-400">
               Zeit
             </th>
             {WEEKDAYS.map((day) => (
               <th
                 key={day.value}
-                className="border-b border-slate-200 pb-2 text-left text-slate-500 dark:border-slate-700 dark:text-slate-400"
+                className="border-b border-slate-200 pb-2 text-left text-xs font-semibold text-slate-500 dark:border-slate-700 dark:text-slate-400"
               >
                 {day.label}
               </th>
@@ -58,12 +58,12 @@ export function TimetableGrid() {
             if (slot.type === 'BREAK') {
               return (
                 <tr key={slot.id} className="bg-slate-50 dark:bg-slate-900">
-                  <td className="px-2 py-1 text-xs text-slate-400 dark:text-slate-500">
+                  <td className="border border-slate-200 px-2 py-1 text-xs text-slate-400 dark:border-slate-700 dark:text-slate-500">
                     {slot.startTime}–{slot.endTime}
                   </td>
                   <td
                     colSpan={WEEKDAYS.length}
-                    className="px-2 py-1 text-center text-xs text-slate-400 dark:text-slate-500"
+                    className="border border-slate-200 px-2 py-1 text-center text-xs text-slate-400 dark:border-slate-700 dark:text-slate-500"
                   >
                     {slot.label}
                   </td>
@@ -72,8 +72,8 @@ export function TimetableGrid() {
             }
 
             return (
-              <tr key={slot.id} className="border-b border-slate-100 dark:border-slate-700">
-                <td className="px-2 py-2 align-top text-xs text-slate-500 dark:text-slate-400">
+              <tr key={slot.id}>
+                <td className="border border-slate-200 px-2 py-2 align-top text-xs text-slate-500 dark:border-slate-700 dark:text-slate-400">
                   <div>{slot.label}</div>
                   <div>
                     {slot.startTime}–{slot.endTime}
@@ -83,7 +83,10 @@ export function TimetableGrid() {
                   const cell = findCell(day.value, slot.id)
                   const cellColor = cell?.subject?.color
                   return (
-                    <td key={day.value} className="px-2 py-2 align-top">
+                    <td
+                      key={day.value}
+                      className="border border-slate-200 p-0 align-top dark:border-slate-700"
+                    >
                       <select
                         value={cell?.subjectId ?? ''}
                         onChange={(e) =>
@@ -95,16 +98,12 @@ export function TimetableGrid() {
                         }
                         className={
                           cellColor
-                            ? 'w-full rounded border px-2 py-1 text-sm'
-                            : 'w-full rounded border border-slate-300 bg-white px-2 py-1 text-sm text-slate-800 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100'
+                            ? 'block h-full w-full border-0 px-2 py-3 text-sm font-medium'
+                            : 'block h-full w-full border-0 bg-white px-2 py-3 text-sm text-slate-800 dark:bg-slate-900 dark:text-slate-100'
                         }
                         style={
                           cellColor
-                            ? {
-                                borderColor: cellColor,
-                                backgroundColor: cellColor,
-                                color: getContrastTextColor(cellColor),
-                              }
+                            ? { backgroundColor: cellColor, color: getContrastTextColor(cellColor) }
                             : undefined
                         }
                       >
