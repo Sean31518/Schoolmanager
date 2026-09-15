@@ -14,10 +14,11 @@ export const TYPE_COLORS: Record<CalendarEventType, string> = {
   PUBLIC_HOLIDAY: '#F59E0B',
 }
 
-/** An explicit event color always wins; otherwise an exam defaults to its
- * subject's color, and everything else falls back to its type's color. */
+/** An explicit event color always wins; otherwise an event with a subject
+ * defaults to that subject's color, and everything else falls back to its
+ * type's color. */
 export function getEffectiveColor(event: CalendarEventDto): string {
   if (event.color) return event.color
-  if (event.type === 'EXAM' && event.subject) return event.subject.color
+  if (event.subject) return event.subject.color
   return TYPE_COLORS[event.type]
 }

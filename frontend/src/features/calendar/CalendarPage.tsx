@@ -185,10 +185,6 @@ export function CalendarPage() {
         {error && <p className="mt-2 text-sm text-red-600 dark:text-red-400">{error}</p>}
       </div>
 
-      <p className="text-sm text-slate-500 dark:text-slate-400">
-        Klick auf einen Termin im Kalender öffnet ihn zum Bearbeiten.
-      </p>
-
       <div className="rounded-lg bg-white p-4 shadow-sm dark:bg-slate-800">
         {isLoading ? (
           <p className="text-slate-400 dark:text-slate-500">Lädt...</p>
