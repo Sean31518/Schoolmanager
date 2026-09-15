@@ -1,6 +1,6 @@
-import { getContrastTextColor } from '../../lib/color'
 import { useSubjects } from '../subjects/hooks'
 import { useSetTimetableCell, useTimetable } from './hooks'
+import { SubjectDropdown } from './SubjectDropdown'
 
 const WEEKDAYS = [
   { value: 'MONDAY', label: 'Mo' },
@@ -81,46 +81,22 @@ export function TimetableGrid() {
                 </td>
                 {WEEKDAYS.map((day) => {
                   const cell = findCell(day.value, slot.id)
-                  const cellColor = cell?.subject?.color
                   return (
                     <td
                       key={day.value}
                       className="border border-slate-200 p-0 align-top dark:border-slate-700"
                     >
-                      <select
+                      <SubjectDropdown
                         value={cell?.subjectId ?? ''}
-                        onChange={(e) =>
+                        subjects={subjects ?? []}
+                        onChange={(subjectId) =>
                           void setCell.mutateAsync({
                             weekday: day.value,
                             timeGridSlotId: slot.id,
-                            subjectId: e.target.value || null,
+                            subjectId,
                           })
                         }
-                        className={
-                          cellColor
-                            ? 'block h-full w-full appearance-none border-0 px-2 py-3 text-sm font-medium outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500'
-                            : 'block h-full w-full appearance-none border-0 bg-white px-2 py-3 text-sm text-slate-800 outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 dark:bg-slate-900 dark:text-slate-100'
-                        }
-                        style={
-                          cellColor
-                            ? { backgroundColor: cellColor, color: getContrastTextColor(cellColor) }
-                            : undefined
-                        }
-                      >
-                        <option value="">–</option>
-                        {(subjects ?? []).map((subject) => (
-                          <option
-                            key={subject.id}
-                            value={subject.id}
-                            style={{
-                              backgroundColor: subject.color,
-                              color: getContrastTextColor(subject.color),
-                            }}
-                          >
-                            {subject.name}
-                          </option>
-                        ))}
-                      </select>
+                      />
                     </td>
                   )
                 })}

@@ -37,7 +37,7 @@ export function TimetableView() {
 
   return (
     <div className="overflow-x-auto rounded-lg bg-white p-4 shadow-sm dark:bg-slate-800">
-      <table className="w-full min-w-[640px] border-collapse text-sm">
+      <table className="w-full min-w-[640px] table-fixed border-collapse text-sm">
         <thead>
           <tr>
             <th className="w-28 border-b border-slate-200 pb-2 text-left text-xs font-semibold text-slate-500 dark:border-slate-700 dark:text-slate-400">
@@ -90,8 +90,8 @@ export function TimetableView() {
                       <div
                         className={
                           cellColor
-                            ? 'flex h-full min-h-[2.75rem] w-full items-center px-2 py-3 text-sm font-medium'
-                            : 'flex h-full min-h-[2.75rem] w-full items-center px-2 py-3 text-sm text-slate-300 dark:text-slate-600'
+                            ? 'flex h-full min-h-[2.75rem] w-full items-center overflow-hidden px-2 py-3 text-sm font-medium'
+                            : 'flex h-full min-h-[2.75rem] w-full items-center overflow-hidden px-2 py-3 text-sm text-slate-300 dark:text-slate-600'
                         }
                         style={
                           cellColor
@@ -102,7 +102,11 @@ export function TimetableView() {
                             : undefined
                         }
                       >
-                        {cell?.subject?.name ?? '–'}
+                        {cell?.subject?.name && (
+                          <span className="truncate" title={cell.subject.name}>
+                            {cell.subject.name}
+                          </span>
+                        )}
                       </div>
                     </td>
                   )
