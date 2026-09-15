@@ -26,10 +26,10 @@ export function ExamHighlightWidget() {
     .filter((e) => daysUntil(e.startDate) >= 0)
     .sort((a, b) => a.startDate.localeCompare(b.startDate))[0]
 
-  const { data: prepItems } = useExamPrep(nextExam?.id ?? '')
+  const { data: examPrep } = useExamPrep(nextExam?.id ?? '')
   const topicIds = useMemo(
-    () => [...new Set((prepItems ?? []).map((item) => item.topicId))],
-    [prepItems],
+    () => [...new Set((examPrep?.items ?? []).map((item) => item.topicId))],
+    [examPrep],
   )
   const { byTopic } = useTopicsMastery(topicIds)
 
