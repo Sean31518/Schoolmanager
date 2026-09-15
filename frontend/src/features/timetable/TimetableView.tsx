@@ -1,6 +1,5 @@
 import { getContrastTextColor } from '../../lib/color'
-import { useSubjects } from '../subjects/hooks'
-import { useSetTimetableCell, useTimetable } from './hooks'
+import { useTimetable } from './hooks'
 
 const WEEKDAYS = [
   { value: 'MONDAY', label: 'Mo' },
@@ -10,10 +9,11 @@ const WEEKDAYS = [
   { value: 'FRIDAY', label: 'Fr' },
 ]
 
-export function TimetableGrid() {
+/** Purely presentational rendering of the timetable — no `<select>`s, no
+ * click/hover interactivity by construction. Editing (which subject sits in
+ * which slot) happens in Settings via `TimetableGrid`. */
+export function TimetableView() {
   const { data, isLoading } = useTimetable()
-  const { data: subjects } = useSubjects()
-  const setCell = useSetTimetableCell()
 
   if (isLoading || !data) {
     return <p className="text-slate-400 dark:text-slate-500">Lädt...</p>
@@ -23,8 +23,8 @@ export function TimetableGrid() {
 
   if (timeGridSlots.length === 0) {
     return (
-      <p className="text-slate-400 dark:text-slate-500">
-        Lege zuerst oben ein Zeitraster an.
+      <p className="rounded-lg bg-white p-4 text-slate-400 shadow-sm dark:bg-slate-800 dark:text-slate-500">
+        Noch kein Zeitraster angelegt.
       </p>
     )
   }
@@ -36,7 +36,7 @@ export function TimetableGrid() {
   }
 
   return (
-    <div className="overflow-x-auto">
+    <div className="overflow-x-auto rounded-lg bg-white p-4 shadow-sm dark:bg-slate-800">
       <table className="w-full min-w-[640px] border-collapse text-sm">
         <thead>
           <tr>
@@ -87,40 +87,23 @@ export function TimetableGrid() {
                       key={day.value}
                       className="border border-slate-200 p-0 align-top dark:border-slate-700"
                     >
-                      <select
-                        value={cell?.subjectId ?? ''}
-                        onChange={(e) =>
-                          void setCell.mutateAsync({
-                            weekday: day.value,
-                            timeGridSlotId: slot.id,
-                            subjectId: e.target.value || null,
-                          })
-                        }
+                      <div
                         className={
                           cellColor
-                            ? 'block h-full w-full appearance-none border-0 px-2 py-3 text-sm font-medium outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500'
-                            : 'block h-full w-full appearance-none border-0 bg-white px-2 py-3 text-sm text-slate-800 outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 dark:bg-slate-900 dark:text-slate-100'
+                            ? 'flex h-full min-h-[2.75rem] w-full items-center px-2 py-3 text-sm font-medium'
+                            : 'flex h-full min-h-[2.75rem] w-full items-center px-2 py-3 text-sm text-slate-300 dark:text-slate-600'
                         }
                         style={
                           cellColor
-                            ? { backgroundColor: cellColor, color: getContrastTextColor(cellColor) }
+                            ? {
+                                backgroundColor: cellColor,
+                                color: getContrastTextColor(cellColor),
+                              }
                             : undefined
                         }
                       >
-                        <option value="">–</option>
-                        {(subjects ?? []).map((subject) => (
-                          <option
-                            key={subject.id}
-                            value={subject.id}
-                            style={{
-                              backgroundColor: subject.color,
-                              color: getContrastTextColor(subject.color),
-                            }}
-                          >
-                            {subject.name}
-                          </option>
-                        ))}
-                      </select>
+                        {cell?.subject?.name ?? '–'}
+                      </div>
                     </td>
                   )
                 })}

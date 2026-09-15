@@ -5,6 +5,7 @@ import { useAuth } from '../auth/AuthContext'
 import { HolidayImportForm } from '../calendar/HolidayImportForm'
 import { SubjectManager } from '../subjects/SubjectManager'
 import { TimeGridEditor } from '../timetable/TimeGridEditor'
+import { TimetableGrid } from '../timetable/TimetableGrid'
 import { useSettings, useUpdateSettings } from './hooks'
 
 const GRADE_LEVELS = Array.from({ length: 13 }, (_, i) => i + 1)
@@ -127,6 +128,10 @@ export function SettingsPage() {
 
       <SettingsSection title="Zeitraster">
         <TimeGridEditor />
+      </SettingsSection>
+
+      <SettingsSection title="Stundenplan">
+        <TimetableGrid />
       </SettingsSection>
 
       <SettingsSection title="Ferien & Feiertage importieren">
