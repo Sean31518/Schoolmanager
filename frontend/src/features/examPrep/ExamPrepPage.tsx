@@ -1,4 +1,3 @@
-import type { JSONContent } from '@tiptap/react'
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { formatGradeLevels } from '../../lib/gradeLevel'
@@ -84,7 +83,7 @@ export function ExamPrepPage() {
     for (const [noteId, indexes] of selection) {
       const note = noteLookup.get(noteId)
       if (!note) continue
-      const sections = extractSections(note.contentJson as JSONContent)
+      const sections = extractSections(note.blocks)
       for (const index of indexes) {
         const section = sections[index]
         if (section) {
@@ -132,7 +131,7 @@ export function ExamPrepPage() {
       ) : (
         <div className="space-y-3">
           {candidates.map((candidate) => {
-            const sections = extractSections(candidate.contentJson as JSONContent)
+            const sections = extractSections(candidate.blocks)
             if (sections.length === 0) return null
             const selectedIndexes = selection.get(candidate.noteId) ?? new Set<number>()
             return (

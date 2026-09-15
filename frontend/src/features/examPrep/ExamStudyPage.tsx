@@ -1,7 +1,6 @@
-import type { JSONContent } from '@tiptap/react'
 import { Link, useParams } from 'react-router-dom'
 import { formatGradeLevels } from '../../lib/gradeLevel'
-import { ReadOnlyContent } from '../notes/ReadOnlyContent'
+import { SectionContent } from './SectionContent'
 import { useExamPrep } from './hooks'
 import { extractSections, type NoteSection } from './sections'
 import type { ExamPrepItemDto } from './types'
@@ -21,7 +20,7 @@ export function ExamStudyPage() {
 
   const resolved: ResolvedItem[] = []
   for (const item of data.items) {
-    const sections = extractSections(item.contentJson as JSONContent)
+    const sections = extractSections(item.blocks)
     const section = sections[item.sectionIndex]
     if (section) resolved.push({ item, section })
   }
@@ -69,7 +68,7 @@ export function ExamStudyPage() {
                 {section.label}
               </h2>
               <div className="mt-2">
-                <ReadOnlyContent content={section.content} />
+                <SectionContent section={section} />
               </div>
             </div>
           ))}

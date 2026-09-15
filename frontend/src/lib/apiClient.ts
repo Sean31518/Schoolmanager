@@ -66,7 +66,7 @@ const NO_RETRY_PATHS = new Set(["/auth/login", "/auth/register", "/auth/refresh"
 export async function apiFetch<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const { skipAuthRetry, ...init } = options;
   const headers = new Headers(init.headers);
-  if (!headers.has("Content-Type") && init.body) {
+  if (!headers.has("Content-Type") && init.body && !(init.body instanceof FormData)) {
     headers.set("Content-Type", "application/json");
   }
   if (accessToken) {

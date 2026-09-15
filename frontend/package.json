@@ -24,6 +24,7 @@
     "@tiptap/starter-kit": "^2.11.2",
     "@tiptap/suggestion": "^2.27.3",
     "clsx": "^2.1.1",
+    "pdfjs-dist": "^6.3.289",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "react-router-dom": "^6.28.1",

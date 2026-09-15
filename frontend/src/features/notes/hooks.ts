@@ -59,8 +59,7 @@ export function useNote(noteId: string) {
 export function useCreateNote(topicId: string) {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (data: { title: string; contentJson?: unknown }) =>
-      api.createNote(topicId, data),
+    mutationFn: (data: { title: string }) => api.createNote(topicId, data),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['notes', topicId] }),
   })
 }
@@ -81,5 +80,76 @@ export function useDeleteNote(topicId: string) {
   return useMutation({
     mutationFn: (noteId: string) => api.deleteNote(noteId),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['notes', topicId] }),
+  })
+}
+
+export function useUploadFile() {
+  return useMutation({ mutationFn: (file: File) => api.uploadFile(file) })
+}
+
+function useInvalidateNote(noteId: string) {
+  const queryClient = useQueryClient()
+  return () => queryClient.invalidateQueries({ queryKey: ['note', noteId] })
+}
+
+export function useCreateTextBlock(noteId: string) {
+  const invalidate = useInvalidateNote(noteId)
+  return useMutation({
+    mutationFn: (data: { contentJson?: unknown }) => api.createTextBlock(noteId, data),
+    onSuccess: invalidate,
+  })
+}
+
+export function useCreateLinkBlock(noteId: string) {
+  const invalidate = useInvalidateNote(noteId)
+  return useMutation({
+    mutationFn: (data: { url: string }) => api.createLinkBlock(noteId, data),
+    onSuccess: invalidate,
+  })
+}
+
+export function useCreateVideoBlock(noteId: string) {
+  const invalidate = useInvalidateNote(noteId)
+  return useMutation({
+    mutationFn: (data: { fileId: string }) => api.createVideoBlock(noteId, data),
+    onSuccess: invalidate,
+  })
+}
+
+export function useCreatePdfBlocks(noteId: string) {
+  const invalidate = useInvalidateNote(noteId)
+  return useMutation({
+    mutationFn: (data: { fileId: string; pageCount: number }) => api.createPdfBlocks(noteId, data),
+    onSuccess: invalidate,
+  })
+}
+
+export function useUpdateBlock(noteId: string) {
+  const invalidate = useInvalidateNote(noteId)
+  return useMutation({
+    mutationFn: ({
+      blockId,
+      data,
+    }: {
+      blockId: string
+      data: Parameters<typeof api.updateBlock>[1]
+    }) => api.updateBlock(blockId, data),
+    onSuccess: invalidate,
+  })
+}
+
+export function useDeleteBlock(noteId: string) {
+  const invalidate = useInvalidateNote(noteId)
+  return useMutation({
+    mutationFn: (blockId: string) => api.deleteBlock(blockId),
+    onSuccess: invalidate,
+  })
+}
+
+export function useReorderBlocks(noteId: string) {
+  const invalidate = useInvalidateNote(noteId)
+  return useMutation({
+    mutationFn: (orderedIds: string[]) => api.reorderBlocks(noteId, orderedIds),
+    onSuccess: invalidate,
   })
 }

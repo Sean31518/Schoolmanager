@@ -1,10 +1,12 @@
+import type { NoteBlockDto } from '../notes/types'
+
 export interface ExamPrepCandidateDto {
   noteId: string
   title: string
   topicId: string
   topicName: string
   gradeLevels: number[]
-  contentJson: unknown
+  blocks: NoteBlockDto[]
   sectionTypeId: string
   sectionTypeName: string
   subjectId: string
