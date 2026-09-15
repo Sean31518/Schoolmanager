@@ -1,13 +1,27 @@
-import { useEffect, useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent, type ReactNode } from 'react'
 import { ApiRequestError } from '../../lib/apiClient'
 import { FEDERAL_STATES } from '../../lib/federalStates'
+import { useAuth } from '../auth/AuthContext'
+import { HolidayImportForm } from '../calendar/HolidayImportForm'
+import { SubjectManager } from '../subjects/SubjectManager'
+import { TimeGridEditor } from '../timetable/TimeGridEditor'
 import { useSettings, useUpdateSettings } from './hooks'
 
 const GRADE_LEVELS = Array.from({ length: 13 }, (_, i) => i + 1)
 
+function SettingsSection({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <section className="mt-6 rounded-lg bg-white p-4 shadow-sm dark:bg-slate-800">
+      <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-100">{title}</h2>
+      <div className="mt-3">{children}</div>
+    </section>
+  )
+}
+
 export function SettingsPage() {
   const { data: settings, isLoading } = useSettings()
   const updateSettings = useUpdateSettings()
+  const { logout } = useAuth()
 
   const [gradeLevel, setGradeLevel] = useState(5)
   const [federalState, setFederalState] = useState('BW')
@@ -106,6 +120,27 @@ export function SettingsPage() {
           {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
         </div>
       </form>
+
+      <SettingsSection title="Fächer verwalten">
+        <SubjectManager />
+      </SettingsSection>
+
+      <SettingsSection title="Zeitraster">
+        <TimeGridEditor />
+      </SettingsSection>
+
+      <SettingsSection title="Ferien & Feiertage importieren">
+        <HolidayImportForm />
+      </SettingsSection>
+
+      <section className="mt-6 rounded-lg bg-white p-4 shadow-sm dark:bg-slate-800">
+        <button
+          onClick={() => void logout()}
+          className="rounded border border-slate-300 px-4 py-2 text-sm hover:bg-slate-100 dark:border-slate-600 dark:hover:bg-slate-700"
+        >
+          Abmelden
+        </button>
+      </section>
     </div>
   )
 }

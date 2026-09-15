@@ -44,9 +44,7 @@ export function TimeGridEditor() {
   }
 
   return (
-    <div className="rounded-lg bg-white p-4 shadow-sm dark:bg-slate-800">
-      <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-100">Zeitraster</h2>
-
+    <div>
       {isLoading ? (
         <p className="mt-3 text-slate-400 dark:text-slate-500">Lädt...</p>
       ) : (

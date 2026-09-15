@@ -3,7 +3,7 @@ import { useAuth } from '../features/auth/AuthContext'
 import { useTheme } from '../lib/useTheme'
 
 export function Layout() {
-  const { user, logout } = useAuth()
+  const { user } = useAuth()
   const { theme, toggleTheme } = useTheme()
 
   return (
@@ -56,16 +56,13 @@ export function Layout() {
                 </svg>
               )}
             </button>
-            <Link to="/settings" className="hover:text-blue-600 dark:hover:text-blue-400">
-              Einstellungen
-            </Link>
             <span>{user?.displayName}</span>
-            <button
-              onClick={() => void logout()}
+            <Link
+              to="/settings"
               className="rounded border border-slate-300 px-3 py-1 hover:bg-slate-100 dark:border-slate-600 dark:hover:bg-slate-700"
             >
-              Abmelden
-            </button>
+              Einstellungen
+            </Link>
           </div>
         </div>
       </header>

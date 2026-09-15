@@ -1,13 +1,7 @@
 import { useMemo, useState, type FormEvent } from 'react'
+import { Link } from 'react-router-dom'
 import { ApiRequestError } from '../../lib/apiClient'
-import { FEDERAL_STATES } from '../../lib/federalStates'
-import { useAuth } from '../auth/AuthContext'
-import {
-  useCalendarEvents,
-  useCreateCalendarEvent,
-  useDeleteCalendarEvent,
-  useImportHolidays,
-} from './hooks'
+import { useCalendarEvents, useCreateCalendarEvent, useDeleteCalendarEvent } from './hooks'
 import type { CalendarEventDto, CalendarEventType } from './types'
 
 const TYPE_LABELS: Record<CalendarEventType, string> = {
@@ -53,7 +47,6 @@ function getMonthGrid(year: number, month: number) {
 }
 
 export function CalendarPage() {
-  const { settings } = useAuth()
   const today = useMemo(() => new Date(), [])
   const [year, setYear] = useState(today.getFullYear())
   const [month, setMonth] = useState(today.getMonth())
@@ -66,16 +59,11 @@ export function CalendarPage() {
   const { data: events, isLoading } = useCalendarEvents({ from: rangeFrom, to: rangeTo })
   const createEvent = useCreateCalendarEvent()
   const deleteEvent = useDeleteCalendarEvent()
-  const importHolidays = useImportHolidays()
 
   const [title, setTitle] = useState('')
   const [type, setType] = useState<'MANUAL' | 'EXAM'>('MANUAL')
   const [startDate, setStartDate] = useState('')
   const [error, setError] = useState<string | null>(null)
-
-  const [importYear, setImportYear] = useState(year)
-  const [importState, setImportState] = useState(settings?.federalState ?? 'BW')
-  const [importMessage, setImportMessage] = useState<string | null>(null)
 
   function goToMonth(delta: number) {
     const next = new Date(Date.UTC(year, month + delta, 1))
@@ -94,23 +82,6 @@ export function CalendarPage() {
       setError(
         err instanceof ApiRequestError ? err.message : 'Termin konnte nicht angelegt werden',
       )
-    }
-  }
-
-  async function handleImport(e: FormEvent) {
-    e.preventDefault()
-    setImportMessage(null)
-    try {
-      const result = await importHolidays.mutateAsync({
-        year: importYear,
-        federalState: importState,
-      })
-      setImportMessage(
-        `${result.imported} neu, ${result.updated} aktualisiert, ${result.skipped} unverändert` +
-          (result.errors.length > 0 ? ` – Fehler: ${result.errors.join('; ')}` : ''),
-      )
-    } catch (err) {
-      setImportMessage(err instanceof ApiRequestError ? err.message : 'Import fehlgeschlagen')
     }
   }
 
@@ -153,46 +124,12 @@ export function CalendarPage() {
         </div>
       </div>
 
-      <div className="rounded-lg bg-white p-4 shadow-sm dark:bg-slate-800">
-        <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-100">
-          Ferien &amp; Feiertage importieren
-        </h2>
-        <form onSubmit={handleImport} className="mt-3 flex flex-wrap items-end gap-3">
-          <label className="text-sm text-slate-600 dark:text-slate-300">
-            Jahr
-            <input
-              type="number"
-              value={importYear}
-              onChange={(e) => setImportYear(Number(e.target.value))}
-              className="mt-1 block w-24 rounded border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
-            />
-          </label>
-          <label className="text-sm text-slate-600 dark:text-slate-300">
-            Bundesland
-            <select
-              value={importState}
-              onChange={(e) => setImportState(e.target.value)}
-              className="mt-1 block rounded border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
-            >
-              {FEDERAL_STATES.map((state) => (
-                <option key={state.value} value={state.value}>
-                  {state.label}
-                </option>
-              ))}
-            </select>
-          </label>
-          <button
-            type="submit"
-            disabled={importHolidays.isPending}
-            className="rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
-          >
-            Importieren
-          </button>
-        </form>
-        {importMessage && (
-          <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">{importMessage}</p>
-        )}
-      </div>
+      <p className="text-sm text-slate-500 dark:text-slate-400">
+        Ferien &amp; Feiertage importieren?{' '}
+        <Link to="/settings" className="text-blue-600 hover:underline dark:text-blue-400">
+          In den Einstellungen
+        </Link>
+      </p>
 
       <div className="rounded-lg bg-white p-4 shadow-sm dark:bg-slate-800">
         <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-100">Neuer Termin</h2>
