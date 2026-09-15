@@ -8,7 +8,7 @@ export function GeneralNotesWidget({ notes }: { notes: GeneralNoteDto[] }) {
   return (
     <div>
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-slate-800">Notizen</h2>
+        <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-100">Notizen</h2>
         <button
           onClick={() =>
             void createNote.mutateAsync({ contentJson: { type: 'doc', content: [] } })
@@ -22,7 +22,9 @@ export function GeneralNotesWidget({ notes }: { notes: GeneralNoteDto[] }) {
         {notes.map((note) => (
           <GeneralNoteCard key={note.id} note={note} />
         ))}
-        {notes.length === 0 && <p className="text-sm text-slate-400">Noch keine Notizen.</p>}
+        {notes.length === 0 && (
+          <p className="text-sm text-slate-400 dark:text-slate-500">Noch keine Notizen.</p>
+        )}
       </div>
     </div>
   )

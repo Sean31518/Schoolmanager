@@ -44,11 +44,11 @@ export function RichTextEditor({ content, onChange }: RichTextEditorProps) {
   }, [content, editor])
 
   return (
-    <div className="rounded-lg border border-slate-300 bg-white">
+    <div className="rounded-lg border border-slate-300 bg-white dark:border-slate-600 dark:bg-slate-800">
       <EditorToolbar editor={editor} />
       <EditorContent
         editor={editor}
-        className="prose prose-sm max-w-none px-4 py-3 focus:outline-none"
+        className="prose prose-sm max-w-none px-4 py-3 text-slate-800 focus:outline-none dark:text-slate-100"
       />
     </div>
   )
@@ -102,14 +102,16 @@ function EditorToolbar({ editor }: { editor: Editor | null }) {
   ]
 
   return (
-    <div className="flex flex-wrap gap-1 border-b border-slate-200 p-2">
+    <div className="flex flex-wrap gap-1 border-b border-slate-200 p-2 dark:border-slate-700">
       {buttons.map((btn) => (
         <button
           key={btn.label}
           type="button"
           onClick={btn.onClick}
           className={`rounded px-2 py-1 text-xs ${
-            btn.isActive ? 'bg-blue-100 text-blue-700' : 'text-slate-600 hover:bg-slate-100'
+            btn.isActive
+              ? 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300'
+              : 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-700'
           }`}
         >
           {btn.label}

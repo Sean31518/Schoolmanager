@@ -1,5 +1,6 @@
 import { useMemo, useState, type FormEvent } from 'react'
 import { ApiRequestError } from '../../lib/apiClient'
+import { FEDERAL_STATES } from '../../lib/federalStates'
 import { useAuth } from '../auth/AuthContext'
 import {
   useCalendarEvents,
@@ -8,25 +9,6 @@ import {
   useImportHolidays,
 } from './hooks'
 import type { CalendarEventDto, CalendarEventType } from './types'
-
-const FEDERAL_STATES: { value: string; label: string }[] = [
-  { value: 'BW', label: 'Baden-Württemberg' },
-  { value: 'BY', label: 'Bayern' },
-  { value: 'BE', label: 'Berlin' },
-  { value: 'BB', label: 'Brandenburg' },
-  { value: 'HB', label: 'Bremen' },
-  { value: 'HH', label: 'Hamburg' },
-  { value: 'HE', label: 'Hessen' },
-  { value: 'MV', label: 'Mecklenburg-Vorpommern' },
-  { value: 'NI', label: 'Niedersachsen' },
-  { value: 'NW', label: 'Nordrhein-Westfalen' },
-  { value: 'RP', label: 'Rheinland-Pfalz' },
-  { value: 'SL', label: 'Saarland' },
-  { value: 'SN', label: 'Sachsen' },
-  { value: 'ST', label: 'Sachsen-Anhalt' },
-  { value: 'SH', label: 'Schleswig-Holstein' },
-  { value: 'TH', label: 'Thüringen' },
-]
 
 const TYPE_LABELS: Record<CalendarEventType, string> = {
   MANUAL: 'Termin',
@@ -42,17 +24,46 @@ const TYPE_COLORS: Record<CalendarEventType, string> = {
   PUBLIC_HOLIDAY: '#F59E0B',
 }
 
+const WEEKDAY_LABELS = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So']
+
 function formatDay(iso: string) {
   return new Date(iso).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' })
 }
 
+function toDateKey(date: Date) {
+  return date.toISOString().slice(0, 10)
+}
+
+function getMonthGrid(year: number, month: number) {
+  const firstOfMonth = new Date(Date.UTC(year, month, 1))
+  const startOffset = (firstOfMonth.getUTCDay() + 6) % 7 // Monday = 0
+  const gridStart = new Date(firstOfMonth)
+  gridStart.setUTCDate(gridStart.getUTCDate() - startOffset)
+
+  const daysInMonth = new Date(Date.UTC(year, month + 1, 0)).getUTCDate()
+  const weeksNeeded = Math.ceil((startOffset + daysInMonth) / 7)
+
+  const days: Date[] = []
+  for (let i = 0; i < weeksNeeded * 7; i++) {
+    const d = new Date(gridStart)
+    d.setUTCDate(gridStart.getUTCDate() + i)
+    days.push(d)
+  }
+  return days
+}
+
 export function CalendarPage() {
   const { settings } = useAuth()
-  const [year, setYear] = useState(new Date().getFullYear())
-  const { data: events, isLoading } = useCalendarEvents({
-    from: `${year}-01-01`,
-    to: `${year}-12-31`,
-  })
+  const today = useMemo(() => new Date(), [])
+  const [year, setYear] = useState(today.getFullYear())
+  const [month, setMonth] = useState(today.getMonth())
+  const todayKey = toDateKey(today)
+
+  const monthGrid = useMemo(() => getMonthGrid(year, month), [year, month])
+  const rangeFrom = toDateKey(monthGrid[0])
+  const rangeTo = toDateKey(monthGrid[monthGrid.length - 1])
+
+  const { data: events, isLoading } = useCalendarEvents({ from: rangeFrom, to: rangeTo })
   const createEvent = useCreateCalendarEvent()
   const deleteEvent = useDeleteCalendarEvent()
   const importHolidays = useImportHolidays()
@@ -65,6 +76,12 @@ export function CalendarPage() {
   const [importYear, setImportYear] = useState(year)
   const [importState, setImportState] = useState(settings?.federalState ?? 'BW')
   const [importMessage, setImportMessage] = useState<string | null>(null)
+
+  function goToMonth(delta: number) {
+    const next = new Date(Date.UTC(year, month + delta, 1))
+    setYear(next.getUTCFullYear())
+    setMonth(next.getUTCMonth())
+  }
 
   async function handleCreate(e: FormEvent) {
     e.preventDefault()
@@ -97,56 +114,65 @@ export function CalendarPage() {
     }
   }
 
-  const grouped = useMemo(() => {
+  const eventsByDay = useMemo(() => {
     const map = new Map<string, CalendarEventDto[]>()
     for (const event of events ?? []) {
-      const month = event.startDate.slice(0, 7)
-      const list = map.get(month) ?? []
+      const key = event.startDate.slice(0, 10)
+      const list = map.get(key) ?? []
       list.push(event)
-      map.set(month, list)
+      map.set(key, list)
     }
-    return [...map.entries()].sort(([a], [b]) => a.localeCompare(b))
+    return map
   }, [events])
+
+  const monthLabel = new Date(Date.UTC(year, month, 1)).toLocaleDateString('de-DE', {
+    month: 'long',
+    year: 'numeric',
+  })
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-slate-800">Kalender</h1>
+        <h1 className="text-2xl font-semibold text-slate-800 dark:text-slate-100">Kalender</h1>
         <div className="flex items-center gap-2 text-sm">
           <button
-            onClick={() => setYear((y) => y - 1)}
-            className="rounded border border-slate-300 px-2 py-1"
+            onClick={() => goToMonth(-1)}
+            className="rounded border border-slate-300 px-2 py-1 dark:border-slate-600 dark:text-slate-200"
           >
             ←
           </button>
-          <span className="font-medium">{year}</span>
+          <span className="min-w-[10rem] text-center font-medium capitalize text-slate-800 dark:text-slate-100">
+            {monthLabel}
+          </span>
           <button
-            onClick={() => setYear((y) => y + 1)}
-            className="rounded border border-slate-300 px-2 py-1"
+            onClick={() => goToMonth(1)}
+            className="rounded border border-slate-300 px-2 py-1 dark:border-slate-600 dark:text-slate-200"
           >
             →
           </button>
         </div>
       </div>
 
-      <div className="rounded-lg bg-white p-4 shadow-sm">
-        <h2 className="text-lg font-semibold text-slate-800">Ferien &amp; Feiertage importieren</h2>
+      <div className="rounded-lg bg-white p-4 shadow-sm dark:bg-slate-800">
+        <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-100">
+          Ferien &amp; Feiertage importieren
+        </h2>
         <form onSubmit={handleImport} className="mt-3 flex flex-wrap items-end gap-3">
-          <label className="text-sm text-slate-600">
+          <label className="text-sm text-slate-600 dark:text-slate-300">
             Jahr
             <input
               type="number"
               value={importYear}
               onChange={(e) => setImportYear(Number(e.target.value))}
-              className="mt-1 block w-24 rounded border border-slate-300 px-3 py-2 text-sm"
+              className="mt-1 block w-24 rounded border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
             />
           </label>
-          <label className="text-sm text-slate-600">
+          <label className="text-sm text-slate-600 dark:text-slate-300">
             Bundesland
             <select
               value={importState}
               onChange={(e) => setImportState(e.target.value)}
-              className="mt-1 block rounded border border-slate-300 px-3 py-2 text-sm"
+              className="mt-1 block rounded border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
             >
               {FEDERAL_STATES.map((state) => (
                 <option key={state.value} value={state.value}>
@@ -163,40 +189,42 @@ export function CalendarPage() {
             Importieren
           </button>
         </form>
-        {importMessage && <p className="mt-2 text-sm text-slate-600">{importMessage}</p>}
+        {importMessage && (
+          <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">{importMessage}</p>
+        )}
       </div>
 
-      <div className="rounded-lg bg-white p-4 shadow-sm">
-        <h2 className="text-lg font-semibold text-slate-800">Neuer Termin</h2>
+      <div className="rounded-lg bg-white p-4 shadow-sm dark:bg-slate-800">
+        <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-100">Neuer Termin</h2>
         <form onSubmit={handleCreate} className="mt-3 flex flex-wrap items-end gap-3">
-          <label className="text-sm text-slate-600">
+          <label className="text-sm text-slate-600 dark:text-slate-300">
             Titel
             <input
               required
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="mt-1 block rounded border border-slate-300 px-3 py-2 text-sm"
+              className="mt-1 block rounded border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
             />
           </label>
-          <label className="text-sm text-slate-600">
+          <label className="text-sm text-slate-600 dark:text-slate-300">
             Typ
             <select
               value={type}
               onChange={(e) => setType(e.target.value as 'MANUAL' | 'EXAM')}
-              className="mt-1 block rounded border border-slate-300 px-3 py-2 text-sm"
+              className="mt-1 block rounded border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
             >
               <option value="MANUAL">Termin</option>
               <option value="EXAM">Klausur</option>
             </select>
           </label>
-          <label className="text-sm text-slate-600">
+          <label className="text-sm text-slate-600 dark:text-slate-300">
             Datum
             <input
               type="date"
               required
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
-              className="mt-1 block rounded border border-slate-300 px-3 py-2 text-sm"
+              className="mt-1 block rounded border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
             />
           </label>
           <button
@@ -207,52 +235,91 @@ export function CalendarPage() {
             Anlegen
           </button>
         </form>
-        {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
+        {error && <p className="mt-2 text-sm text-red-600 dark:text-red-400">{error}</p>}
       </div>
 
-      {isLoading ? (
-        <p className="text-slate-400">Lädt...</p>
-      ) : grouped.length === 0 ? (
-        <p className="text-slate-400">Keine Termine in {year}.</p>
-      ) : (
-        <div className="space-y-4">
-          {grouped.map(([month, monthEvents]) => (
-            <div key={month} className="rounded-lg bg-white p-4 shadow-sm">
-              <h3 className="text-sm font-semibold text-slate-500">
-                {new Date(`${month}-01`).toLocaleDateString('de-DE', {
-                  month: 'long',
-                  year: 'numeric',
-                })}
-              </h3>
-              <ul className="mt-2 space-y-1">
-                {monthEvents.map((event) => (
-                  <li key={event.id} className="flex items-center gap-3 text-sm">
-                    <span
-                      className="rounded px-1.5 py-0.5 text-xs font-medium text-white"
-                      style={{ backgroundColor: TYPE_COLORS[event.type] }}
-                    >
-                      {TYPE_LABELS[event.type]}
-                    </span>
-                    <span className="text-slate-500">
-                      {formatDay(event.startDate)}
-                      {event.endDate && ` – ${formatDay(event.endDate)}`}
-                    </span>
-                    <span className="flex-1 text-slate-800">{event.title}</span>
-                    {(event.type === 'MANUAL' || event.type === 'EXAM') && (
-                      <button
-                        onClick={() => void deleteEvent.mutateAsync(event.id)}
-                        className="text-xs text-slate-400 hover:text-red-600"
-                      >
-                        Löschen
-                      </button>
-                    )}
-                  </li>
-                ))}
-              </ul>
+      <div className="rounded-lg bg-white p-4 shadow-sm dark:bg-slate-800">
+        {isLoading ? (
+          <p className="text-slate-400 dark:text-slate-500">Lädt...</p>
+        ) : (
+          <>
+            <div className="grid grid-cols-7 gap-px overflow-hidden rounded border border-slate-200 bg-slate-200 text-xs font-semibold text-slate-500 dark:border-slate-700 dark:bg-slate-700 dark:text-slate-400">
+              {WEEKDAY_LABELS.map((label) => (
+                <div key={label} className="bg-slate-50 px-2 py-1 text-center dark:bg-slate-800">
+                  {label}
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
-      )}
+            <div className="grid grid-cols-7 gap-px overflow-hidden rounded border border-t-0 border-slate-200 bg-slate-200 dark:border-slate-700 dark:bg-slate-700">
+              {monthGrid.map((day) => {
+                const dayKey = toDateKey(day)
+                const isCurrentMonth = day.getUTCMonth() === month
+                const dayEvents = eventsByDay.get(dayKey) ?? []
+                const isToday = dayKey === todayKey
+                return (
+                  <div
+                    key={dayKey}
+                    className={
+                      isCurrentMonth
+                        ? 'min-h-[6rem] bg-white p-1.5 dark:bg-slate-800'
+                        : 'min-h-[6rem] bg-slate-50 p-1.5 dark:bg-slate-900'
+                    }
+                  >
+                    <div
+                      className={
+                        isToday
+                          ? 'inline-flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-xs font-semibold text-white'
+                          : isCurrentMonth
+                            ? 'text-xs font-medium text-slate-600 dark:text-slate-300'
+                            : 'text-xs font-medium text-slate-300 dark:text-slate-600'
+                      }
+                    >
+                      {day.getUTCDate()}
+                    </div>
+                    <div className="mt-1 space-y-0.5">
+                      {dayEvents.slice(0, 3).map((event) => (
+                        <div
+                          key={event.id}
+                          title={`${event.title}${event.endDate ? ` – ${formatDay(event.endDate)}` : ''}`}
+                          className="group flex items-center gap-1 truncate rounded px-1 py-0.5 text-[11px] font-medium text-white"
+                          style={{ backgroundColor: TYPE_COLORS[event.type] }}
+                        >
+                          <span className="truncate">{event.title}</span>
+                          {(event.type === 'MANUAL' || event.type === 'EXAM') && (
+                            <button
+                              onClick={() => void deleteEvent.mutateAsync(event.id)}
+                              className="ml-auto hidden flex-shrink-0 group-hover:inline"
+                              aria-label="Löschen"
+                            >
+                              ×
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                      {dayEvents.length > 3 && (
+                        <div className="text-[11px] text-slate-400 dark:text-slate-500">
+                          +{dayEvents.length - 3} mehr
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+            <div className="mt-3 flex flex-wrap gap-3 text-xs text-slate-500 dark:text-slate-400">
+              {(Object.keys(TYPE_LABELS) as CalendarEventType[]).map((t) => (
+                <span key={t} className="flex items-center gap-1.5">
+                  <span
+                    className="h-2.5 w-2.5 rounded-full"
+                    style={{ backgroundColor: TYPE_COLORS[t] }}
+                  />
+                  {TYPE_LABELS[t]}
+                </span>
+              ))}
+            </div>
+          </>
+        )}
+      </div>
     </div>
   )
 }

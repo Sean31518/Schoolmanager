@@ -124,4 +124,56 @@ describe("Holiday import", () => {
     expect(res.body.imported).toBe(1);
     expect(res.body.errors.length).toBe(1);
   });
+
+  it("reports a friendly rate-limit message when ferien-api.de returns 429 repeatedly", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (url: string) => {
+        if (url.includes("date.nager.at")) {
+          return new Response(JSON.stringify(mockPublicHolidays), { status: 200 });
+        }
+        return new Response("Too Many Requests", { status: 429 });
+      }),
+    );
+
+    const user = await registerUser();
+    const headers = { Authorization: `Bearer ${user.accessToken}` };
+
+    const res = await request(app)
+      .post("/api/calendar-events/import-holidays")
+      .set(headers)
+      .send({ year: 2099, federalState: "BW" });
+
+    expect(res.status).toBe(200);
+    expect(res.body.errors.some((e: string) => e.includes("Rate-Limit"))).toBe(true);
+  }, 10000);
+
+  it("retries once on a transient 429 and succeeds", async () => {
+    let ferienCalls = 0;
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (url: string) => {
+        if (url.includes("date.nager.at")) {
+          return new Response(JSON.stringify(mockPublicHolidays), { status: 200 });
+        }
+        ferienCalls += 1;
+        if (ferienCalls === 1) {
+          return new Response("Too Many Requests", { status: 429 });
+        }
+        return new Response(JSON.stringify(mockSchoolHolidays), { status: 200 });
+      }),
+    );
+
+    const user = await registerUser();
+    const headers = { Authorization: `Bearer ${user.accessToken}` };
+
+    const res = await request(app)
+      .post("/api/calendar-events/import-holidays")
+      .set(headers)
+      .send({ year: 2098, federalState: "BW" });
+
+    expect(res.status).toBe(200);
+    expect(res.body.errors).toEqual([]);
+    expect(ferienCalls).toBe(2);
+  }, 10000);
 });

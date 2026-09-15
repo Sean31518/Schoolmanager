@@ -44,94 +44,94 @@ export function TimeGridEditor() {
   }
 
   return (
-    <div className="rounded-lg bg-white p-4 shadow-sm">
-      <h2 className="text-lg font-semibold text-slate-800">Zeitraster</h2>
+    <div className="rounded-lg bg-white p-4 shadow-sm dark:bg-slate-800">
+      <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-100">Zeitraster</h2>
 
       {isLoading ? (
-        <p className="mt-3 text-slate-400">Lädt...</p>
+        <p className="mt-3 text-slate-400 dark:text-slate-500">Lädt...</p>
       ) : (
         <ul className="mt-3 space-y-1">
           {(slots ?? []).map((slot, index) => (
             <li
               key={slot.id}
-              className="flex items-center gap-3 rounded border border-slate-200 px-3 py-2 text-sm"
+              className="flex items-center gap-3 rounded border border-slate-200 px-3 py-2 text-sm dark:border-slate-700"
             >
-              <span className="w-24 text-slate-500">
+              <span className="w-24 text-slate-500 dark:text-slate-400">
                 {slot.startTime}–{slot.endTime}
               </span>
-              <span className="flex-1">
+              <span className="flex-1 text-slate-800 dark:text-slate-100">
                 {slot.label}{' '}
-                <span className="text-xs text-slate-400">
+                <span className="text-xs text-slate-400 dark:text-slate-500">
                   ({slot.type === 'LESSON' ? 'Stunde' : 'Pause'})
                 </span>
               </span>
               <button
                 type="button"
                 onClick={() => move(index, -1)}
-                className="text-slate-400 hover:text-slate-700"
+                className="text-slate-400 hover:text-slate-700 dark:text-slate-500 dark:hover:text-slate-200"
               >
                 ↑
               </button>
               <button
                 type="button"
                 onClick={() => move(index, 1)}
-                className="text-slate-400 hover:text-slate-700"
+                className="text-slate-400 hover:text-slate-700 dark:text-slate-500 dark:hover:text-slate-200"
               >
                 ↓
               </button>
               <button
                 type="button"
                 onClick={() => void deleteSlot.mutateAsync(slot.id)}
-                className="text-slate-400 hover:text-red-600"
+                className="text-slate-400 hover:text-red-600 dark:text-slate-500 dark:hover:text-red-400"
               >
                 Löschen
               </button>
             </li>
           ))}
           {slots && slots.length === 0 && (
-            <p className="text-slate-400">Noch kein Zeitraster angelegt.</p>
+            <p className="text-slate-400 dark:text-slate-500">Noch kein Zeitraster angelegt.</p>
           )}
         </ul>
       )}
 
       <form onSubmit={handleCreate} className="mt-4 flex flex-wrap items-end gap-3">
-        <label className="text-sm text-slate-600">
+        <label className="text-sm text-slate-600 dark:text-slate-300">
           Bezeichnung
           <input
             required
             value={label}
             onChange={(e) => setLabel(e.target.value)}
             placeholder="z.B. 1. Stunde"
-            className="mt-1 block rounded border border-slate-300 px-3 py-2 text-sm"
+            className="mt-1 block rounded border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
           />
         </label>
-        <label className="text-sm text-slate-600">
+        <label className="text-sm text-slate-600 dark:text-slate-300">
           Typ
           <select
             value={type}
             onChange={(e) => setType(e.target.value as TimeGridSlotType)}
-            className="mt-1 block rounded border border-slate-300 px-3 py-2 text-sm"
+            className="mt-1 block rounded border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
           >
             <option value="LESSON">Stunde</option>
             <option value="BREAK">Pause</option>
           </select>
         </label>
-        <label className="text-sm text-slate-600">
+        <label className="text-sm text-slate-600 dark:text-slate-300">
           Von
           <input
             type="time"
             value={startTime}
             onChange={(e) => setStartTime(e.target.value)}
-            className="mt-1 block rounded border border-slate-300 px-3 py-2 text-sm"
+            className="mt-1 block rounded border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
           />
         </label>
-        <label className="text-sm text-slate-600">
+        <label className="text-sm text-slate-600 dark:text-slate-300">
           Bis
           <input
             type="time"
             value={endTime}
             onChange={(e) => setEndTime(e.target.value)}
-            className="mt-1 block rounded border border-slate-300 px-3 py-2 text-sm"
+            className="mt-1 block rounded border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
           />
         </label>
         <button
@@ -142,7 +142,7 @@ export function TimeGridEditor() {
           Hinzufügen
         </button>
       </form>
-      {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
+      {error && <p className="mt-2 text-sm text-red-600 dark:text-red-400">{error}</p>}
     </div>
   )
 }

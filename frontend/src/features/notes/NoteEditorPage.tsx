@@ -48,15 +48,19 @@ export function NoteEditorPage() {
   }
 
   if (isLoading || content === null) {
-    return <p className="text-slate-400">Lädt...</p>
+    return <p className="text-slate-400 dark:text-slate-500">Lädt...</p>
   }
 
   return (
     <div>
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-slate-800">Klasse {gradeLevel}</h1>
+        <h1 className="text-2xl font-semibold text-slate-800 dark:text-slate-100">
+          Klasse {gradeLevel}
+        </h1>
         <div className="flex items-center gap-3 text-sm">
-          <span className={dirty ? 'text-amber-600' : 'text-green-600'}>
+          <span
+            className={dirty ? 'text-amber-600 dark:text-amber-400' : 'text-green-600 dark:text-green-400'}
+          >
             {dirty ? 'Ungespeicherte Änderungen' : 'Gespeichert'}
           </span>
           <button

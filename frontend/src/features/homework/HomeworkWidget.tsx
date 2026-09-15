@@ -19,12 +19,12 @@ export function HomeworkWidget({ items }: { items: HomeworkDto[] }) {
 
   return (
     <div>
-      <h2 className="text-lg font-semibold text-slate-800">Hausaufgaben</h2>
+      <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-100">Hausaufgaben</h2>
       <ul className="mt-3 space-y-2">
         {items.map((hw) => (
           <li
             key={hw.id}
-            className="flex items-center gap-3 rounded border border-slate-200 px-3 py-2 text-sm"
+            className="flex items-center gap-3 rounded border border-slate-200 px-3 py-2 text-sm dark:border-slate-700"
           >
             <input
               type="checkbox"
@@ -40,25 +40,29 @@ export function HomeworkWidget({ items }: { items: HomeworkDto[] }) {
               />
             )}
             <span
-              className={hw.done ? 'flex-1 text-slate-400 line-through' : 'flex-1 text-slate-700'}
+              className={
+                hw.done
+                  ? 'flex-1 text-slate-400 line-through dark:text-slate-500'
+                  : 'flex-1 text-slate-700 dark:text-slate-200'
+              }
             >
               {hw.title}
             </span>
             {hw.dueDate && (
-              <span className="text-xs text-slate-400">
+              <span className="text-xs text-slate-400 dark:text-slate-500">
                 {new Date(hw.dueDate).toLocaleDateString('de-DE')}
               </span>
             )}
             <button
               onClick={() => void deleteHomework.mutateAsync(hw.id)}
-              className="text-xs text-slate-400 hover:text-red-600"
+              className="text-xs text-slate-400 hover:text-red-600 dark:text-slate-500 dark:hover:text-red-400"
             >
               ×
             </button>
           </li>
         ))}
         {items.length === 0 && (
-          <p className="text-sm text-slate-400">Keine offenen Hausaufgaben.</p>
+          <p className="text-sm text-slate-400 dark:text-slate-500">Keine offenen Hausaufgaben.</p>
         )}
       </ul>
 
@@ -67,13 +71,13 @@ export function HomeworkWidget({ items }: { items: HomeworkDto[] }) {
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder="Neue Hausaufgabe"
-          className="min-w-[160px] flex-1 rounded border border-slate-300 px-3 py-1.5 text-sm"
+          className="min-w-[160px] flex-1 rounded border border-slate-300 bg-white px-3 py-1.5 text-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
         />
         <input
           type="date"
           value={dueDate}
           onChange={(e) => setDueDate(e.target.value)}
-          className="rounded border border-slate-300 px-3 py-1.5 text-sm"
+          className="rounded border border-slate-300 bg-white px-3 py-1.5 text-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
         />
         <button
           type="submit"

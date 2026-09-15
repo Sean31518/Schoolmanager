@@ -29,40 +29,44 @@ export function RegisterPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4">
+    <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4 dark:bg-slate-900">
       <form
         onSubmit={handleSubmit}
-        className="w-full max-w-sm rounded-lg bg-white p-8 shadow"
+        className="w-full max-w-sm rounded-lg bg-white p-8 shadow dark:bg-slate-800"
       >
-        <h1 className="mb-6 text-xl font-semibold text-slate-800">Konto erstellen</h1>
+        <h1 className="mb-6 text-xl font-semibold text-slate-800 dark:text-slate-100">
+          Konto erstellen
+        </h1>
 
         {error && (
-          <p className="mb-4 rounded bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>
+          <p className="mb-4 rounded bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950 dark:text-red-300">
+            {error}
+          </p>
         )}
 
-        <label className="mb-3 block text-sm text-slate-600">
+        <label className="mb-3 block text-sm text-slate-600 dark:text-slate-300">
           Name
           <input
             type="text"
             required
             value={displayName}
             onChange={(e) => setDisplayName(e.target.value)}
-            className="mt-1 w-full rounded border border-slate-300 px-3 py-2 text-sm"
+            className="mt-1 w-full rounded border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
           />
         </label>
 
-        <label className="mb-3 block text-sm text-slate-600">
+        <label className="mb-3 block text-sm text-slate-600 dark:text-slate-300">
           E-Mail
           <input
             type="email"
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="mt-1 w-full rounded border border-slate-300 px-3 py-2 text-sm"
+            className="mt-1 w-full rounded border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
           />
         </label>
 
-        <label className="mb-6 block text-sm text-slate-600">
+        <label className="mb-6 block text-sm text-slate-600 dark:text-slate-300">
           Passwort (mind. 8 Zeichen)
           <input
             type="password"
@@ -70,7 +74,7 @@ export function RegisterPage() {
             minLength={8}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="mt-1 w-full rounded border border-slate-300 px-3 py-2 text-sm"
+            className="mt-1 w-full rounded border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
           />
         </label>
 
@@ -82,9 +86,9 @@ export function RegisterPage() {
           {submitting ? 'Wird erstellt...' : 'Konto erstellen'}
         </button>
 
-        <p className="mt-4 text-center text-sm text-slate-500">
+        <p className="mt-4 text-center text-sm text-slate-500 dark:text-slate-400">
           Bereits ein Konto?{' '}
-          <Link to="/login" className="text-blue-600 hover:underline">
+          <Link to="/login" className="text-blue-600 hover:underline dark:text-blue-400">
             Anmelden
           </Link>
         </p>

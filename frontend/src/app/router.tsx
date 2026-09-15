@@ -7,6 +7,7 @@ import { CalendarPage } from '../features/calendar/CalendarPage'
 import { DashboardPage } from '../features/dashboard/DashboardPage'
 import { NoteEditorPage } from '../features/notes/NoteEditorPage'
 import { SectionTypeOverviewPage } from '../features/notes/SectionTypeOverviewPage'
+import { SettingsPage } from '../features/settings/SettingsPage'
 import { SubjectDetailPage } from '../features/subjects/SubjectDetailPage'
 import { SubjectsPage } from '../features/subjects/SubjectsPage'
 import { TimetablePage } from '../features/timetable/TimetablePage'
@@ -17,7 +18,7 @@ function RequireAuth({ children }: { children: ReactNode }) {
 
   if (status === 'loading') {
     return (
-      <div className="flex min-h-screen items-center justify-center text-slate-400">
+      <div className="flex min-h-screen items-center justify-center bg-slate-50 text-slate-400 dark:bg-slate-900 dark:text-slate-500">
         Lädt...
       </div>
     )
@@ -45,6 +46,7 @@ export function AppRouter() {
         <Route path="/" element={<DashboardPage />} />
         <Route path="/timetable" element={<TimetablePage />} />
         <Route path="/calendar" element={<CalendarPage />} />
+        <Route path="/settings" element={<SettingsPage />} />
         <Route path="/subjects" element={<SubjectsPage />} />
         <Route path="/subjects/:subjectId" element={<SubjectDetailPage />} />
         <Route
