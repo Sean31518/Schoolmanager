@@ -171,7 +171,7 @@ function SubjectManagerRow({ subject }: { subject: SubjectDto }) {
       />
       <span className="font-medium text-text-primary">{subject.name}</span>
       <span className="ml-auto flex items-center gap-3">
-        <button onClick={startEditing} className="text-text-muted hover:text-accent">
+        <button onClick={startEditing} className="text-text-muted hover:text-accent-text">
           Bearbeiten
         </button>
         <button onClick={handleDelete} className="text-text-muted hover:text-red-400">

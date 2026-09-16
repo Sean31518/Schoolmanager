@@ -8,7 +8,7 @@ export function SubjectsPage() {
     <div className="space-y-5">
       <div className="flex items-center justify-between">
         <h1 className="text-[15px] font-semibold text-text-primary">Fächer</h1>
-        <Link to="/settings" className="text-sm text-accent hover:underline">
+        <Link to="/settings" className="text-sm text-accent-text hover:underline">
           Fächer verwalten
         </Link>
       </div>
@@ -38,7 +38,7 @@ export function SubjectsPage() {
       ) : (
         <p className="text-text-tertiary">
           Noch keine Fächer angelegt.{' '}
-          <Link to="/settings" className="text-accent hover:underline">
+          <Link to="/settings" className="text-accent-text hover:underline">
             Jetzt anlegen
           </Link>
         </p>

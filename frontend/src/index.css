@@ -6,7 +6,41 @@
   --font-sans: 'Figtree', ui-sans-serif, system-ui, sans-serif;
   --font-mono: 'Azeret Mono', ui-monospace, monospace;
 
-  /* Werkstatt Corporate Design - warmes Graphit + Ocker-Akzent */
+  /* Werkstatt Corporate Design - warmes Graphit + Ocker-Akzent.
+     Light is the @theme default; .dark below overrides every token for the
+     dark variant. Toggled at runtime via useTheme() (dark/light-theme.ts),
+     which adds/removes the `dark` class on <html>. */
+  --color-bg-0: #ffffff;
+  --color-bg-1: #faf8f3;
+  --color-bg-2: #f4f2ec;
+  --color-bg-3: #eae6dc;
+  --color-bg-hover: #eae6dc;
+  --color-bg-muted: #f4f2ec;
+
+  --color-border: #dcd8cc;
+  --color-border-subtle: #e7e3d9;
+
+  --color-text-primary: #1c1b17;
+  --color-text-secondary: #4e4b42;
+  --color-text-tertiary: #5a574e;
+  --color-text-muted: #706c60;
+  --color-text-disabled: #8f8a7b;
+
+  --color-accent: #dfa24a;
+  --color-accent-hover: #b87f2e;
+  --color-accent-ink: #1a1408;
+  /* Accent used as text (not fill) is darkened for contrast against light
+     backgrounds; on the dark background the plain accent already reads fine. */
+  --color-accent-text: #a2661c;
+
+  /* A few Werkstatt-restyled components use bare Tailwind red-400/green-400
+     for danger/success accents without their own light/dark pairing;
+     overriding the palette entries here re-themes them for free. */
+  --color-red-400: #dc2626;
+  --color-green-400: #15803d;
+}
+
+.dark {
   --color-bg-0: #0a0a09;
   --color-bg-1: #121211;
   --color-bg-2: #1a1a18;
@@ -26,6 +60,10 @@
   --color-accent: #dfa24a;
   --color-accent-hover: #b87f2e;
   --color-accent-ink: #1a1408;
+  --color-accent-text: #dfa24a;
+
+  --color-red-400: #f87171;
+  --color-green-400: #4ade80;
 }
 
 body {

@@ -150,7 +150,7 @@ export function EventEditModal({
             <button
               type="button"
               onClick={() => setColor(null)}
-              className="text-sm text-text-muted hover:text-accent"
+              className="text-sm text-text-muted hover:text-accent-text"
             >
               Automatische Farbe verwenden
             </button>
@@ -159,7 +159,7 @@ export function EventEditModal({
 
         {event.type === 'EXAM' && (
           <p className="mt-3 text-sm">
-            <Link to={`/exams/${event.id}`} className="text-accent hover:underline">
+            <Link to={`/exams/${event.id}`} className="text-accent-text hover:underline">
               Klausurvorbereitung öffnen →
             </Link>
           </p>

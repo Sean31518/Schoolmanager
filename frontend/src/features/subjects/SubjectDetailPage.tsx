@@ -92,13 +92,13 @@ function SectionTypeRow({
       ) : (
         <Link
           to={`/subjects/${subjectId}/sections/${sectionType.id}`}
-          className="text-sm font-medium text-text-primary hover:text-accent"
+          className="text-sm font-medium text-text-primary hover:text-accent-text"
         >
           {sectionType.name}
         </Link>
       )}
       <div className="flex items-center gap-3 text-sm">
-        <button type="button" onClick={startRenaming} className="text-accent hover:underline">
+        <button type="button" onClick={startRenaming} className="text-accent-text hover:underline">
           Bearbeiten
         </button>
         <button onClick={onDelete} className="text-text-muted hover:text-red-400">

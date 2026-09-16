@@ -4,6 +4,7 @@ import { SidebarResizeHandle } from '../components/SidebarResizeHandle'
 import { useAuth } from '../features/auth/AuthContext'
 import { useSubjects } from '../features/subjects/hooks'
 import { useResizableSidebar } from '../lib/useResizableSidebar'
+import { useTheme } from '../lib/useTheme'
 
 const navItems = [
   {
@@ -80,6 +81,7 @@ function NavIcon({ children }: { children: ReactNode }) {
 export function Layout() {
   const { user } = useAuth()
   const { data: subjects } = useSubjects()
+  const { theme, toggleTheme } = useTheme()
   const { width, collapsed, setCollapsed, startResize } = useResizableSidebar(
     'sidebar-main',
     210,
@@ -173,7 +175,7 @@ export function Layout() {
             >
               {({ isActive }) => (
                 <>
-                  <span className={isActive ? 'text-accent' : 'text-text-tertiary'}>
+                  <span className={isActive ? 'text-accent-text' : 'text-text-tertiary'}>
                     <NavIcon>{item.icon}</NavIcon>
                   </span>
                   {item.label}
@@ -210,21 +212,44 @@ export function Layout() {
         <div className="mt-auto flex items-center gap-2 border-t border-border pt-3">
           <button
             type="button"
-            title="Design-Umschalter (bald verfügbar)"
-            aria-label="Design-Umschalter (bald verfügbar)"
-            className="flex h-[22px] w-[22px] items-center justify-center rounded-md bg-bg-hover text-text-secondary"
+            onClick={toggleTheme}
+            title={theme === 'dark' ? 'Helles Design' : 'Dunkles Design'}
+            aria-label={theme === 'dark' ? 'Helles Design' : 'Dunkles Design'}
+            className="flex h-[22px] w-[22px] items-center justify-center rounded-md bg-bg-hover text-text-secondary hover:text-text-primary"
           >
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.75"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="h-[13px] w-[13px]"
-            >
-              <path d="M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401" />
-            </svg>
+            {theme === 'dark' ? (
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.75"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="h-[13px] w-[13px]"
+              >
+                <circle cx="12" cy="12" r="4" />
+                <path d="M12 2v2" />
+                <path d="M12 20v2" />
+                <path d="m4.93 4.93 1.41 1.41" />
+                <path d="m17.66 17.66 1.41 1.41" />
+                <path d="M2 12h2" />
+                <path d="M20 12h2" />
+                <path d="m6.34 17.66-1.41 1.41" />
+                <path d="m19.07 4.93-1.41 1.41" />
+              </svg>
+            ) : (
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.75"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="h-[13px] w-[13px]"
+              >
+                <path d="M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401" />
+              </svg>
+            )}
           </button>
           <span className="flex-1 truncate text-xs text-text-secondary">
             {user?.displayName}

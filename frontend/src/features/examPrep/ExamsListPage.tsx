@@ -40,7 +40,7 @@ export function ExamsListPage() {
             {upcoming.length === 0 ? (
               <p className="mt-2 text-text-tertiary">
                 Keine anstehenden Klausuren.{' '}
-                <Link to="/calendar" className="text-accent hover:underline">
+                <Link to="/calendar" className="text-accent-text hover:underline">
                   Im Kalender anlegen
                 </Link>
               </p>
@@ -59,7 +59,7 @@ export function ExamsListPage() {
                     )}
                     <Link
                       to={`/exams/${exam.id}`}
-                      className="font-medium text-text-primary hover:text-accent"
+                      className="font-medium text-text-primary hover:text-accent-text"
                     >
                       {exam.title}
                     </Link>
@@ -92,7 +92,7 @@ export function ExamsListPage() {
                     )}
                     <Link
                       to={`/exams/${exam.id}`}
-                      className="font-medium text-text-primary hover:text-accent"
+                      className="font-medium text-text-primary hover:text-accent-text"
                     >
                       {exam.title}
                     </Link>

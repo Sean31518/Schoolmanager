@@ -137,7 +137,7 @@ export function CalendarPage() {
       {!holidaysImportedForYear && (
         <p className="text-sm text-text-tertiary">
           Ferien &amp; Feiertage importieren?{' '}
-          <Link to="/settings" className="text-accent hover:underline">
+          <Link to="/settings" className="text-accent-text hover:underline">
             In den Einstellungen
           </Link>
         </p>

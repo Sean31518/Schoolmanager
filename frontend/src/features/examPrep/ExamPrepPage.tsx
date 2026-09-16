@@ -70,7 +70,7 @@ export function ExamPrepPage() {
   return (
     <div className="space-y-6">
       <div>
-        <Link to="/exams" className="text-sm text-accent hover:underline">
+        <Link to="/exams" className="text-sm text-accent-text hover:underline">
           ← Klausuren
         </Link>
         <h1 className="mt-1 text-[15px] font-semibold text-text-primary">
@@ -87,7 +87,7 @@ export function ExamPrepPage() {
           + Stoff hinzufügen
         </button>
         {(existing?.items.length ?? 0) > 0 && (
-          <Link to={`/exams/${eventId}`} className="text-sm text-accent hover:underline">
+          <Link to={`/exams/${eventId}`} className="text-sm text-accent-text hover:underline">
             Zur Lernansicht →
           </Link>
         )}

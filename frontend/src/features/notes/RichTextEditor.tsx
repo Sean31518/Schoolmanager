@@ -132,7 +132,7 @@ function EditorToolbar({ editor }: { editor: Editor | null }) {
             onClick={btn.onClick}
             className={`rounded-md px-2 py-1 text-xs ${
               btn.isActive
-                ? 'bg-accent/15 text-accent'
+                ? 'bg-accent/15 text-accent-text'
                 : 'text-text-secondary hover:bg-bg-hover'
             }`}
           >
@@ -145,7 +145,7 @@ function EditorToolbar({ editor }: { editor: Editor | null }) {
             type="button"
             onClick={() => setShowTablePicker((v) => !v)}
             className={`rounded-md px-2 py-1 text-xs ${
-              inTable ? 'bg-accent/15 text-accent' : 'text-text-secondary hover:bg-bg-hover'
+              inTable ? 'bg-accent/15 text-accent-text' : 'text-text-secondary hover:bg-bg-hover'
             }`}
           >
             Tabelle

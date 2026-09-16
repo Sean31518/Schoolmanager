@@ -118,7 +118,7 @@ export function TimetableView() {
                 key={day.value}
                 className={`pb-1.5 pl-1 text-left font-mono text-[10px] tracking-wider ${
                   day.value === todayWeekday
-                    ? 'font-semibold text-accent'
+                    ? 'font-semibold text-accent-text'
                     : 'font-medium text-text-muted'
                 }`}
               >

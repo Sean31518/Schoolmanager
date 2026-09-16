@@ -82,7 +82,7 @@ function NoteEditor({ noteId }: { noteId: string }) {
           <button
             type="button"
             onClick={startRenaming}
-            className="text-2xl font-semibold text-text-primary hover:text-accent"
+            className="text-2xl font-semibold text-text-primary hover:text-accent-text"
           >
             {note.title}
           </button>

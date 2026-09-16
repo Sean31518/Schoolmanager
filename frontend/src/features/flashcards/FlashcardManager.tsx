@@ -149,7 +149,7 @@ function FlashcardRow({ topicId, card }: { topicId: string; card: FlashcardDto }
       <span
         className={`shrink-0 rounded-[4px] px-1.5 py-px font-mono text-[9px] ${
           card.state === 'KNOWN'
-            ? 'bg-accent/15 text-accent'
+            ? 'bg-accent/15 text-accent-text'
             : 'bg-bg-hover text-text-tertiary'
         }`}
       >

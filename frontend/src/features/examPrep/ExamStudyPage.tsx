@@ -77,7 +77,7 @@ export function ExamStudyPage() {
         <PageHeader eventId={eventId} />
         <p className="text-text-tertiary">
           Noch keine Inhalte ausgewählt.{' '}
-          <Link to={`/exams/${eventId}/edit`} className="text-accent hover:underline">
+          <Link to={`/exams/${eventId}/edit`} className="text-accent-text hover:underline">
             Jetzt auswählen
           </Link>
         </p>
@@ -165,7 +165,7 @@ export function ExamStudyPage() {
 function PageHeader({ eventId }: { eventId: string }) {
   return (
     <div>
-      <Link to={`/exams/${eventId}/edit`} className="text-sm text-accent hover:underline">
+      <Link to={`/exams/${eventId}/edit`} className="text-sm text-accent-text hover:underline">
         ← Auswahl bearbeiten
       </Link>
       <h1 className="mt-1 text-[15px] font-semibold text-text-primary">Lernansicht</h1>

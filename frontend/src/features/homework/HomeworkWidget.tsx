@@ -20,7 +20,7 @@ export function HomeworkWidget({ items }: { items: HomeworkDto[] }) {
           HAUSAUFGABEN
         </span>
         {items.length > 0 && (
-          <span className="rounded-[4px] border border-accent/40 px-1.5 py-px font-mono text-[10px] text-accent">
+          <span className="rounded-[4px] border border-accent/40 px-1.5 py-px font-mono text-[10px] text-accent-text">
             {items.filter((hw) => !hw.done).length} OFFEN
           </span>
         )}
@@ -166,7 +166,7 @@ function HomeworkItem({ hw }: { hw: HomeworkDto }) {
       {hw.linkedNote && (
         <Link
           to={`/subjects/${hw.linkedNote.subjectId}/sections/${hw.linkedNote.sectionTypeId}/notes/${hw.linkedNote.id}`}
-          className="mt-1.5 ml-6 flex items-center gap-1.5 text-xs text-text-tertiary hover:text-accent"
+          className="mt-1.5 ml-6 flex items-center gap-1.5 text-xs text-text-tertiary hover:text-accent-text"
         >
           <svg
             viewBox="0 0 24 24"
@@ -197,7 +197,7 @@ function HomeworkItem({ hw }: { hw: HomeworkDto }) {
               placeholder="Neue Unteraufgabe"
               className="flex-1 rounded-md border border-border bg-bg-muted px-2 py-1 text-xs text-text-primary placeholder:text-text-muted"
             />
-            <button type="submit" className="text-xs text-accent hover:underline">
+            <button type="submit" className="text-xs text-accent-text hover:underline">
               Hinzufügen
             </button>
           </form>
@@ -225,7 +225,7 @@ function LinkedNoteControl({ hw }: { hw: HomeworkDto }) {
         title={hw.linkedNote ? 'Verknüpfung ändern' : 'Mit Notiz verknüpfen'}
         className={
           hw.linkedNote
-            ? 'relative z-20 shrink-0 text-accent'
+            ? 'relative z-20 shrink-0 text-accent-text'
             : 'relative z-20 shrink-0 text-text-muted hover:text-text-primary'
         }
       >
@@ -265,7 +265,7 @@ function LinkedNoteControl({ hw }: { hw: HomeworkDto }) {
                   onClick={() => pick(note.id)}
                   className={
                     note.id === hw.linkedNoteId
-                      ? 'block w-full truncate rounded px-1.5 py-1 text-left text-xs font-semibold text-accent'
+                      ? 'block w-full truncate rounded px-1.5 py-1 text-left text-xs font-semibold text-accent-text'
                       : 'block w-full truncate rounded px-1.5 py-1 text-left text-xs text-text-secondary hover:bg-bg-hover'
                   }
                 >

@@ -158,7 +158,7 @@ export function StoffBrowser({
               setTopicId(null)
               setNoteId(null)
             }}
-            className="text-accent hover:underline"
+            className="text-accent-text hover:underline"
           >
             Fächer
           </button>
@@ -171,7 +171,7 @@ export function StoffBrowser({
                   setTopicId(null)
                   setNoteId(null)
                 }}
-                className="text-accent hover:underline"
+                className="text-accent-text hover:underline"
               >
                 {subject.name}
               </button>
@@ -185,7 +185,7 @@ export function StoffBrowser({
                   setTopicId(null)
                   setNoteId(null)
                 }}
-                className="text-accent hover:underline"
+                className="text-accent-text hover:underline"
               >
                 {sectionType.name}
               </button>
@@ -194,7 +194,7 @@ export function StoffBrowser({
           {topic && (
             <>
               <span className="text-text-muted">/</span>
-              <button onClick={() => setNoteId(null)} className="text-accent hover:underline">
+              <button onClick={() => setNoteId(null)} className="text-accent-text hover:underline">
                 {topic.name}
               </button>
             </>
@@ -252,7 +252,7 @@ export function StoffBrowser({
                 <button
                   onClick={() => void toggleWholeSectionType()}
                   disabled={bulkLoading}
-                  className="mb-1 block w-full rounded-md border border-dashed border-accent/40 p-2 text-left text-sm text-accent hover:bg-accent/10 disabled:opacity-50"
+                  className="mb-1 block w-full rounded-md border border-dashed border-accent/40 p-2 text-left text-sm text-accent-text hover:bg-accent/10 disabled:opacity-50"
                 >
                   {bulkLoading ? 'Lädt...' : 'Alle Themen dieses Hefts an-/abwählen'}
                 </button>
@@ -279,7 +279,7 @@ export function StoffBrowser({
               {notes && notes.length > 0 && (
                 <button
                   onClick={() => toggleWholeTopic(notes)}
-                  className="mb-1 block w-full rounded-md border border-dashed border-accent/40 p-2 text-left text-sm text-accent hover:bg-accent/10"
+                  className="mb-1 block w-full rounded-md border border-dashed border-accent/40 p-2 text-left text-sm text-accent-text hover:bg-accent/10"
                 >
                   {isFullySelected(selection, notes)
                     ? 'Alle Notizen dieses Themas abwählen'
@@ -294,7 +294,7 @@ export function StoffBrowser({
                 >
                   <span>{n.title}</span>
                   {(selection.get(n.id)?.size ?? 0) > 0 && (
-                    <span className="rounded-full bg-accent/15 px-2 py-0.5 text-xs text-accent">
+                    <span className="rounded-full bg-accent/15 px-2 py-0.5 text-xs text-accent-text">
                       {selection.get(n.id)?.size} ausgewählt
                     </span>
                   )}

@@ -46,7 +46,7 @@ export function ExamHighlightWidget() {
       to={`/exams/${nextExam.id}`}
       className="block rounded-lg border border-accent/35 border-l-[3px] bg-accent/[0.07] px-3 py-2.5"
     >
-      <div className="font-mono text-[10px] tracking-wider text-accent">
+      <div className="font-mono text-[10px] tracking-wider text-accent-text">
         {formatDaysLabel(daysUntil(nextExam.startDate))}
       </div>
       <div className="mt-0.5 text-sm font-semibold text-text-primary">{nextExam.title}</div>

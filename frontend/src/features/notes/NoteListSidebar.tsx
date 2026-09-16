@@ -86,7 +86,7 @@ export function NoteListSidebar({
         <div className="flex items-center justify-between gap-2">
           <Link
             to={`/subjects/${subjectId}`}
-            className="flex min-w-0 items-center gap-2 text-text-primary hover:text-accent"
+            className="flex min-w-0 items-center gap-2 text-text-primary hover:text-accent-text"
           >
             {subject && (
               <span
@@ -241,7 +241,7 @@ function TopicGroup({
           type="button"
           onClick={() => void handleCreateNote()}
           title="Neue Notiz in diesem Thema"
-          className="hidden h-5 w-5 shrink-0 items-center justify-center rounded-[4px] text-text-muted hover:bg-bg-hover hover:text-accent group-hover/topic:flex"
+          className="hidden h-5 w-5 shrink-0 items-center justify-center rounded-[4px] text-text-muted hover:bg-bg-hover hover:text-accent-text group-hover/topic:flex"
         >
           <svg
             viewBox="0 0 24 24"

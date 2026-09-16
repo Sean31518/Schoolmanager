@@ -13,7 +13,7 @@ export function TimetablePage() {
       {!hasEntries && (
         <p className="text-sm text-text-tertiary">
           Stundenplan bearbeiten?{' '}
-          <Link to="/settings" className="text-accent hover:underline">
+          <Link to="/settings" className="text-accent-text hover:underline">
             In den Einstellungen
           </Link>
         </p>
