@@ -1,5 +1,5 @@
 import type { JSONContent } from '@tiptap/react'
-import { useRef, useState } from 'react'
+import { useRef, useState, type ReactNode } from 'react'
 import type { BlockActions } from '../SlashCommand'
 import {
   useCreateImageBlock,
@@ -67,6 +67,16 @@ export function BlockList({ noteId, blocks }: { noteId: string; blocks: NoteBloc
   function requestLinkAt(position: number) {
     pendingInsertIndex.current = position
     setShowLinkForm(true)
+  }
+
+  function blockActionsAt(position: number): BlockActions {
+    return {
+      onInsertText: () => void insertTextAt(position),
+      onRequestPdf: () => requestPdfAt(position),
+      onRequestVideo: () => requestVideoAt(position),
+      onRequestLink: () => requestLinkAt(position),
+      onRequestImage: () => requestImageAt(position),
+    }
   }
 
   async function moveToPendingPosition(newBlockIds: string[]) {
@@ -156,17 +166,17 @@ export function BlockList({ noteId, blocks }: { noteId: string; blocks: NoteBloc
 
   return (
     <div className="space-y-1">
-      <InsertTextHere onClick={() => void insertTextAt(0)} />
+      <InsertBlockMenu actions={blockActionsAt(0)} />
       {blocks.map((block, index) => (
         <div key={block.id}>
-          <div className="group relative rounded-lg border border-transparent p-1 hover:border-slate-200 dark:hover:border-slate-700">
-            <div className="absolute right-1 top-1 hidden items-center gap-1 group-hover:flex">
+          <div className="group relative rounded-lg border border-transparent p-1 hover:border-border">
+            <div className="absolute right-1 top-1 hidden items-center gap-1 rounded-md border border-border bg-bg-2 p-0.5 shadow-lg group-hover:flex">
               <button
                 type="button"
                 onClick={() => moveBlock(index, -1)}
                 disabled={index === 0}
                 title="Nach oben verschieben"
-                className="rounded bg-white px-1.5 py-0.5 text-xs text-slate-400 shadow hover:text-blue-600 disabled:opacity-30 disabled:hover:text-slate-400 dark:bg-slate-800 dark:text-slate-500 dark:hover:text-blue-400"
+                className="rounded px-1.5 py-0.5 text-xs text-text-muted hover:bg-bg-hover hover:text-text-primary disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-text-muted"
               >
                 ↑
               </button>
@@ -175,7 +185,7 @@ export function BlockList({ noteId, blocks }: { noteId: string; blocks: NoteBloc
                 onClick={() => moveBlock(index, 1)}
                 disabled={index === blocks.length - 1}
                 title="Nach unten verschieben"
-                className="rounded bg-white px-1.5 py-0.5 text-xs text-slate-400 shadow hover:text-blue-600 disabled:opacity-30 disabled:hover:text-slate-400 dark:bg-slate-800 dark:text-slate-500 dark:hover:text-blue-400"
+                className="rounded px-1.5 py-0.5 text-xs text-text-muted hover:bg-bg-hover hover:text-text-primary disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-text-muted"
               >
                 ↓
               </button>
@@ -183,7 +193,7 @@ export function BlockList({ noteId, blocks }: { noteId: string; blocks: NoteBloc
                 <button
                   type="button"
                   onClick={() => handleDelete(block.id)}
-                  className="rounded bg-white px-1.5 py-0.5 text-xs text-slate-400 shadow hover:text-red-600 dark:bg-slate-800 dark:text-slate-500 dark:hover:text-red-400"
+                  className="rounded px-1.5 py-0.5 text-xs text-text-muted hover:bg-bg-hover hover:text-red-400"
                 >
                   Entfernen
                 </button>
@@ -194,16 +204,10 @@ export function BlockList({ noteId, blocks }: { noteId: string; blocks: NoteBloc
               onSaveText={(content) =>
                 void updateBlock.mutateAsync({ blockId: block.id, data: { contentJson: content } })
               }
-              blockActions={{
-                onInsertText: () => void insertTextAt(index + 1),
-                onRequestPdf: () => requestPdfAt(index + 1),
-                onRequestVideo: () => requestVideoAt(index + 1),
-                onRequestLink: () => requestLinkAt(index + 1),
-                onRequestImage: () => requestImageAt(index + 1),
-              }}
+              blockActions={blockActionsAt(index + 1)}
             />
           </div>
-          <InsertTextHere onClick={() => void insertTextAt(index + 1)} />
+          <InsertBlockMenu actions={blockActionsAt(index + 1)} />
         </div>
       ))}
 
@@ -241,8 +245,8 @@ export function BlockList({ noteId, blocks }: { noteId: string; blocks: NoteBloc
         }}
       />
 
-      {uploading && <span className="text-xs text-slate-400 dark:text-slate-500">Lädt hoch...</span>}
-      {uploadError && <span className="text-xs text-red-600 dark:text-red-400">{uploadError}</span>}
+      {uploading && <span className="text-xs text-text-tertiary">Lädt hoch...</span>}
+      {uploadError && <span className="text-xs text-red-400">{uploadError}</span>}
 
       {showLinkForm && (
         <form onSubmit={(e) => void handleAddLink(e)} className="flex items-center gap-2">
@@ -253,11 +257,11 @@ export function BlockList({ noteId, blocks }: { noteId: string; blocks: NoteBloc
             placeholder="https://..."
             value={linkDraft}
             onChange={(e) => setLinkDraft(e.target.value)}
-            className="flex-1 rounded border border-slate-300 bg-white px-3 py-1.5 text-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+            className="flex-1 rounded-md border border-border bg-bg-muted px-3 py-1.5 text-sm text-text-primary placeholder:text-text-muted"
           />
           <button
             type="submit"
-            className="rounded bg-blue-600 px-3 py-1.5 text-sm font-medium text-white"
+            className="rounded-md bg-accent px-3 py-1.5 text-sm font-semibold text-accent-ink"
           >
             Hinzufügen
           </button>
@@ -267,7 +271,7 @@ export function BlockList({ noteId, blocks }: { noteId: string; blocks: NoteBloc
               pendingInsertIndex.current = null
               setShowLinkForm(false)
             }}
-            className="rounded border border-slate-300 px-3 py-1.5 text-sm hover:bg-slate-100 dark:border-slate-600 dark:hover:bg-slate-700"
+            className="rounded-md border border-border px-3 py-1.5 text-sm text-text-secondary hover:bg-bg-hover"
           >
             Abbrechen
           </button>
@@ -277,17 +281,119 @@ export function BlockList({ noteId, blocks }: { noteId: string; blocks: NoteBloc
   )
 }
 
-function InsertTextHere({ onClick }: { onClick: () => void }) {
+function MenuIcon({ children }: { children: ReactNode }) {
   return (
-    <div className="group/insert flex h-2 items-center">
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.75"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className="h-[14px] w-[14px] shrink-0 text-text-tertiary"
+    >
+      {children}
+    </svg>
+  )
+}
+
+/** The small "+" between blocks — click reveals a menu to pick which kind
+ * of block to insert there, instead of always inserting text. */
+function InsertBlockMenu({ actions }: { actions: BlockActions }) {
+  const [open, setOpen] = useState(false)
+
+  function pick(action: () => void) {
+    setOpen(false)
+    action()
+  }
+
+  return (
+    <div className="group/insert relative flex h-2 items-center justify-center">
       <button
         type="button"
-        onClick={onClick}
-        title="Textblock hier einfügen"
-        className="mx-auto hidden h-4 w-4 items-center justify-center rounded-full bg-blue-600 text-xs leading-none text-white group-hover/insert:flex"
+        onClick={() => setOpen((v) => !v)}
+        title="Element hier einfügen"
+        className={`relative z-20 mx-auto flex h-4 w-4 items-center justify-center rounded-full bg-accent text-accent-ink hover:bg-accent-hover ${
+          open ? 'flex' : 'hidden group-hover/insert:flex'
+        }`}
       >
-        +
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="h-2.5 w-2.5"
+        >
+          <path d="M12 5v14M5 12h14" />
+        </svg>
       </button>
+      {open && (
+        <>
+          <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
+          <div className="absolute left-1/2 top-full z-20 w-40 -translate-x-1/2 pt-1.5">
+            <div className="rounded-md border border-border bg-bg-2 p-1 shadow-lg">
+              <button
+                type="button"
+                onClick={() => pick(actions.onInsertText)}
+                className="flex w-full items-center gap-2.5 rounded px-2 py-1.5 text-left text-[12.5px] font-medium text-text-secondary hover:bg-bg-hover hover:text-text-primary"
+              >
+                <MenuIcon>
+                  <path d="M4 6h16M4 12h16M4 18h10" />
+                </MenuIcon>
+                Text
+              </button>
+              <button
+                type="button"
+                onClick={() => pick(actions.onRequestPdf)}
+                className="flex w-full items-center gap-2.5 rounded px-2 py-1.5 text-left text-[12.5px] font-medium text-text-secondary hover:bg-bg-hover hover:text-text-primary"
+              >
+                <MenuIcon>
+                  <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" />
+                  <path d="M14 2v5h6" />
+                </MenuIcon>
+                PDF
+              </button>
+              <button
+                type="button"
+                onClick={() => pick(actions.onRequestVideo)}
+                className="flex w-full items-center gap-2.5 rounded px-2 py-1.5 text-left text-[12.5px] font-medium text-text-secondary hover:bg-bg-hover hover:text-text-primary"
+              >
+                <MenuIcon>
+                  <path d="m22 8-6 4 6 4V8Z" />
+                  <rect width="14" height="12" x="2" y="6" rx="2" />
+                </MenuIcon>
+                Video
+              </button>
+              <button
+                type="button"
+                onClick={() => pick(actions.onRequestImage)}
+                className="flex w-full items-center gap-2.5 rounded px-2 py-1.5 text-left text-[12.5px] font-medium text-text-secondary hover:bg-bg-hover hover:text-text-primary"
+              >
+                <MenuIcon>
+                  <rect width="18" height="18" x="3" y="3" rx="2" />
+                  <circle cx="9" cy="9" r="2" />
+                  <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
+                </MenuIcon>
+                Bild
+              </button>
+              <button
+                type="button"
+                onClick={() => pick(actions.onRequestLink)}
+                className="flex w-full items-center gap-2.5 rounded px-2 py-1.5 text-left text-[12.5px] font-medium text-text-secondary hover:bg-bg-hover hover:text-text-primary"
+              >
+                <MenuIcon>
+                  <path d="m9 17 6-6" />
+                  <path d="M13 6.5a5 5 0 0 1 7.5 6.5l-4 4a5 5 0 0 1-7-7" />
+                  <path d="M11 17.5a5 5 0 0 1-7.5-6.5l4-4a5 5 0 0 1 7 7" />
+                </MenuIcon>
+                Link
+              </button>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   )
 }

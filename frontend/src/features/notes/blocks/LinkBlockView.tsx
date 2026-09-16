@@ -31,7 +31,7 @@ export function LinkBlockView({ url }: { url: string }) {
       href={url}
       target="_blank"
       rel="noreferrer"
-      className="inline-block break-all text-blue-600 hover:underline dark:text-blue-400"
+      className="inline-block break-all text-accent hover:underline"
     >
       {url}
     </a>

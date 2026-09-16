@@ -35,14 +35,14 @@ export function PdfPageView({ fileId, pageNumber }: { fileId: string; pageNumber
   }, [fileId, pageNumber])
 
   if (error) {
-    return <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+    return <p className="text-sm text-red-400">{error}</p>
   }
 
   return (
-    <div className="mx-auto w-fit max-w-full overflow-x-auto rounded-lg border border-slate-200 bg-white p-2 dark:border-slate-700 dark:bg-slate-900">
-      <canvas ref={canvasRef} className="max-w-full" />
-      <p className="mt-1 text-center text-xs text-slate-400 dark:text-slate-500">
-        Seite {pageNumber}
+    <div className="mx-auto w-fit max-w-full overflow-x-auto rounded-lg border border-border bg-bg-2 p-2">
+      <canvas ref={canvasRef} className="max-w-full rounded" />
+      <p className="mt-1 text-center font-mono text-[10px] tracking-wider text-text-tertiary">
+        SEITE {pageNumber}
       </p>
     </div>
   )
