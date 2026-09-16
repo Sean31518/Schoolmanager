@@ -45,7 +45,7 @@ export function HolidayImportForm() {
           <select
             value={importState}
             onChange={(e) => setImportState(e.target.value)}
-            className="[color-scheme:dark] mt-1 block rounded-md border border-border bg-bg-muted px-3 py-2 text-sm text-text-primary"
+            className="dark:[color-scheme:dark] mt-1 block rounded-md border border-border bg-bg-muted px-3 py-2 text-sm text-text-primary"
           >
             {FEDERAL_STATES.map((state) => (
               <option key={state.value} value={state.value}>

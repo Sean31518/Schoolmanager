@@ -9,6 +9,6 @@ export function ReadOnlyContent({ content }: { content: JSONContent }) {
   })
 
   return (
-    <EditorContent editor={editor} className="prose prose-sm prose-invert max-w-none" />
+    <EditorContent editor={editor} className="prose prose-sm dark:prose-invert max-w-none" />
   )
 }

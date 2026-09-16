@@ -104,7 +104,7 @@ export function TimeGridEditor() {
           <select
             value={type}
             onChange={(e) => setType(e.target.value as TimeGridSlotType)}
-            className="[color-scheme:dark] mt-1 block rounded-md border border-border bg-bg-muted px-3 py-2 text-sm text-text-primary"
+            className="dark:[color-scheme:dark] mt-1 block rounded-md border border-border bg-bg-muted px-3 py-2 text-sm text-text-primary"
           >
             <option value="LESSON">Stunde</option>
             <option value="BREAK">Pause</option>
@@ -116,7 +116,7 @@ export function TimeGridEditor() {
             type="time"
             value={startTime}
             onChange={(e) => setStartTime(e.target.value)}
-            className="[color-scheme:dark] mt-1 block rounded-md border border-border bg-bg-muted px-3 py-2 text-sm text-text-primary"
+            className="dark:[color-scheme:dark] mt-1 block rounded-md border border-border bg-bg-muted px-3 py-2 text-sm text-text-primary"
           />
         </label>
         <label className="text-sm text-text-secondary">
@@ -125,7 +125,7 @@ export function TimeGridEditor() {
             type="time"
             value={endTime}
             onChange={(e) => setEndTime(e.target.value)}
-            className="[color-scheme:dark] mt-1 block rounded-md border border-border bg-bg-muted px-3 py-2 text-sm text-text-primary"
+            className="dark:[color-scheme:dark] mt-1 block rounded-md border border-border bg-bg-muted px-3 py-2 text-sm text-text-primary"
           />
         </label>
         <button

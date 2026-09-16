@@ -63,7 +63,7 @@ export function RichTextEditor({ content, onChange, blockActions }: RichTextEdit
       <EditorToolbar editor={editor} />
       <EditorContent
         editor={editor}
-        className="prose prose-sm prose-invert max-w-none px-4 py-3 focus:outline-none"
+        className="prose prose-sm dark:prose-invert max-w-none px-4 py-3 focus:outline-none"
       />
     </div>
   )

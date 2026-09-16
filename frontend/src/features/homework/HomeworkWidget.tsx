@@ -145,7 +145,7 @@ function HomeworkItem({ hw }: { hw: HomeworkDto }) {
             })
           }
           title="Fällig am"
-          className="[color-scheme:dark] shrink-0 rounded border-none bg-transparent font-mono text-[10px] text-text-tertiary focus:outline-none"
+          className="dark:[color-scheme:dark] shrink-0 rounded border-none bg-transparent font-mono text-[10px] text-text-tertiary focus:outline-none"
         />
         <button
           type="button"

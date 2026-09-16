@@ -59,7 +59,7 @@ export function SubjectManager() {
             type="color"
             value={color}
             onChange={(e) => setColor(e.target.value)}
-            className="[color-scheme:dark] mt-1 block h-9 w-14 rounded-md border border-border"
+            className="dark:[color-scheme:dark] mt-1 block h-9 w-14 rounded-md border border-border"
           />
           <PaletteSwatches onPick={setColor} />
         </label>
@@ -139,7 +139,7 @@ function SubjectManagerRow({ subject }: { subject: SubjectDto }) {
               type="color"
               value={color}
               onChange={(e) => setColor(e.target.value)}
-              className="[color-scheme:dark] mt-1 block h-9 w-14 rounded-md border border-border"
+              className="dark:[color-scheme:dark] mt-1 block h-9 w-14 rounded-md border border-border"
             />
             <PaletteSwatches onPick={setColor} />
           </label>
