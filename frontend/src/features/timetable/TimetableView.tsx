@@ -147,7 +147,7 @@ export function TimetableView() {
             return (
               <tr key={slot.id}>
                 <td className="align-middle font-mono text-[10px] text-text-secondary">
-                  {slot.startTime}
+                  <div className="flex min-h-[2.75rem] items-center">{slot.startTime}</div>
                 </td>
                 {WEEKDAYS.map((day) => {
                   const span = daySpansByDay[day.value][i]
