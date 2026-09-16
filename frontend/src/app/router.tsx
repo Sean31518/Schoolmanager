@@ -9,8 +9,6 @@ import { ExamPage } from '../features/examPrep/ExamPage'
 import { ExamPrepPage } from '../features/examPrep/ExamPrepPage'
 import { ExamsListPage } from '../features/examPrep/ExamsListPage'
 import { NoteEditorPage } from '../features/notes/NoteEditorPage'
-import { SectionTypeOverviewPage } from '../features/notes/SectionTypeOverviewPage'
-import { TopicDetailPage } from '../features/notes/TopicDetailPage'
 import { SettingsPage } from '../features/settings/SettingsPage'
 import { SubjectDetailPage } from '../features/subjects/SubjectDetailPage'
 import { SubjectsPage } from '../features/subjects/SubjectsPage'
@@ -58,14 +56,10 @@ export function AppRouter() {
         <Route path="/subjects/:subjectId" element={<SubjectDetailPage />} />
         <Route
           path="/subjects/:subjectId/sections/:sectionTypeId"
-          element={<SectionTypeOverviewPage />}
+          element={<NoteEditorPage />}
         />
         <Route
-          path="/subjects/:subjectId/sections/:sectionTypeId/topics/:topicId"
-          element={<TopicDetailPage />}
-        />
-        <Route
-          path="/subjects/:subjectId/sections/:sectionTypeId/topics/:topicId/notes/:noteId"
+          path="/subjects/:subjectId/sections/:sectionTypeId/notes/:noteId"
           element={<NoteEditorPage />}
         />
       </Route>

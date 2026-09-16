@@ -337,31 +337,55 @@ function FlashcardQuiz({ topic }: { topic: TopicGroup }) {
   )
 }
 
-function MaterialView({ topics }: { topics: TopicGroup[] }) {
-  const resolved: { item: ExamPrepItemDto; section: NoteSection }[] = []
+interface ResolvedNoteGroup {
+  noteId: string
+  item: ExamPrepItemDto
+  sections: { item: ExamPrepItemDto; section: NoteSection }[]
+}
+
+function groupByNote(topics: TopicGroup[]): ResolvedNoteGroup[] {
+  const map = new Map<string, ResolvedNoteGroup>()
   for (const topic of topics) {
     for (const item of topic.items) {
       const sections = extractSections(item.blocks)
       const section = sections[item.sectionIndex]
-      if (section) resolved.push({ item, section })
+      if (!section) continue
+      const existing = map.get(item.noteId)
+      if (existing) {
+        existing.sections.push({ item, section })
+      } else {
+        map.set(item.noteId, { noteId: item.noteId, item, sections: [{ item, section }] })
+      }
     }
   }
+  return [...map.values()]
+}
+
+function MaterialView({ topics }: { topics: TopicGroup[] }) {
+  const noteGroups = groupByNote(topics)
 
   return (
     <div className="space-y-4">
-      {resolved.map(({ item, section }) => (
-        <div key={item.id} className="rounded-lg border border-border p-4">
+      {noteGroups.map(({ noteId, item, sections }) => (
+        <div key={noteId} className="rounded-lg border border-border p-4">
           <div className="flex items-center gap-2 text-sm text-text-tertiary">
             <span
               className="h-2.5 w-2.5 shrink-0 rounded-[2px]"
               style={{ backgroundColor: item.subjectColor }}
             />
-            {item.subjectName} · {item.sectionTypeName} · {item.topicName} · {item.title}
+            {item.subjectName} · {item.sectionTypeName} · {item.topicName}
             {item.gradeLevels.length > 0 ? ` · ${formatGradeLevels(item.gradeLevels)}` : ''}
           </div>
-          <h2 className="mt-1 text-[15px] font-semibold text-text-primary">{section.label}</h2>
-          <div className="mt-2">
-            <SectionContent section={section} />
+          <h2 className="mt-1 text-[15px] font-semibold text-text-primary">{item.title}</h2>
+          <div className="mt-3 space-y-4 divide-y divide-border-subtle">
+            {sections.map(({ item: sectionItem, section }) => (
+              <div key={sectionItem.id} className="pt-4 first:pt-0">
+                <h3 className="text-[13px] font-semibold text-text-secondary">{section.label}</h3>
+                <div className="mt-2">
+                  <SectionContent section={section} />
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       ))}

@@ -11,32 +11,6 @@ export async function getDashboard(userId: string) {
   const settings = await prisma.settings.findUnique({ where: { userId } });
   const currentGradeLevel = settings?.currentGradeLevel ?? 5;
 
-  const subjects = await prisma.subject.findMany({
-    where: { userId },
-    orderBy: { name: "asc" },
-    include: {
-      noteSectionTypes: {
-        orderBy: { sortOrder: "asc" },
-        include: {
-          topics: {
-            select: { notes: { select: { id: true } } },
-          },
-        },
-      },
-    },
-  });
-
-  const quickLinks = subjects.flatMap((subject) =>
-    subject.noteSectionTypes.map((sectionType) => ({
-      subjectId: subject.id,
-      subjectName: subject.name,
-      color: subject.color,
-      sectionTypeId: sectionType.id,
-      sectionTypeName: sectionType.name,
-      hasContent: sectionType.topics.some((topic) => topic.notes.length > 0),
-    })),
-  );
-
   const now = new Date();
 
   const [upcomingHomework, upcomingEvents, generalNotesRaw, recentNotes, { timeGridSlots, timetableSlots }] =
@@ -134,7 +108,6 @@ export async function getDashboard(userId: string) {
 
   return {
     currentGradeLevel,
-    quickLinks,
     upcomingHomework,
     generalNotes,
     upcomingReminders,

@@ -57,16 +57,6 @@ const navItems = [
       </>
     ),
   },
-  {
-    to: '/subjects',
-    label: 'Fächer',
-    icon: (
-      <>
-        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
-        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
-      </>
-    ),
-  },
 ]
 
 function NavIcon({ children }: { children: ReactNode }) {
@@ -130,7 +120,12 @@ export function Layout() {
         <div className="h-px bg-border" />
 
         <div className="flex flex-col gap-1.5 px-1">
-          <span className="font-mono text-[9px] tracking-wider text-text-muted">FÄCHER</span>
+          <NavLink
+            to="/subjects"
+            className="font-mono text-[9px] tracking-wider text-text-muted hover:text-text-secondary"
+          >
+            FÄCHER
+          </NavLink>
           {(subjects ?? []).map((subject) => (
             <NavLink
               key={subject.id}

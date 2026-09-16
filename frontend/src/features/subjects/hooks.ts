@@ -49,6 +49,23 @@ export function useCreateSectionType(subjectId: string) {
   })
 }
 
+export function useUpdateSectionType(subjectId: string) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({
+      sectionTypeId,
+      data,
+    }: {
+      sectionTypeId: string
+      data: Parameters<typeof api.updateSectionType>[1]
+    }) => api.updateSectionType(sectionTypeId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['subjects', subjectId] })
+      queryClient.invalidateQueries({ queryKey: ['subjects'] })
+    },
+  })
+}
+
 export function useDeleteSectionType(subjectId: string) {
   const queryClient = useQueryClient()
   return useMutation({

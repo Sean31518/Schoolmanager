@@ -55,6 +55,28 @@ export async function updateSectionType(
   return prisma.noteSectionType.update({ where: { id: sectionTypeId }, data });
 }
 
+export async function listNotesGroupedByTopic(userId: string, sectionTypeId: string) {
+  await requireOwnedSectionType(userId, sectionTypeId);
+
+  const topics = await prisma.topic.findMany({
+    where: { noteSectionTypeId: sectionTypeId },
+    orderBy: { sortOrder: "asc" },
+    include: {
+      notes: { orderBy: { sortOrder: "asc" } },
+    },
+  });
+
+  return topics.map((topic) => ({
+    topicId: topic.id,
+    topicName: topic.name,
+    notes: topic.notes.map((note) => ({
+      id: note.id,
+      title: note.title,
+      updatedAt: note.updatedAt,
+    })),
+  }));
+}
+
 export async function deleteSectionType(userId: string, sectionTypeId: string) {
   await requireOwnedSectionType(userId, sectionTypeId);
   await prisma.noteSectionType.delete({ where: { id: sectionTypeId } });

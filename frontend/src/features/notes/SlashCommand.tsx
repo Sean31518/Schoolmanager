@@ -11,6 +11,52 @@ interface CommandItem {
   command: (props: { editor: Editor; range: Range }) => void
 }
 
+export interface BlockActions {
+  onInsertText: () => void
+  onRequestPdf: () => void
+  onRequestVideo: () => void
+  onRequestLink: () => void
+}
+
+type BlockActionsRef = { current?: BlockActions }
+
+function buildBlockCommands(blockActionsRef: BlockActionsRef): CommandItem[] {
+  return [
+    {
+      title: 'Text',
+      keywords: ['text', 'absatz', 'block'],
+      command: ({ editor, range }) => {
+        editor.chain().focus().deleteRange(range).run()
+        blockActionsRef.current?.onInsertText()
+      },
+    },
+    {
+      title: 'PDF',
+      keywords: ['pdf', 'datei'],
+      command: ({ editor, range }) => {
+        editor.chain().focus().deleteRange(range).run()
+        blockActionsRef.current?.onRequestPdf()
+      },
+    },
+    {
+      title: 'Video',
+      keywords: ['video', 'film'],
+      command: ({ editor, range }) => {
+        editor.chain().focus().deleteRange(range).run()
+        blockActionsRef.current?.onRequestVideo()
+      },
+    },
+    {
+      title: 'Link',
+      keywords: ['link', 'url', 'embed'],
+      command: ({ editor, range }) => {
+        editor.chain().focus().deleteRange(range).run()
+        blockActionsRef.current?.onRequestLink()
+      },
+    },
+  ]
+}
+
 const COMMANDS: CommandItem[] = [
   {
     title: 'Überschrift 1',
@@ -55,10 +101,11 @@ const COMMANDS: CommandItem[] = [
   },
 ]
 
-function getItems(query: string): CommandItem[] {
+function getItems(query: string, blockActionsRef?: BlockActionsRef): CommandItem[] {
+  const all = blockActionsRef?.current ? [...COMMANDS, ...buildBlockCommands(blockActionsRef)] : COMMANDS
   const q = query.toLowerCase()
-  if (!q) return COMMANDS
-  return COMMANDS.filter(
+  if (!q) return all
+  return all.filter(
     (item) =>
       item.title.toLowerCase().includes(q) || item.keywords.some((k) => k.startsWith(q)),
   )
@@ -171,11 +218,15 @@ const renderSlashMenu: () => ReturnType<SuggestionRender> = () => {
   }
 }
 
-export const SlashCommand = Extension.create({
+export const SlashCommand = Extension.create<{
+  blockActionsRef?: BlockActionsRef
+  suggestion: Partial<SuggestionOptions<CommandItem>>
+}>({
   name: 'slashCommand',
 
   addOptions() {
     return {
+      blockActionsRef: undefined,
       suggestion: {
         char: '/',
         startOfLine: false,
@@ -197,10 +248,12 @@ export const SlashCommand = Extension.create({
   },
 
   addProseMirrorPlugins() {
+    const blockActionsRef = this.options.blockActionsRef
     return [
       Suggestion({
         editor: this.editor,
         ...this.options.suggestion,
+        items: ({ query }: { query: string }) => getItems(query, blockActionsRef),
       }),
     ]
   },

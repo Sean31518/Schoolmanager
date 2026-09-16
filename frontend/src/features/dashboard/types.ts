@@ -1,15 +1,6 @@
 import type { GeneralNoteDto } from '../generalNotes/types'
 import type { HomeworkDto } from '../homework/types'
 
-export interface QuickLinkDto {
-  subjectId: string
-  subjectName: string
-  color: string
-  sectionTypeId: string
-  sectionTypeName: string
-  hasContent: boolean
-}
-
 export interface ReminderDto {
   kind: 'homework' | 'event'
   id: string
@@ -42,7 +33,6 @@ export interface RecentlyViewedNoteDto {
 
 export interface DashboardDto {
   currentGradeLevel: number
-  quickLinks: QuickLinkDto[]
   upcomingHomework: HomeworkDto[]
   generalNotes: GeneralNoteDto[]
   upcomingReminders: ReminderDto[]

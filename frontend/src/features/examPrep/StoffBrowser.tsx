@@ -25,6 +25,27 @@ function mergeAllSections(selection: StoffSelection, notes: NoteDto[]): StoffSel
   return next
 }
 
+function removeAllSections(selection: StoffSelection, notes: NoteDto[]): StoffSelection {
+  const next = new Map(selection)
+  for (const note of notes) {
+    next.delete(note.id)
+  }
+  return next
+}
+
+function isFullySelected(selection: StoffSelection, notes: NoteDto[]): boolean {
+  for (const note of notes) {
+    const sections = extractSections(note.blocks)
+    if (sections.length === 0) continue
+    const forNote = selection.get(note.id)
+    if (!forNote) return false
+    for (const section of sections) {
+      if (!forNote.has(section.index)) return false
+    }
+  }
+  return true
+}
+
 export function StoffBrowser({
   eventId,
   initialSelection,
@@ -53,16 +74,25 @@ export function StoffBrowser({
   const [saving, setSaving] = useState(false)
   const [bulkLoading, setBulkLoading] = useState(false)
 
-  function selectWholeTopic(topicNotes: NoteDto[]) {
-    setSelection((prev) => mergeAllSections(prev, topicNotes))
+  function toggleWholeTopic(topicNotes: NoteDto[]) {
+    setSelection((prev) =>
+      isFullySelected(prev, topicNotes)
+        ? removeAllSections(prev, topicNotes)
+        : mergeAllSections(prev, topicNotes),
+    )
   }
 
-  async function selectWholeSectionType() {
+  async function toggleWholeSectionType() {
     if (!topics || topics.length === 0) return
     setBulkLoading(true)
     try {
       const notesPerTopic = await Promise.all(topics.map((t) => listNotes(t.id)))
-      setSelection((prev) => mergeAllSections(prev, notesPerTopic.flat()))
+      const allNotes = notesPerTopic.flat()
+      setSelection((prev) =>
+        isFullySelected(prev, allNotes)
+          ? removeAllSections(prev, allNotes)
+          : mergeAllSections(prev, allNotes),
+      )
     } finally {
       setBulkLoading(false)
     }
@@ -220,11 +250,11 @@ export function StoffBrowser({
             <div className="space-y-1">
               {topics && topics.length > 0 && (
                 <button
-                  onClick={() => void selectWholeSectionType()}
+                  onClick={() => void toggleWholeSectionType()}
                   disabled={bulkLoading}
                   className="mb-1 block w-full rounded-md border border-dashed border-accent/40 p-2 text-left text-sm text-accent hover:bg-accent/10 disabled:opacity-50"
                 >
-                  {bulkLoading ? 'Lädt...' : 'Alle Themen dieses Hefts auswählen'}
+                  {bulkLoading ? 'Lädt...' : 'Alle Themen dieses Hefts an-/abwählen'}
                 </button>
               )}
               {(topics ?? []).map((t) => (
@@ -248,10 +278,12 @@ export function StoffBrowser({
             <div className="space-y-1">
               {notes && notes.length > 0 && (
                 <button
-                  onClick={() => selectWholeTopic(notes)}
+                  onClick={() => toggleWholeTopic(notes)}
                   className="mb-1 block w-full rounded-md border border-dashed border-accent/40 p-2 text-left text-sm text-accent hover:bg-accent/10"
                 >
-                  Alle Notizen dieses Themas auswählen
+                  {isFullySelected(selection, notes)
+                    ? 'Alle Notizen dieses Themas abwählen'
+                    : 'Alle Notizen dieses Themas auswählen'}
                 </button>
               )}
               {(notes ?? []).map((n) => (

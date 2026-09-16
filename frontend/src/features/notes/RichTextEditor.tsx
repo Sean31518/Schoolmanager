@@ -8,15 +8,19 @@ import TaskItem from '@tiptap/extension-task-item'
 import TaskList from '@tiptap/extension-task-list'
 import { EditorContent, useEditor, type Editor, type JSONContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
-import { useState, type FormEvent } from 'react'
+import { useMemo, useRef, useState, type FormEvent } from 'react'
 import 'tippy.js/dist/tippy.css'
-import { SlashCommand } from './SlashCommand'
+import { SlashCommand, type BlockActions } from './SlashCommand'
 
 interface RichTextEditorProps {
   content: JSONContent
   onChange: (content: JSONContent) => void
+  blockActions?: BlockActions
 }
 
+// Schema-defining extensions shared with read-only rendering (ReadOnlyContent's
+// generateHTML/useEditor(editable: false) needs the same node/mark set, but
+// never the interactive SlashCommand extension).
 export const EXTENSIONS = [
   StarterKit,
   Link.configure({ openOnClick: false }),
@@ -27,10 +31,20 @@ export const EXTENSIONS = [
   TableCell,
   TaskList,
   TaskItem.configure({ nested: true }),
-  SlashCommand,
 ]
 
-export function RichTextEditor({ content, onChange }: RichTextEditorProps) {
+export function RichTextEditor({ content, onChange, blockActions }: RichTextEditorProps) {
+  // Kept in a ref (not a dependency of `extensions`) so the editor — and its
+  // extensions array — never gets recreated just because the parent passed a
+  // new closure; the slash command reads the current callbacks at call time.
+  const blockActionsRef = useRef(blockActions)
+  blockActionsRef.current = blockActions
+
+  const extensions = useMemo(
+    () => [...EXTENSIONS, SlashCommand.configure({ blockActionsRef })],
+    [],
+  )
+
   // `content` is only used as the editor's initial value on mount, deliberately
   // never re-synced afterward: TipTap fires onUpdate per transaction (i.e. per
   // keystroke), so feeding `content` back in via setContent on every prop
@@ -39,7 +53,7 @@ export function RichTextEditor({ content, onChange }: RichTextEditorProps) {
   // need to load a different document into a fresh editor (e.g. switching
   // notes) should remount this component with a different `key` instead.
   const editor = useEditor({
-    extensions: EXTENSIONS,
+    extensions,
     content,
     onUpdate: ({ editor }) => onChange(editor.getJSON()),
   })

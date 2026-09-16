@@ -17,7 +17,7 @@ export function RecentNotesWidget({ notes }: { notes: RecentlyViewedNoteDto[] })
           {notes.map((note) => (
             <Link
               key={note.id}
-              to={`/subjects/${note.subjectId}/sections/${note.sectionTypeId}/topics/${note.topicId}/notes/${note.id}`}
+              to={`/subjects/${note.subjectId}/sections/${note.sectionTypeId}/notes/${note.id}`}
               className="flex min-w-0 flex-col gap-1.5 rounded-md border border-border-subtle px-2.5 py-2 hover:border-border"
             >
               <span className="flex items-center gap-1.5">

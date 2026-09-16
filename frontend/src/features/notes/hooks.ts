@@ -14,7 +14,10 @@ export function useCreateTopic(sectionTypeId: string) {
   return useMutation({
     mutationFn: (data: { name: string; gradeLevels?: number[] }) =>
       api.createTopic(sectionTypeId, data),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['topics', sectionTypeId] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['topics', sectionTypeId] })
+      queryClient.invalidateQueries({ queryKey: ['section-type-notes', sectionTypeId] })
+    },
   })
 }
 
@@ -28,7 +31,10 @@ export function useUpdateTopic(sectionTypeId: string) {
       topicId: string
       data: Parameters<typeof api.updateTopic>[1]
     }) => api.updateTopic(topicId, data),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['topics', sectionTypeId] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['topics', sectionTypeId] })
+      queryClient.invalidateQueries({ queryKey: ['section-type-notes', sectionTypeId] })
+    },
   })
 }
 
@@ -36,7 +42,10 @@ export function useDeleteTopic(sectionTypeId: string) {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (topicId: string) => api.deleteTopic(topicId),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['topics', sectionTypeId] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['topics', sectionTypeId] })
+      queryClient.invalidateQueries({ queryKey: ['section-type-notes', sectionTypeId] })
+    },
   })
 }
 
@@ -45,6 +54,14 @@ export function useSubjectNotes(subjectId: string) {
     queryKey: ['subject-notes', subjectId],
     queryFn: () => api.listSubjectNotes(subjectId),
     enabled: Boolean(subjectId),
+  })
+}
+
+export function useSectionTypeNotes(sectionTypeId: string) {
+  return useQuery({
+    queryKey: ['section-type-notes', sectionTypeId],
+    queryFn: () => api.listSectionTypeNotes(sectionTypeId),
+    enabled: Boolean(sectionTypeId),
   })
 }
 
@@ -64,13 +81,15 @@ export function useNote(noteId: string) {
   })
 }
 
-export function useCreateNote(topicId: string) {
+export function useCreateNoteInTopic() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (data: { title: string }) => api.createNote(topicId, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['notes', topicId] })
+    mutationFn: ({ topicId, title }: { topicId: string; title: string }) =>
+      api.createNote(topicId, { title }),
+    onSuccess: (_note, vars) => {
+      queryClient.invalidateQueries({ queryKey: ['notes', vars.topicId] })
       queryClient.invalidateQueries({ queryKey: ['subject-notes'] })
+      queryClient.invalidateQueries({ queryKey: ['section-type-notes'] })
     },
   })
 }
@@ -83,17 +102,19 @@ export function useUpdateNote(noteId: string) {
       queryClient.invalidateQueries({ queryKey: ['note', noteId] })
       queryClient.invalidateQueries({ queryKey: ['notes', updated.topicId] })
       queryClient.invalidateQueries({ queryKey: ['subject-notes'] })
+      queryClient.invalidateQueries({ queryKey: ['section-type-notes'] })
     },
   })
 }
 
-export function useDeleteNote(topicId: string) {
+export function useDeleteNoteById() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (noteId: string) => api.deleteNote(noteId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['notes', topicId] })
+      queryClient.invalidateQueries({ queryKey: ['notes'] })
       queryClient.invalidateQueries({ queryKey: ['subject-notes'] })
+      queryClient.invalidateQueries({ queryKey: ['section-type-notes'] })
     },
   })
 }

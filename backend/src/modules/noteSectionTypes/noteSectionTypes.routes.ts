@@ -17,3 +17,4 @@ sectionTypeByIdRouter.use(authGuard);
 
 sectionTypeByIdRouter.patch("/:id", asyncHandler(sectionTypesController.update));
 sectionTypeByIdRouter.delete("/:id", asyncHandler(sectionTypesController.remove));
+sectionTypeByIdRouter.get("/:id/notes", asyncHandler(sectionTypesController.listNotes));

@@ -1,6 +1,7 @@
 import type { JSONContent } from '@tiptap/react'
 import { useEffect, useRef } from 'react'
 import { RichTextEditor } from '../RichTextEditor'
+import type { BlockActions } from '../SlashCommand'
 
 const AUTOSAVE_DELAY_MS = 1500
 
@@ -8,10 +9,12 @@ export function TextBlockEditor({
   blockId,
   content,
   onSave,
+  blockActions,
 }: {
   blockId: string
   content: JSONContent
   onSave: (content: JSONContent) => void
+  blockActions?: BlockActions
 }) {
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -26,5 +29,12 @@ export function TextBlockEditor({
     timerRef.current = setTimeout(() => onSave(next), AUTOSAVE_DELAY_MS)
   }
 
-  return <RichTextEditor key={blockId} content={content} onChange={handleChange} />
+  return (
+    <RichTextEditor
+      key={blockId}
+      content={content}
+      onChange={handleChange}
+      blockActions={blockActions}
+    />
+  )
 }

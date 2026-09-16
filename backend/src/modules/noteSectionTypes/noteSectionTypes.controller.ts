@@ -48,3 +48,8 @@ export async function remove(req: Request, res: Response) {
   await sectionTypesService.deleteSectionType(req.user!.id, req.params.id);
   res.status(204).send();
 }
+
+export async function listNotes(req: Request, res: Response) {
+  const groups = await sectionTypesService.listNotesGroupedByTopic(req.user!.id, req.params.id);
+  res.json(groups);
+}

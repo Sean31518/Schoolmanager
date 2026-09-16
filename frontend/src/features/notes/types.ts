@@ -49,3 +49,9 @@ export interface SubjectNoteSummaryDto {
   sectionTypeId: string
   sectionTypeName: string
 }
+
+export interface SectionTypeNoteGroupDto {
+  topicId: string
+  topicName: string
+  notes: { id: string; title: string; updatedAt: string }[]
+}

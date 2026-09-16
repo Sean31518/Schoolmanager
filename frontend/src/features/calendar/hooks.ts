@@ -16,7 +16,10 @@ export function useCreateCalendarEvent() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: api.createCalendarEvent,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['calendar-events'] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['calendar-events'] })
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] })
+    },
   })
 }
 

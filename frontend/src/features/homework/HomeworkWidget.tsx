@@ -1,7 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { useSubjects } from '../subjects/hooks'
 import {
-  useCreateHomework,
   useCreateSubtask,
   useDeleteHomework,
   useDeleteSubtask,
@@ -12,25 +11,6 @@ import {
 import type { HomeworkDto, HomeworkSubtaskDto } from './types'
 
 export function HomeworkWidget({ items }: { items: HomeworkDto[] }) {
-  const createHomework = useCreateHomework()
-  const [title, setTitle] = useState('')
-  const [dueDate, setDueDate] = useState('')
-  const [subjectId, setSubjectId] = useState('')
-  const { data: subjects } = useSubjects()
-
-  async function handleAdd(e: FormEvent) {
-    e.preventDefault()
-    if (!title.trim()) return
-    await createHomework.mutateAsync({
-      title,
-      dueDate: dueDate || null,
-      subjectId: subjectId || null,
-    })
-    setTitle('')
-    setDueDate('')
-    setSubjectId('')
-  }
-
   return (
     <div className="rounded-lg border border-border bg-bg-1">
       <div className="flex items-center justify-between border-b border-border px-3 py-2">
@@ -49,39 +29,6 @@ export function HomeworkWidget({ items }: { items: HomeworkDto[] }) {
       {items.map((hw) => (
         <HomeworkItem key={hw.id} hw={hw} />
       ))}
-
-      <form onSubmit={handleAdd} className="flex flex-wrap items-center gap-2 px-3 py-2.5">
-        <input
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          placeholder="Neue Hausaufgabe"
-          className="min-w-[160px] flex-1 rounded-md border border-border bg-bg-muted px-3 py-1.5 text-sm text-text-primary placeholder:text-text-muted"
-        />
-        <select
-          value={subjectId}
-          onChange={(e) => setSubjectId(e.target.value)}
-          className="rounded-md border border-border bg-bg-muted px-2 py-1.5 text-xs text-text-secondary"
-        >
-          <option value="">Fach (optional)</option>
-          {(subjects ?? []).map((s) => (
-            <option key={s.id} value={s.id}>
-              {s.name}
-            </option>
-          ))}
-        </select>
-        <input
-          type="date"
-          value={dueDate}
-          onChange={(e) => setDueDate(e.target.value)}
-          className="rounded-md border border-border bg-bg-muted px-2 py-1.5 text-xs text-text-secondary"
-        />
-        <button
-          type="submit"
-          className="rounded-md bg-accent px-3 py-1.5 text-xs font-semibold text-accent-ink"
-        >
-          Hinzufügen
-        </button>
-      </form>
     </div>
   )
 }

@@ -34,6 +34,20 @@ body {
   font-family: var(--font-sans);
 }
 
+/* Tailwind Typography's default paragraph margin (~1.14em for prose-sm) reads
+   as an oversized gap between consecutive lines while actively typing in the
+   block editor; tighten it there without affecting read-only prose elsewhere. */
+.prose .ProseMirror p {
+  margin-top: 0.35em;
+  margin-bottom: 0.35em;
+}
+.prose .ProseMirror p:first-child {
+  margin-top: 0;
+}
+.prose .ProseMirror p:last-child {
+  margin-bottom: 0;
+}
+
 /* Typography's default list-item bullet also applies to TipTap's task list;
    task items get their own checkbox instead. */
 .prose ul[data-type='taskList'] {
