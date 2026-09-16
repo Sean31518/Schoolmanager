@@ -9,6 +9,29 @@ function isNowWithin(startTime: string, endTime: string) {
   return minutesNow >= startH * 60 + startM && minutesNow < endH * 60 + endM
 }
 
+/** Consecutive same-subject lessons ("Doppelstunden") collapse into a single
+ * row spanning the combined time range, matching how the main Stundenplan
+ * grid merges them. Subject names are unique per user, so comparing by name
+ * is equivalent to comparing by subject id here. */
+function mergeDoppelstunden(slots: TimetableSlotSummaryDto[]): TimetableSlotSummaryDto[] {
+  const merged: TimetableSlotSummaryDto[] = []
+  for (const slot of slots) {
+    const prev = merged[merged.length - 1]
+    if (
+      prev &&
+      prev.type === 'LESSON' &&
+      slot.type === 'LESSON' &&
+      prev.subjectName &&
+      prev.subjectName === slot.subjectName
+    ) {
+      merged[merged.length - 1] = { ...prev, endTime: slot.endTime }
+      continue
+    }
+    merged.push(slot)
+  }
+  return merged
+}
+
 function SlotRow({ slot, isNow }: { slot: TimetableSlotSummaryDto; isNow: boolean }) {
   if (slot.type === 'BREAK') {
     return (
@@ -79,7 +102,7 @@ export function TodayTomorrowWidget({
   tomorrow: TimetableSlotSummaryDto[]
 }) {
   const [view, setView] = useState<'today' | 'tomorrow'>('today')
-  const slots = view === 'today' ? today : tomorrow
+  const slots = mergeDoppelstunden(view === 'today' ? today : tomorrow)
 
   return (
     <div className="overflow-hidden rounded-lg border border-border bg-bg-1">

@@ -130,14 +130,20 @@ export function TimetableView() {
         <tbody className="[&>tr>td]:p-[3px]">
           {timeGridSlots.map((slot, i) => {
             if (slot.type === 'BREAK') {
+              const breakIsNow = Boolean(todayWeekday) && isNowWithin(slot.startTime, slot.endTime)
               return (
                 <tr key={slot.id}>
                   <td className="align-middle font-mono text-[10px] text-text-muted">
                     {slot.startTime}
                   </td>
                   <td colSpan={WEEKDAYS.length}>
-                    <div className="rounded-[5px] border border-border-subtle bg-bg-muted px-2 py-1 text-center font-mono text-[10px] tracking-wider text-text-muted">
+                    <div className="flex items-center justify-center gap-2 rounded-[5px] border border-border-subtle bg-bg-muted px-2 py-1 font-mono text-[10px] tracking-wider text-text-muted">
                       {slot.label}
+                      {breakIsNow && (
+                        <span className="shrink-0 rounded-[3px] bg-accent px-[5px] py-px font-mono text-[9px] font-semibold tracking-wider text-accent-ink">
+                          JETZT
+                        </span>
+                      )}
                     </div>
                   </td>
                 </tr>
@@ -180,6 +186,12 @@ export function TimetableView() {
                               {cell.room}
                             </span>
                           )}
+                        </div>
+                      ) : isNow ? (
+                        <div className="absolute inset-0 flex items-center justify-end px-2">
+                          <span className="shrink-0 rounded-[3px] bg-accent px-[5px] py-px font-mono text-[9px] font-semibold tracking-wider text-accent-ink">
+                            JETZT
+                          </span>
                         </div>
                       ) : null}
                     </td>

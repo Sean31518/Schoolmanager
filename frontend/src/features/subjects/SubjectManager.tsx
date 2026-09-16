@@ -13,7 +13,7 @@ function PaletteSwatches({ onPick }: { onPick: (color: string) => void }) {
           type="button"
           title={hex}
           onClick={() => onPick(hex)}
-          className="h-4 w-4 rounded-sm ring-1 ring-inset ring-black/10 dark:ring-white/10"
+          className="h-4 w-4 rounded-sm ring-1 ring-inset ring-white/10"
           style={{ backgroundColor: hex }}
         />
       ))}
@@ -44,45 +44,45 @@ export function SubjectManager() {
   return (
     <div>
       <form onSubmit={handleCreate} className="flex flex-wrap items-end gap-3">
-        <label className="text-sm text-slate-600 dark:text-slate-300">
+        <label className="text-sm text-text-secondary">
           Name
           <input
             required
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="mt-1 block rounded border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+            className="mt-1 block rounded-md border border-border bg-bg-muted px-3 py-2 text-sm text-text-primary"
           />
         </label>
-        <label className="text-sm text-slate-600 dark:text-slate-300">
+        <label className="text-sm text-text-secondary">
           Farbe
           <input
             type="color"
             value={color}
             onChange={(e) => setColor(e.target.value)}
-            className="mt-1 block h-9 w-14 rounded border border-slate-300 dark:border-slate-600"
+            className="[color-scheme:dark] mt-1 block h-9 w-14 rounded-md border border-border"
           />
           <PaletteSwatches onPick={setColor} />
         </label>
         <button
           type="submit"
           disabled={createSubject.isPending}
-          className="rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+          className="rounded-md bg-accent px-4 py-2 text-sm font-semibold text-accent-ink disabled:opacity-50"
         >
           Fach anlegen
         </button>
-        {error && <p className="w-full text-sm text-red-600 dark:text-red-400">{error}</p>}
+        {error && <p className="w-full text-sm text-red-400">{error}</p>}
       </form>
 
       {isLoading ? (
-        <p className="mt-4 text-slate-400 dark:text-slate-500">Lädt...</p>
+        <p className="mt-4 text-text-tertiary">Lädt...</p>
       ) : subjects && subjects.length > 0 ? (
-        <ul className="mt-4 space-y-2">
+        <ul className="mt-4 divide-y divide-border-subtle rounded-md border border-border">
           {subjects.map((subject) => (
             <SubjectManagerRow key={subject.id} subject={subject} />
           ))}
         </ul>
       ) : (
-        <p className="mt-4 text-slate-400 dark:text-slate-500">Noch keine Fächer angelegt.</p>
+        <p className="mt-4 text-text-tertiary">Noch keine Fächer angelegt.</p>
       )}
     </div>
   )
@@ -122,65 +122,59 @@ function SubjectManagerRow({ subject }: { subject: SubjectDto }) {
 
   if (isEditing) {
     return (
-      <li>
-        <form
-          onSubmit={handleSave}
-          className="flex flex-wrap items-end gap-3 rounded border border-slate-200 p-3 dark:border-slate-700"
-        >
-          <label className="text-sm text-slate-600 dark:text-slate-300">
+      <li className="p-3">
+        <form onSubmit={handleSave} className="flex flex-wrap items-end gap-3">
+          <label className="text-sm text-text-secondary">
             Name
             <input
               required
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="mt-1 block rounded border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+              className="mt-1 block rounded-md border border-border bg-bg-muted px-3 py-2 text-sm text-text-primary"
             />
           </label>
-          <label className="text-sm text-slate-600 dark:text-slate-300">
+          <label className="text-sm text-text-secondary">
             Farbe
             <input
               type="color"
               value={color}
               onChange={(e) => setColor(e.target.value)}
-              className="mt-1 block h-9 w-14 rounded border border-slate-300 dark:border-slate-600"
+              className="[color-scheme:dark] mt-1 block h-9 w-14 rounded-md border border-border"
             />
             <PaletteSwatches onPick={setColor} />
           </label>
           <button
             type="submit"
             disabled={updateSubject.isPending}
-            className="rounded bg-blue-600 px-3 py-2 text-sm font-medium text-white disabled:opacity-50"
+            className="rounded-md bg-accent px-3 py-2 text-sm font-semibold text-accent-ink disabled:opacity-50"
           >
             Speichern
           </button>
           <button
             type="button"
             onClick={() => setIsEditing(false)}
-            className="rounded border border-slate-300 px-3 py-2 text-sm hover:bg-slate-100 dark:border-slate-600 dark:hover:bg-slate-700"
+            className="rounded-md border border-border px-3 py-2 text-sm text-text-secondary hover:bg-bg-hover"
           >
             Abbrechen
           </button>
-          {error && <p className="w-full text-sm text-red-600 dark:text-red-400">{error}</p>}
+          {error && <p className="w-full text-sm text-red-400">{error}</p>}
         </form>
       </li>
     )
   }
 
   return (
-    <li className="flex items-center gap-3 rounded border border-slate-200 p-3 dark:border-slate-700">
-      <span className="h-4 w-4 flex-shrink-0 rounded-full" style={{ backgroundColor: subject.color }} />
-      <span className="font-medium text-slate-800 dark:text-slate-100">{subject.name}</span>
-      <span className="ml-auto flex items-center gap-3 text-sm">
-        <button
-          onClick={startEditing}
-          className="text-slate-400 hover:text-blue-600 dark:text-slate-500 dark:hover:text-blue-400"
-        >
+    <li className="flex items-center gap-3 px-3 py-2.5 text-sm">
+      <span
+        className="h-[9px] w-[9px] shrink-0 rounded-[2px]"
+        style={{ backgroundColor: subject.color }}
+      />
+      <span className="font-medium text-text-primary">{subject.name}</span>
+      <span className="ml-auto flex items-center gap-3">
+        <button onClick={startEditing} className="text-text-muted hover:text-accent">
           Bearbeiten
         </button>
-        <button
-          onClick={handleDelete}
-          className="text-slate-400 hover:text-red-600 dark:text-slate-500 dark:hover:text-red-400"
-        >
+        <button onClick={handleDelete} className="text-text-muted hover:text-red-400">
           Löschen
         </button>
       </span>

@@ -34,54 +34,56 @@ export function SubjectDetailPage() {
   }
 
   if (isLoading || !subject) {
-    return <p className="text-slate-400 dark:text-slate-500">Lädt...</p>
+    return <p className="text-text-tertiary">Lädt...</p>
   }
 
   return (
-    <div>
+    <div className="space-y-5">
       <div className="flex items-center gap-3">
-        <span className="h-4 w-4 rounded-full" style={{ backgroundColor: subject.color }} />
-        <h1 className="text-2xl font-semibold text-slate-800 dark:text-slate-100">
-          {subject.name}
-        </h1>
+        <span
+          className="h-[9px] w-[9px] shrink-0 rounded-[2px]"
+          style={{ backgroundColor: subject.color }}
+        />
+        <h1 className="text-[15px] font-semibold text-text-primary">{subject.name}</h1>
       </div>
 
-      <form
-        onSubmit={handleCreate}
-        className="mt-6 flex items-end gap-3 rounded-lg bg-white p-4 shadow-sm dark:bg-slate-800"
-      >
-        <label className="text-sm text-slate-600 dark:text-slate-300">
-          Neuer Notizbereich (z.B. Regelheft, Vokabelheft)
-          <input
-            required
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="mt-1 block rounded border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
-          />
-        </label>
-        <button
-          type="submit"
-          disabled={createSectionType.isPending}
-          className="rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
-        >
-          Anlegen
-        </button>
-        {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
-      </form>
+      <section className="rounded-lg border border-border bg-bg-1 p-4">
+        <h2 className="text-[13px] font-semibold text-text-primary">Neues Heft</h2>
+        <form onSubmit={handleCreate} className="mt-3 flex flex-wrap items-end gap-3">
+          <label className="text-sm text-text-secondary">
+            Bezeichnung (z.B. Regelheft, Vokabelheft)
+            <input
+              required
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="mt-1 block rounded-md border border-border bg-bg-muted px-3 py-2 text-sm text-text-primary"
+            />
+          </label>
+          <button
+            type="submit"
+            disabled={createSectionType.isPending}
+            className="rounded-md bg-accent px-4 py-2 text-sm font-semibold text-accent-ink disabled:opacity-50"
+          >
+            Anlegen
+          </button>
+          {error && <p className="text-sm text-red-400">{error}</p>}
+        </form>
+      </section>
 
-      <ul className="mt-6 space-y-2">
-        {subject.noteSectionTypes.map((sectionType) => (
-          <SectionTypeRow
-            key={sectionType.id}
-            subjectId={subjectId}
-            sectionType={sectionType}
-            onDelete={() => void deleteSectionType.mutateAsync(sectionType.id)}
-          />
-        ))}
-        {subject.noteSectionTypes.length === 0 && (
-          <p className="text-slate-400 dark:text-slate-500">Noch keine Notizbereiche angelegt.</p>
-        )}
-      </ul>
+      {subject.noteSectionTypes.length === 0 ? (
+        <p className="text-text-tertiary">Noch keine Hefte angelegt.</p>
+      ) : (
+        <ul className="divide-y divide-border-subtle rounded-lg border border-border bg-bg-1">
+          {subject.noteSectionTypes.map((sectionType) => (
+            <SectionTypeRow
+              key={sectionType.id}
+              subjectId={subjectId}
+              sectionType={sectionType}
+              onDelete={() => void deleteSectionType.mutateAsync(sectionType.id)}
+            />
+          ))}
+        </ul>
+      )}
     </div>
   )
 }
@@ -115,7 +117,7 @@ function SectionTypeRow({
   }
 
   return (
-    <li className="flex items-center justify-between rounded-lg bg-white p-4 shadow-sm dark:bg-slate-800">
+    <li className="flex items-center justify-between gap-3 px-4 py-3">
       {isRenaming ? (
         <input
           autoFocus
@@ -129,28 +131,21 @@ function SectionTypeRow({
               setIsRenaming(false)
             }
           }}
-          className="rounded border border-slate-300 bg-white px-2 py-1 font-medium text-slate-800 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+          className="rounded-md border border-border bg-bg-muted px-2 py-1 text-sm font-medium text-text-primary"
         />
       ) : (
         <Link
           to={`/subjects/${subjectId}/sections/${sectionType.id}`}
-          className="font-medium text-slate-800 hover:text-blue-600 dark:text-slate-100 dark:hover:text-blue-400"
+          className="text-sm font-medium text-text-primary hover:text-accent"
         >
           {sectionType.name}
         </Link>
       )}
-      <div className="flex items-center gap-3">
-        <button
-          type="button"
-          onClick={startRenaming}
-          className="text-sm text-blue-600 hover:underline dark:text-blue-400"
-        >
+      <div className="flex items-center gap-3 text-sm">
+        <button type="button" onClick={startRenaming} className="text-accent hover:underline">
           Bearbeiten
         </button>
-        <button
-          onClick={onDelete}
-          className="text-sm text-slate-400 hover:text-red-600 dark:text-slate-500 dark:hover:text-red-400"
-        >
+        <button onClick={onDelete} className="text-text-muted hover:text-red-400">
           Löschen
         </button>
       </div>

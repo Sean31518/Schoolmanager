@@ -53,7 +53,12 @@ export function ExamsListPage() {
                         style={{ backgroundColor: exam.subject.color }}
                       />
                     )}
-                    <span className="font-medium text-text-primary">{exam.title}</span>
+                    <Link
+                      to={`/exams/${exam.id}`}
+                      className="font-medium text-text-primary hover:text-accent"
+                    >
+                      {exam.title}
+                    </Link>
                     {exam.subject && (
                       <span className="text-sm text-text-tertiary">{exam.subject.name}</span>
                     )}
@@ -84,7 +89,12 @@ export function ExamsListPage() {
                         style={{ backgroundColor: exam.subject.color }}
                       />
                     )}
-                    <span className="font-medium text-text-primary">{exam.title}</span>
+                    <Link
+                      to={`/exams/${exam.id}`}
+                      className="font-medium text-text-primary hover:text-accent"
+                    >
+                      {exam.title}
+                    </Link>
                     <span className="ml-auto font-mono text-xs text-text-tertiary">
                       {formatDate(exam.startDate)}
                     </span>

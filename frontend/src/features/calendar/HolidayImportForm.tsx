@@ -31,21 +31,21 @@ export function HolidayImportForm() {
   return (
     <div>
       <form onSubmit={handleImport} className="flex flex-wrap items-end gap-3">
-        <label className="text-sm text-slate-600 dark:text-slate-300">
+        <label className="text-sm text-text-secondary">
           Jahr
           <input
             type="number"
             value={importYear}
             onChange={(e) => setImportYear(Number(e.target.value))}
-            className="mt-1 block w-24 rounded border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+            className="mt-1 block w-24 rounded-md border border-border bg-bg-muted px-3 py-2 text-sm text-text-primary"
           />
         </label>
-        <label className="text-sm text-slate-600 dark:text-slate-300">
+        <label className="text-sm text-text-secondary">
           Bundesland
           <select
             value={importState}
             onChange={(e) => setImportState(e.target.value)}
-            className="mt-1 block rounded border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+            className="[color-scheme:dark] mt-1 block rounded-md border border-border bg-bg-muted px-3 py-2 text-sm text-text-primary"
           >
             {FEDERAL_STATES.map((state) => (
               <option key={state.value} value={state.value}>
@@ -57,14 +57,12 @@ export function HolidayImportForm() {
         <button
           type="submit"
           disabled={importHolidays.isPending}
-          className="rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+          className="rounded-md bg-accent px-4 py-2 text-sm font-semibold text-accent-ink disabled:opacity-50"
         >
           Importieren
         </button>
       </form>
-      {importMessage && (
-        <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">{importMessage}</p>
-      )}
+      {importMessage && <p className="mt-2 text-sm text-text-secondary">{importMessage}</p>}
     </div>
   )
 }

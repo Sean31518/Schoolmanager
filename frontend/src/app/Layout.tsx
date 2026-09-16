@@ -119,10 +119,10 @@ export function Layout() {
 
         <div className="h-px bg-border" />
 
-        <div className="flex flex-col gap-1.5 px-1">
+        <div className="flex flex-col gap-2 px-1">
           <NavLink
             to="/subjects"
-            className="font-mono text-[9px] tracking-wider text-text-muted hover:text-text-secondary"
+            className="font-mono text-[10px] tracking-wider text-text-tertiary hover:text-text-secondary"
           >
             FÄCHER
           </NavLink>
@@ -130,10 +130,10 @@ export function Layout() {
             <NavLink
               key={subject.id}
               to={`/subjects/${subject.id}`}
-              className="flex items-center gap-2 text-xs text-text-secondary hover:text-text-primary"
+              className="flex items-center gap-2.5 text-[13px] text-text-secondary hover:text-text-primary"
             >
               <span
-                className="h-[7px] w-[7px] shrink-0 rounded-[2px]"
+                className="h-2 w-2 shrink-0 rounded-[2px]"
                 style={{ backgroundColor: subject.color }}
               />
               {subject.name}

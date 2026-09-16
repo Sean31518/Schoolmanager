@@ -46,101 +46,97 @@ export function TimeGridEditor() {
   return (
     <div>
       {isLoading ? (
-        <p className="mt-3 text-slate-400 dark:text-slate-500">Lädt...</p>
-      ) : (
-        <ul className="mt-3 space-y-1">
-          {(slots ?? []).map((slot, index) => (
-            <li
-              key={slot.id}
-              className="flex items-center gap-3 rounded border border-slate-200 px-3 py-2 text-sm dark:border-slate-700"
-            >
-              <span className="w-24 text-slate-500 dark:text-slate-400">
+        <p className="text-text-tertiary">Lädt...</p>
+      ) : slots && slots.length > 0 ? (
+        <div className="divide-y divide-border-subtle rounded-md border border-border">
+          {slots.map((slot, index) => (
+            <div key={slot.id} className="flex items-center gap-3 px-3 py-2 text-sm">
+              <span className="w-24 shrink-0 font-mono text-xs text-text-tertiary">
                 {slot.startTime}–{slot.endTime}
               </span>
-              <span className="flex-1 text-slate-800 dark:text-slate-100">
+              <span className="flex-1 text-text-primary">
                 {slot.label}{' '}
-                <span className="text-xs text-slate-400 dark:text-slate-500">
+                <span className="text-xs text-text-tertiary">
                   ({slot.type === 'LESSON' ? 'Stunde' : 'Pause'})
                 </span>
               </span>
               <button
                 type="button"
                 onClick={() => move(index, -1)}
-                className="text-slate-400 hover:text-slate-700 dark:text-slate-500 dark:hover:text-slate-200"
+                className="text-text-muted hover:text-text-primary"
               >
                 ↑
               </button>
               <button
                 type="button"
                 onClick={() => move(index, 1)}
-                className="text-slate-400 hover:text-slate-700 dark:text-slate-500 dark:hover:text-slate-200"
+                className="text-text-muted hover:text-text-primary"
               >
                 ↓
               </button>
               <button
                 type="button"
                 onClick={() => void deleteSlot.mutateAsync(slot.id)}
-                className="text-slate-400 hover:text-red-600 dark:text-slate-500 dark:hover:text-red-400"
+                className="text-text-muted hover:text-red-400"
               >
                 Löschen
               </button>
-            </li>
+            </div>
           ))}
-          {slots && slots.length === 0 && (
-            <p className="text-slate-400 dark:text-slate-500">Noch kein Zeitraster angelegt.</p>
-          )}
-        </ul>
+        </div>
+      ) : (
+        <p className="text-text-tertiary">Noch kein Zeitraster angelegt.</p>
       )}
 
       <form onSubmit={handleCreate} className="mt-4 flex flex-wrap items-end gap-3">
-        <label className="text-sm text-slate-600 dark:text-slate-300">
+        <label className="text-sm text-text-secondary">
           Bezeichnung
           <input
             required
             value={label}
             onChange={(e) => setLabel(e.target.value)}
             placeholder="z.B. 1. Stunde"
-            className="mt-1 block rounded border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+            className="mt-1 block rounded-md border border-border bg-bg-muted px-3 py-2 text-sm text-text-primary placeholder:text-text-muted"
           />
         </label>
-        <label className="text-sm text-slate-600 dark:text-slate-300">
+        <label className="text-sm text-text-secondary">
           Typ
           <select
             value={type}
             onChange={(e) => setType(e.target.value as TimeGridSlotType)}
-            className="mt-1 block rounded border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+            className="[color-scheme:dark] mt-1 block rounded-md border border-border bg-bg-muted px-3 py-2 text-sm text-text-primary"
           >
             <option value="LESSON">Stunde</option>
             <option value="BREAK">Pause</option>
           </select>
         </label>
-        <label className="text-sm text-slate-600 dark:text-slate-300">
+        <label className="text-sm text-text-secondary">
           Von
           <input
             type="time"
             value={startTime}
             onChange={(e) => setStartTime(e.target.value)}
-            className="mt-1 block rounded border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+            className="[color-scheme:dark] mt-1 block rounded-md border border-border bg-bg-muted px-3 py-2 text-sm text-text-primary"
           />
         </label>
-        <label className="text-sm text-slate-600 dark:text-slate-300">
+        <label className="text-sm text-text-secondary">
           Bis
           <input
             type="time"
             value={endTime}
             onChange={(e) => setEndTime(e.target.value)}
-            className="mt-1 block rounded border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+            className="[color-scheme:dark] mt-1 block rounded-md border border-border bg-bg-muted px-3 py-2 text-sm text-text-primary"
           />
         </label>
         <button
           type="submit"
           disabled={createSlot.isPending}
-          className="rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+          className="rounded-md bg-accent px-4 py-2 text-sm font-semibold text-accent-ink disabled:opacity-50"
         >
           Hinzufügen
         </button>
       </form>
-      {error && <p className="mt-2 text-sm text-red-600 dark:text-red-400">{error}</p>}
+      {error && <p className="mt-2 text-sm text-red-400">{error}</p>}
     </div>
   )
 }

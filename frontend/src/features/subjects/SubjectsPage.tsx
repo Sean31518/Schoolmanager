@@ -5,45 +5,40 @@ export function SubjectsPage() {
   const { data: subjects, isLoading } = useSubjects()
 
   return (
-    <div>
+    <div className="space-y-5">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-slate-800 dark:text-slate-100">Fächer</h1>
-        <Link
-          to="/settings"
-          className="text-sm text-blue-600 hover:underline dark:text-blue-400"
-        >
+        <h1 className="text-[15px] font-semibold text-text-primary">Fächer</h1>
+        <Link to="/settings" className="text-sm text-accent hover:underline">
           Fächer verwalten
         </Link>
       </div>
 
       {isLoading ? (
-        <p className="mt-6 text-slate-400 dark:text-slate-500">Lädt...</p>
+        <p className="text-text-tertiary">Lädt...</p>
       ) : subjects && subjects.length > 0 ? (
-        <ul className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           {subjects.map((subject) => (
             <li key={subject.id}>
               <Link
                 to={`/subjects/${subject.id}`}
-                className="flex items-center gap-3 rounded-lg bg-white p-4 shadow-sm hover:shadow dark:bg-slate-800"
+                className="flex items-center gap-3 rounded-lg border border-border bg-bg-1 p-4 hover:border-text-disabled"
               >
                 <span
-                  className="h-4 w-4 flex-shrink-0 rounded-full"
+                  className="h-[9px] w-[9px] shrink-0 rounded-[2px]"
                   style={{ backgroundColor: subject.color }}
                 />
-                <span className="font-medium text-slate-800 dark:text-slate-100">
-                  {subject.name}
-                </span>
-                <span className="ml-auto text-xs text-slate-400 dark:text-slate-500">
-                  {subject.noteSectionTypes.length} Notizbereich(e)
+                <span className="font-medium text-text-primary">{subject.name}</span>
+                <span className="ml-auto font-mono text-[10px] text-text-tertiary">
+                  {subject.noteSectionTypes.length} HEFT(E)
                 </span>
               </Link>
             </li>
           ))}
         </ul>
       ) : (
-        <p className="mt-6 text-slate-400 dark:text-slate-500">
+        <p className="text-text-tertiary">
           Noch keine Fächer angelegt.{' '}
-          <Link to="/settings" className="text-blue-600 hover:underline dark:text-blue-400">
+          <Link to="/settings" className="text-accent hover:underline">
             Jetzt anlegen
           </Link>
         </p>

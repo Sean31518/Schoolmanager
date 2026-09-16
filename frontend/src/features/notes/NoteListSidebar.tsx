@@ -26,9 +26,6 @@ export function NoteListSidebar({
   const [query, setQuery] = useState('')
 
   const sectionType = subject?.noteSectionTypes.find((st) => st.id === sectionTypeId)
-  const activeTopicName = (groups ?? []).find((g) =>
-    g.notes.some((n) => n.id === activeNoteId),
-  )?.topicName
 
   const q = query.trim().toLowerCase()
   const filteredGroups = (groups ?? [])
@@ -46,17 +43,18 @@ export function NoteListSidebar({
   return (
     <div className="flex w-[264px] shrink-0 flex-col border-r border-border">
       <div className="flex flex-col gap-2 border-b border-border p-3.5">
-        <div className="flex items-center gap-2">
+        <Link
+          to={`/subjects/${subjectId}`}
+          className="flex items-center gap-2 text-text-primary hover:text-accent"
+        >
           {subject && (
             <span
               className="h-[9px] w-[9px] shrink-0 rounded-[2px]"
               style={{ backgroundColor: subject.color }}
             />
           )}
-          <span className="truncate text-sm font-semibold text-text-primary">
-            {activeTopicName ?? sectionType?.name}
-          </span>
-        </div>
+          <span className="truncate text-sm font-semibold">{subject?.name}</span>
+        </Link>
         <div className="flex items-center gap-1.5">
           <label className="flex flex-1 items-center gap-1.5 rounded-md border border-border px-2.5 py-1.5 text-xs text-text-muted focus-within:border-text-disabled">
             <svg
