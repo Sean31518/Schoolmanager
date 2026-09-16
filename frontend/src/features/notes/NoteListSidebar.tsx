@@ -178,17 +178,37 @@ function TopicGroup({
           type="button"
           onClick={() => void handleCreateNote()}
           title="Neue Notiz in diesem Thema"
-          className="hidden shrink-0 rounded-[3px] px-1 text-xs text-text-muted hover:text-accent group-hover/topic:block"
+          className="hidden h-5 w-5 shrink-0 items-center justify-center rounded-[4px] text-text-muted hover:bg-bg-hover hover:text-accent group-hover/topic:flex"
         >
-          +
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="h-3.5 w-3.5"
+          >
+            <path d="M12 5v14M5 12h14" />
+          </svg>
         </button>
         <button
           type="button"
           onClick={handleDeleteTopic}
           title="Thema löschen"
-          className="hidden shrink-0 rounded-[3px] px-1 text-xs text-text-muted hover:text-red-400 group-hover/topic:block"
+          className="hidden h-5 w-5 shrink-0 items-center justify-center rounded-[4px] text-text-muted hover:bg-bg-hover hover:text-red-400 group-hover/topic:flex"
         >
-          ×
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="h-3.5 w-3.5"
+          >
+            <path d="M18 6 6 18M6 6l12 12" />
+          </svg>
         </button>
       </div>
 
@@ -224,9 +244,19 @@ function TopicGroup({
               type="button"
               onClick={() => handleDeleteNote(note.id)}
               title="Notiz löschen"
-              className="absolute right-2.5 top-1/2 hidden -translate-y-1/2 text-text-muted hover:text-red-400 group-hover/note:block"
+              className="absolute right-2 top-1/2 hidden h-5 w-5 -translate-y-1/2 items-center justify-center rounded-[4px] text-text-muted hover:bg-bg-hover hover:text-red-400 group-hover/note:flex"
             >
-              ×
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="h-3.5 w-3.5"
+              >
+                <path d="M18 6 6 18M6 6l12 12" />
+              </svg>
             </button>
           </div>
         )

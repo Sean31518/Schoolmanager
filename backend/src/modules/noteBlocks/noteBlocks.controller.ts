@@ -1,6 +1,7 @@
 import type { Request, Response } from "express";
 import * as noteBlocksService from "./noteBlocks.service.js";
 import {
+  createImageBlockSchema,
   createLinkBlockSchema,
   createPdfBlockSchema,
   createTextBlockSchema,
@@ -29,6 +30,12 @@ export async function createLink(req: Request, res: Response) {
 export async function createVideo(req: Request, res: Response) {
   const body = createVideoBlockSchema.parse(req.body);
   const block = await noteBlocksService.createVideoBlock(req.user!.id, req.params.noteId, body);
+  res.status(201).json(block);
+}
+
+export async function createImage(req: Request, res: Response) {
+  const body = createImageBlockSchema.parse(req.body);
+  const block = await noteBlocksService.createImageBlock(req.user!.id, req.params.noteId, body);
   res.status(201).json(block);
 }
 

@@ -16,6 +16,7 @@ export interface BlockActions {
   onRequestPdf: () => void
   onRequestVideo: () => void
   onRequestLink: () => void
+  onRequestImage: () => void
 }
 
 type BlockActionsRef = { current?: BlockActions }
@@ -44,6 +45,14 @@ function buildBlockCommands(blockActionsRef: BlockActionsRef): CommandItem[] {
       command: ({ editor, range }) => {
         editor.chain().focus().deleteRange(range).run()
         blockActionsRef.current?.onRequestVideo()
+      },
+    },
+    {
+      title: 'Bild',
+      keywords: ['bild', 'foto', 'image'],
+      command: ({ editor, range }) => {
+        editor.chain().focus().deleteRange(range).run()
+        blockActionsRef.current?.onRequestImage()
       },
     },
     {

@@ -2,6 +2,7 @@ import type { JSONContent } from '@tiptap/react'
 import { useRef, useState } from 'react'
 import type { BlockActions } from '../SlashCommand'
 import {
+  useCreateImageBlock,
   useCreateLinkBlock,
   useCreatePdfBlocks,
   useCreateTextBlock,
@@ -12,6 +13,7 @@ import {
   useUploadFile,
 } from '../hooks'
 import type { NoteBlockDto } from '../types'
+import { ImageBlockView } from './ImageBlockView'
 import { LinkBlockView } from './LinkBlockView'
 import { loadPdfDocument } from './pdfDocumentCache'
 import { PdfPageView } from './PdfPageView'
@@ -24,6 +26,7 @@ export function BlockList({ noteId, blocks }: { noteId: string; blocks: NoteBloc
   const createText = useCreateTextBlock(noteId)
   const createLink = useCreateLinkBlock(noteId)
   const createVideo = useCreateVideoBlock(noteId)
+  const createImage = useCreateImageBlock(noteId)
   const createPdf = useCreatePdfBlocks(noteId)
   const updateBlock = useUpdateBlock(noteId)
   const deleteBlock = useDeleteBlock(noteId)
@@ -34,6 +37,7 @@ export function BlockList({ noteId, blocks }: { noteId: string; blocks: NoteBloc
   const [uploading, setUploading] = useState(false)
   const pdfInputRef = useRef<HTMLInputElement>(null)
   const videoInputRef = useRef<HTMLInputElement>(null)
+  const imageInputRef = useRef<HTMLInputElement>(null)
   const [showLinkForm, setShowLinkForm] = useState(false)
   const [linkDraft, setLinkDraft] = useState('')
   const pendingInsertIndex = useRef<number | null>(null)
@@ -53,6 +57,11 @@ export function BlockList({ noteId, blocks }: { noteId: string; blocks: NoteBloc
   function requestVideoAt(position: number) {
     pendingInsertIndex.current = position
     videoInputRef.current?.click()
+  }
+
+  function requestImageAt(position: number) {
+    pendingInsertIndex.current = position
+    imageInputRef.current?.click()
   }
 
   function requestLinkAt(position: number) {
@@ -94,6 +103,21 @@ export function BlockList({ noteId, blocks }: { noteId: string; blocks: NoteBloc
       await moveToPendingPosition([created.id])
     } catch {
       setUploadError('Video konnte nicht hochgeladen werden')
+      pendingInsertIndex.current = null
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  async function handleImageSelected(file: File) {
+    setUploadError(null)
+    setUploading(true)
+    try {
+      const uploaded = await uploadFile.mutateAsync(file)
+      const created = await createImage.mutateAsync({ fileId: uploaded.id })
+      await moveToPendingPosition([created.id])
+    } catch {
+      setUploadError('Bild konnte nicht hochgeladen werden')
       pendingInsertIndex.current = null
     } finally {
       setUploading(false)
@@ -175,6 +199,7 @@ export function BlockList({ noteId, blocks }: { noteId: string; blocks: NoteBloc
                 onRequestPdf: () => requestPdfAt(index + 1),
                 onRequestVideo: () => requestVideoAt(index + 1),
                 onRequestLink: () => requestLinkAt(index + 1),
+                onRequestImage: () => requestImageAt(index + 1),
               }}
             />
           </div>
@@ -202,6 +227,17 @@ export function BlockList({ noteId, blocks }: { noteId: string; blocks: NoteBloc
           const file = e.target.files?.[0]
           e.target.value = ''
           if (file) void handleVideoSelected(file)
+        }}
+      />
+      <input
+        ref={imageInputRef}
+        type="file"
+        accept="image/*"
+        hidden
+        onChange={(e) => {
+          const file = e.target.files?.[0]
+          e.target.value = ''
+          if (file) void handleImageSelected(file)
         }}
       />
 
@@ -281,6 +317,8 @@ function BlockContent({
       ) : null
     case 'VIDEO':
       return block.file ? <VideoBlockView file={block.file} /> : null
+    case 'IMAGE':
+      return block.file ? <ImageBlockView file={block.file} /> : null
     case 'LINK':
       return block.url ? <LinkBlockView url={block.url} /> : null
     default:

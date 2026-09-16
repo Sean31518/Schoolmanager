@@ -12,6 +12,11 @@ const ALLOWED_MIME_TYPES = new Set([
   "video/webm",
   "video/ogg",
   "video/quicktime",
+  "image/png",
+  "image/jpeg",
+  "image/gif",
+  "image/webp",
+  "image/svg+xml",
 ]);
 
 function fileFilter(_req: Request, file: Express.Multer.File, cb: FileFilterCallback) {

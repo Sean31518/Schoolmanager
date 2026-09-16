@@ -3,6 +3,7 @@ import { ValidationError } from "../../lib/errors.js";
 import { requireOwnedFile, requireOwnedNote, requireOwnedNoteBlock } from "../../lib/ownership.js";
 import { prisma } from "../../lib/prisma.js";
 import type {
+  createImageBlockSchema,
   createLinkBlockSchema,
   createPdfBlockSchema,
   createTextBlockSchema,
@@ -80,6 +81,24 @@ export async function createVideoBlock(
   const sortOrder = await nextSortOrder(noteId);
   const block = await prisma.noteBlock.create({
     data: { noteId, type: "VIDEO", sortOrder, fileId: file.id },
+    include: { file: { select: fileSelect } },
+  });
+  return mapBlock(block);
+}
+
+export async function createImageBlock(
+  userId: string,
+  noteId: string,
+  data: z.infer<typeof createImageBlockSchema>,
+) {
+  await requireOwnedNote(userId, noteId);
+  const file = await requireOwnedFile(userId, data.fileId);
+  if (!file.mimeType.startsWith("image/")) {
+    throw new ValidationError("Datei ist kein Bild");
+  }
+  const sortOrder = await nextSortOrder(noteId);
+  const block = await prisma.noteBlock.create({
+    data: { noteId, type: "IMAGE", sortOrder, fileId: file.id },
     include: { file: { select: fileSelect } },
   });
   return mapBlock(block);

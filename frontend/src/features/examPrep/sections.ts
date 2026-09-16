@@ -5,6 +5,7 @@ export type NoteSection =
   | { index: number; label: string; kind: 'text'; content: JSONContent }
   | { index: number; label: string; kind: 'pdfPage'; fileId: string; pageNumber: number }
   | { index: number; label: string; kind: 'video'; file: NoteBlockFileDto }
+  | { index: number; label: string; kind: 'image'; file: NoteBlockFileDto }
   | { index: number; label: string; kind: 'link'; url: string }
 
 function headingText(node: JSONContent): string {
@@ -88,6 +89,13 @@ export function extractSections(blocks: NoteBlockDto[]): NoteSection[] {
         index: nextIndex(),
         kind: 'video',
         label: `Video: ${block.file.originalName}`,
+        file: block.file,
+      })
+    } else if (block.type === 'IMAGE' && block.file) {
+      sections.push({
+        index: nextIndex(),
+        kind: 'image',
+        label: `Bild: ${block.file.originalName}`,
         file: block.file,
       })
     } else if (block.type === 'LINK' && block.url) {

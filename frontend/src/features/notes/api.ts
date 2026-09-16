@@ -91,6 +91,13 @@ export function createVideoBlock(noteId: string, data: { fileId: string }) {
   })
 }
 
+export function createImageBlock(noteId: string, data: { fileId: string }) {
+  return apiFetch<NoteBlockDto>(`/notes/${noteId}/blocks/image`, {
+    method: 'POST',
+    body: JSON.stringify(data),
+  })
+}
+
 export function createPdfBlocks(noteId: string, data: { fileId: string; pageCount: number }) {
   return apiFetch<NoteBlockDto[]>(`/notes/${noteId}/blocks/pdf`, {
     method: 'POST',

@@ -11,6 +11,7 @@ noteBlocksRouter.get("/", asyncHandler(noteBlocksController.list));
 noteBlocksRouter.post("/text", asyncHandler(noteBlocksController.createText));
 noteBlocksRouter.post("/link", asyncHandler(noteBlocksController.createLink));
 noteBlocksRouter.post("/video", asyncHandler(noteBlocksController.createVideo));
+noteBlocksRouter.post("/image", asyncHandler(noteBlocksController.createImage));
 noteBlocksRouter.post("/pdf", asyncHandler(noteBlocksController.createPdf));
 noteBlocksRouter.patch("/reorder", asyncHandler(noteBlocksController.reorder));
 

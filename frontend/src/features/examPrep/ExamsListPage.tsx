@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
+import { CreateMenu } from '../../components/CreateMenu'
 import { useExams } from '../calendar/hooks'
 
 function formatDate(iso: string) {
@@ -25,7 +26,10 @@ export function ExamsListPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-[15px] font-semibold text-text-primary">Klausuren</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-[15px] font-semibold text-text-primary">Klausuren</h1>
+        <CreateMenu terminLabel="Klausur" defaultTerminType="EXAM" />
+      </div>
 
       {isLoading ? (
         <p className="text-text-tertiary">Lädt...</p>
@@ -65,9 +69,6 @@ export function ExamsListPage() {
                     <span className="ml-auto font-mono text-xs text-text-tertiary">
                       {formatDate(exam.startDate)}
                     </span>
-                    <Link to={`/exams/${exam.id}`} className="text-sm text-accent hover:underline">
-                      Vorbereiten
-                    </Link>
                   </li>
                 ))}
               </ul>
@@ -98,9 +99,6 @@ export function ExamsListPage() {
                     <span className="ml-auto font-mono text-xs text-text-tertiary">
                       {formatDate(exam.startDate)}
                     </span>
-                    <Link to={`/exams/${exam.id}`} className="text-sm text-accent hover:underline">
-                      Ansehen
-                    </Link>
                   </li>
                 ))}
               </ul>

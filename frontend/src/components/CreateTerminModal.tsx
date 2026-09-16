@@ -3,12 +3,18 @@ import { ApiRequestError } from '../lib/apiClient'
 import { useCreateCalendarEvent } from '../features/calendar/hooks'
 import { useSubjects } from '../features/subjects/hooks'
 
-export function CreateTerminModal({ onClose }: { onClose: () => void }) {
+export function CreateTerminModal({
+  onClose,
+  defaultType = 'MANUAL',
+}: {
+  onClose: () => void
+  defaultType?: 'MANUAL' | 'EXAM'
+}) {
   const { data: subjects } = useSubjects()
   const createEvent = useCreateCalendarEvent()
 
   const [title, setTitle] = useState('')
-  const [type, setType] = useState<'MANUAL' | 'EXAM'>('MANUAL')
+  const [type, setType] = useState<'MANUAL' | 'EXAM'>(defaultType)
   const [startDate, setStartDate] = useState('')
   const [subjectId, setSubjectId] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -36,7 +42,9 @@ export function CreateTerminModal({ onClose }: { onClose: () => void }) {
         onClick={(e) => e.stopPropagation()}
         className="w-full max-w-md rounded-lg border border-border bg-bg-1 p-5 shadow-lg"
       >
-        <h2 className="text-[15px] font-semibold text-text-primary">Neuer Termin</h2>
+        <h2 className="text-[15px] font-semibold text-text-primary">
+          {type === 'EXAM' ? 'Neue Klausur' : 'Neuer Termin'}
+        </h2>
 
         <label className="mt-3 block text-sm text-text-secondary">
           Titel

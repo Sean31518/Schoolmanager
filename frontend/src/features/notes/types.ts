@@ -7,7 +7,7 @@ export interface TopicDto {
   notes?: { id: string }[]
 }
 
-export type NoteBlockType = 'TEXT' | 'PDF_PAGE' | 'VIDEO' | 'LINK'
+export type NoteBlockType = 'TEXT' | 'PDF_PAGE' | 'VIDEO' | 'LINK' | 'IMAGE'
 
 export interface NoteBlockFileDto {
   id: string

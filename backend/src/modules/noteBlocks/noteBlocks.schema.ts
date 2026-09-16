@@ -12,6 +12,10 @@ export const createVideoBlockSchema = z.object({
   fileId: z.string().min(1),
 });
 
+export const createImageBlockSchema = z.object({
+  fileId: z.string().min(1),
+});
+
 export const createPdfBlockSchema = z.object({
   fileId: z.string().min(1),
   pageCount: z.number().int().min(1).max(2000),

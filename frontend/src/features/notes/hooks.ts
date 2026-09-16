@@ -152,6 +152,14 @@ export function useCreateVideoBlock(noteId: string) {
   })
 }
 
+export function useCreateImageBlock(noteId: string) {
+  const invalidate = useInvalidateNote(noteId)
+  return useMutation({
+    mutationFn: (data: { fileId: string }) => api.createImageBlock(noteId, data),
+    onSuccess: invalidate,
+  })
+}
+
 export function useCreatePdfBlocks(noteId: string) {
   const invalidate = useInvalidateNote(noteId)
   return useMutation({

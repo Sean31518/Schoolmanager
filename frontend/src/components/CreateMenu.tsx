@@ -19,7 +19,13 @@ function MenuIcon({ children }: { children: React.ReactNode }) {
   )
 }
 
-export function CreateMenu() {
+export function CreateMenu({
+  terminLabel = 'Termin',
+  defaultTerminType = 'MANUAL',
+}: {
+  terminLabel?: string
+  defaultTerminType?: 'MANUAL' | 'EXAM'
+} = {}) {
   const createNote = useCreateGeneralNote()
   const [modal, setModal] = useState<'termin' | 'hausaufgabe' | null>(null)
 
@@ -61,7 +67,7 @@ export function CreateMenu() {
                 <rect x="3" y="3" width="18" height="18" rx="2" />
                 <path d="M3 9h18" />
               </MenuIcon>
-              Termin
+              {terminLabel}
             </button>
             <button
               type="button"
@@ -90,7 +96,9 @@ export function CreateMenu() {
           </div>
         </div>
       </div>
-      {modal === 'termin' && <CreateTerminModal onClose={() => setModal(null)} />}
+      {modal === 'termin' && (
+        <CreateTerminModal onClose={() => setModal(null)} defaultType={defaultTerminType} />
+      )}
       {modal === 'hausaufgabe' && <CreateHausaufgabeModal onClose={() => setModal(null)} />}
     </>
   )
