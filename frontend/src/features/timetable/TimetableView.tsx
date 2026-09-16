@@ -181,11 +181,7 @@ export function TimetableView() {
                             </span>
                           )}
                         </div>
-                      ) : (
-                        <div className="absolute inset-0 flex min-h-[2.75rem] items-center rounded-[5px] border border-dashed border-border-subtle px-2.5 py-2 text-xs text-text-disabled">
-                          frei
-                        </div>
-                      )}
+                      ) : null}
                     </td>
                   )
                 })}

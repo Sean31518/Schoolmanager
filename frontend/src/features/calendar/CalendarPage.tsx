@@ -42,6 +42,10 @@ export function CalendarPage() {
   const rangeTo = toDateKey(monthGrid[monthGrid.length - 1])
 
   const { data: events, isLoading } = useCalendarEvents({ from: rangeFrom, to: rangeTo })
+  const { data: yearEvents } = useCalendarEvents({ from: `${year}-01-01`, to: `${year}-12-31` })
+  const holidaysImportedForYear = (yearEvents ?? []).some(
+    (e) => e.type === 'HOLIDAY' || e.type === 'PUBLIC_HOLIDAY',
+  )
   const [editingEvent, setEditingEvent] = useState<CalendarEventDto | null>(null)
 
   function goToMonth(delta: number) {
@@ -89,13 +93,6 @@ export function CalendarPage() {
         </div>
       </div>
 
-      <p className="text-sm text-text-tertiary">
-        Ferien &amp; Feiertage importieren?{' '}
-        <Link to="/settings" className="text-accent hover:underline">
-          In den Einstellungen
-        </Link>
-      </p>
-
       <div className="rounded-lg border border-border bg-bg-1 p-4">
         {isLoading ? (
           <p className="text-text-tertiary">Lädt...</p>
@@ -136,6 +133,15 @@ export function CalendarPage() {
           </>
         )}
       </div>
+
+      {!holidaysImportedForYear && (
+        <p className="text-sm text-text-tertiary">
+          Ferien &amp; Feiertage importieren?{' '}
+          <Link to="/settings" className="text-accent hover:underline">
+            In den Einstellungen
+          </Link>
+        </p>
+      )}
 
       {editingEvent && (
         <EventEditModal event={editingEvent} onClose={() => setEditingEvent(null)} />
