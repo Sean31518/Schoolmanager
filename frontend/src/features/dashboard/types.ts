@@ -11,11 +11,12 @@ export interface ReminderDto {
 }
 
 export interface TimetableSlotSummaryDto {
+  type: 'LESSON' | 'BREAK'
   label: string
   startTime: string
   endTime: string
-  subjectName: string
-  subjectColor: string
+  subjectName: string | null
+  subjectColor: string | null
 }
 
 export interface RecentlyViewedNoteDto {

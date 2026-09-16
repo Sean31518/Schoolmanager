@@ -51,7 +51,7 @@ describe("Dashboard", () => {
     });
   });
 
-  it("shows only assigned LESSON slots for today/tomorrow, skipping breaks and empty slots", async () => {
+  it("includes every slot for today/tomorrow — lessons, breaks, and free periods", async () => {
     const user = await registerUser();
     const headers = { Authorization: `Bearer ${user.accessToken}` };
 
@@ -89,15 +89,12 @@ describe("Dashboard", () => {
     const res = await request(app).get("/api/dashboard").set(headers);
     expect(res.status).toBe(200);
     expect(res.body.todayTimetable).toEqual([
-      expect.objectContaining({ label: "1. Stunde", subjectName: "Mathe" }),
+      expect.objectContaining({ type: "LESSON", label: "1. Stunde", subjectName: "Mathe" }),
+      // A subjectId assigned to a BREAK slot (as done above) is ignored —
+      // breaks always render with no subject.
+      expect.objectContaining({ type: "BREAK", label: "Pause", subjectName: null }),
+      expect.objectContaining({ type: "LESSON", label: "2. Stunde", subjectName: null }),
     ]);
-    // The break slot and the unassigned lesson slot must not appear.
-    expect(
-      res.body.todayTimetable.some((s: { label: string }) => s.label === "Pause"),
-    ).toBe(false);
-    expect(
-      res.body.todayTimetable.some((s: { label: string }) => s.label === "2. Stunde"),
-    ).toBe(false);
     void unassignedLessonRes;
   });
 

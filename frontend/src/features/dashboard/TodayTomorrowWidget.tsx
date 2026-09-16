@@ -9,6 +9,68 @@ function isNowWithin(startTime: string, endTime: string) {
   return minutesNow >= startH * 60 + startM && minutesNow < endH * 60 + endM
 }
 
+function SlotRow({ slot, isNow }: { slot: TimetableSlotSummaryDto; isNow: boolean }) {
+  if (slot.type === 'BREAK') {
+    return (
+      <div
+        className={`flex items-center justify-center gap-2 rounded-[5px] border border-border-subtle bg-bg-muted py-1.5 pl-2.5 pr-2 ${
+          isNow ? 'ml-1.5' : ''
+        }`}
+      >
+        <span className="font-mono text-[10px] tracking-wider text-text-muted">
+          {slot.label.toUpperCase()}
+        </span>
+        {isNow && (
+          <span className="shrink-0 rounded-[3px] bg-accent px-[5px] py-px font-mono text-[9px] font-semibold tracking-wider text-accent-ink">
+            JETZT
+          </span>
+        )}
+      </div>
+    )
+  }
+
+  if (!slot.subjectName) {
+    return (
+      <div
+        className={`flex items-center gap-2.5 rounded-[5px] border border-dashed border-border-subtle py-1.5 pl-2.5 pr-2 ${
+          isNow ? 'ml-1.5' : ''
+        }`}
+      >
+        <span className="w-9 shrink-0 font-mono text-[10px] text-text-tertiary">
+          {slot.startTime}
+        </span>
+        <span className="flex-1 truncate text-xs text-text-disabled">Frei</span>
+        {isNow && (
+          <span className="shrink-0 rounded-[3px] bg-accent px-[5px] py-px font-mono text-[9px] font-semibold tracking-wider text-accent-ink">
+            JETZT
+          </span>
+        )}
+      </div>
+    )
+  }
+
+  return (
+    <div
+      className={`flex items-center gap-2.5 rounded-[5px] bg-bg-3 py-1.5 pl-2.5 pr-2 ${
+        isNow ? 'ml-1.5' : ''
+      }`}
+      style={{ borderLeft: `4px solid ${slot.subjectColor}` }}
+    >
+      <span className="w-9 shrink-0 font-mono text-[10px] text-text-tertiary">
+        {slot.startTime}
+      </span>
+      <span className="flex-1 truncate text-xs font-semibold text-text-primary">
+        {slot.subjectName}
+      </span>
+      {isNow && (
+        <span className="shrink-0 rounded-[3px] bg-accent px-[5px] py-px font-mono text-[9px] font-semibold tracking-wider text-accent-ink">
+          JETZT
+        </span>
+      )}
+    </div>
+  )
+}
+
 export function TodayTomorrowWidget({
   today,
   tomorrow,
@@ -22,63 +84,30 @@ export function TodayTomorrowWidget({
   return (
     <div className="overflow-hidden rounded-lg border border-border bg-bg-1">
       <div className="flex items-center justify-between gap-2 border-b border-border px-3 py-2">
-        <span className="truncate whitespace-nowrap font-mono text-[10px] tracking-wider text-text-tertiary">
-          STUNDENPLAN · {slots.length} STUNDEN
+        <span className="font-mono text-[10px] tracking-wider text-text-tertiary">
+          STUNDENPLAN
         </span>
-        <div className="flex shrink-0 overflow-hidden rounded-md border border-border">
-          <button
-            type="button"
-            onClick={() => setView('today')}
-            className={`px-2 py-1 font-mono text-[10px] tracking-wider ${
-              view === 'today'
-                ? 'bg-accent text-accent-ink'
-                : 'text-text-tertiary hover:text-text-primary'
-            }`}
-          >
-            HEUTE
-          </button>
-          <button
-            type="button"
-            onClick={() => setView('tomorrow')}
-            className={`px-2 py-1 font-mono text-[10px] tracking-wider ${
-              view === 'tomorrow'
-                ? 'bg-accent text-accent-ink'
-                : 'text-text-tertiary hover:text-text-primary'
-            }`}
-          >
-            MORGEN
-          </button>
-        </div>
+        <button
+          type="button"
+          onClick={() => setView((v) => (v === 'today' ? 'tomorrow' : 'today'))}
+          title={view === 'today' ? 'Zu morgen wechseln' : 'Zu heute wechseln'}
+          className="shrink-0 rounded-md border border-border px-2 py-1 font-mono text-[10px] tracking-wider text-text-secondary hover:border-text-disabled hover:text-text-primary"
+        >
+          {view === 'today' ? 'HEUTE' : 'MORGEN'} ⇄
+        </button>
       </div>
 
       {slots.length === 0 ? (
         <p className="px-3 py-2.5 text-sm text-text-tertiary">Keine Stunden.</p>
       ) : (
         <div className="flex flex-col gap-1 p-2">
-          {slots.map((slot, i) => {
-            const isNow = view === 'today' && isNowWithin(slot.startTime, slot.endTime)
-            return (
-              <div
-                key={i}
-                className={`flex items-center gap-2.5 rounded-[5px] bg-bg-3 py-1.5 pl-2.5 pr-2 ${
-                  isNow ? 'ml-1.5' : ''
-                }`}
-                style={{ borderLeft: `4px solid ${slot.subjectColor}` }}
-              >
-                <span className="w-9 shrink-0 font-mono text-[10px] text-text-tertiary">
-                  {slot.startTime}
-                </span>
-                <span className="flex-1 truncate text-xs font-semibold text-text-primary">
-                  {slot.subjectName}
-                </span>
-                {isNow && (
-                  <span className="shrink-0 rounded-[3px] bg-accent px-[5px] py-px font-mono text-[9px] font-semibold tracking-wider text-accent-ink">
-                    JETZT
-                  </span>
-                )}
-              </div>
-            )
-          })}
+          {slots.map((slot, i) => (
+            <SlotRow
+              key={i}
+              slot={slot}
+              isNow={view === 'today' && isNowWithin(slot.startTime, slot.endTime)}
+            />
+          ))}
         </div>
       )}
     </div>

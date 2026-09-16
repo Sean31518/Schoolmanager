@@ -71,24 +71,32 @@ export async function getDashboard(userId: string) {
 
   // Today/tomorrow timetable: reuse the same slot data the Stundenplan
   // pages already fetch, just filtered down to the relevant weekday(s).
+  // Every slot is included (breaks and free periods too) so the dashboard
+  // widget always shows what's currently going on, not just lessons.
   function slotsForWeekday(weekday: string) {
-    return timeGridSlots
-      .filter((slot) => slot.type === "LESSON")
-      .flatMap((slot) => {
-        const cell = timetableSlots.find(
-          (s) => s.weekday === weekday && s.timeGridSlotId === slot.id,
-        );
-        if (!cell?.subject) return [];
-        return [
-          {
-            label: slot.label,
-            startTime: slot.startTime,
-            endTime: slot.endTime,
-            subjectName: cell.subject.name,
-            subjectColor: cell.subject.color,
-          },
-        ];
-      });
+    return timeGridSlots.map((slot) => {
+      if (slot.type === "BREAK") {
+        return {
+          type: "BREAK" as const,
+          label: slot.label,
+          startTime: slot.startTime,
+          endTime: slot.endTime,
+          subjectName: null,
+          subjectColor: null,
+        };
+      }
+      const cell = timetableSlots.find(
+        (s) => s.weekday === weekday && s.timeGridSlotId === slot.id,
+      );
+      return {
+        type: "LESSON" as const,
+        label: slot.label,
+        startTime: slot.startTime,
+        endTime: slot.endTime,
+        subjectName: cell?.subject?.name ?? null,
+        subjectColor: cell?.subject?.color ?? null,
+      };
+    });
   }
 
   const tomorrow = new Date(now);

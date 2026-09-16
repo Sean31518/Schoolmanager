@@ -135,11 +135,18 @@ function HomeworkItem({ hw }: { hw: HomeworkDto }) {
             </option>
           ))}
         </select>
-        {hw.dueDate && (
-          <span className="shrink-0 font-mono text-[10px] text-text-tertiary">
-            {new Date(hw.dueDate).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' })}
-          </span>
-        )}
+        <input
+          type="date"
+          value={hw.dueDate ? hw.dueDate.slice(0, 10) : ''}
+          onChange={(e) =>
+            void updateHomework.mutateAsync({
+              id: hw.id,
+              data: { dueDate: e.target.value || null },
+            })
+          }
+          title="Fällig am"
+          className="[color-scheme:dark] shrink-0 rounded border-none bg-transparent font-mono text-[10px] text-text-tertiary focus:outline-none"
+        />
         <button
           type="button"
           onClick={() => setShowSubtasks((v) => !v)}
