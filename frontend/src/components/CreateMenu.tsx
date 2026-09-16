@@ -1,6 +1,8 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useCreateGeneralNote } from '../features/generalNotes/hooks'
 import { CreateHausaufgabeModal } from './CreateHausaufgabeModal'
+import { CreateHeftModal } from './CreateHeftModal'
 import { CreateTerminModal } from './CreateTerminModal'
 
 function MenuIcon({ children }: { children: React.ReactNode }) {
@@ -22,12 +24,17 @@ function MenuIcon({ children }: { children: React.ReactNode }) {
 export function CreateMenu({
   terminLabel = 'Termin',
   defaultTerminType = 'MANUAL',
+  subjectId,
 }: {
   terminLabel?: string
   defaultTerminType?: 'MANUAL' | 'EXAM'
+  /** When set, adds a "Heft" option that creates a new Notizbereich for
+   * this subject — used on the Fächer/Hefte-Übersicht page. */
+  subjectId?: string
 } = {}) {
   const createNote = useCreateGeneralNote()
-  const [modal, setModal] = useState<'termin' | 'hausaufgabe' | null>(null)
+  const navigate = useNavigate()
+  const [modal, setModal] = useState<'termin' | 'hausaufgabe' | 'heft' | null>(null)
 
   return (
     <>
@@ -93,6 +100,19 @@ export function CreateMenu({
               </MenuIcon>
               Notiz
             </button>
+            {subjectId && (
+              <button
+                type="button"
+                onClick={() => setModal('heft')}
+                className="flex w-full items-center gap-2.5 rounded px-2 py-1.5 text-left text-[12.5px] font-medium text-text-secondary hover:bg-bg-hover hover:text-text-primary"
+              >
+                <MenuIcon>
+                  <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+                  <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+                </MenuIcon>
+                Heft
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -100,6 +120,13 @@ export function CreateMenu({
         <CreateTerminModal onClose={() => setModal(null)} defaultType={defaultTerminType} />
       )}
       {modal === 'hausaufgabe' && <CreateHausaufgabeModal onClose={() => setModal(null)} />}
+      {modal === 'heft' && subjectId && (
+        <CreateHeftModal
+          subjectId={subjectId}
+          onClose={() => setModal(null)}
+          onCreated={(sectionTypeId) => navigate(`/subjects/${subjectId}/sections/${sectionTypeId}`)}
+        />
+      )}
     </>
   )
 }

@@ -1,17 +1,11 @@
-import { useState, type FormEvent } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
-import { ApiRequestError } from '../../lib/apiClient'
-import {
-  useCreateSectionType,
-  useDeleteSectionType,
-  useSubject,
-  useUpdateSectionType,
-} from './hooks'
+import { useState } from 'react'
+import { Link, useParams } from 'react-router-dom'
+import { CreateMenu } from '../../components/CreateMenu'
+import { useDeleteSectionType, useSubject, useUpdateSectionType } from './hooks'
 import type { NoteSectionTypeDto } from './types'
 
 export function SubjectDetailPage() {
   const { subjectId = '' } = useParams()
-  const navigate = useNavigate()
   const { data: subject, isLoading } = useSubject(subjectId)
   const deleteSectionType = useDeleteSectionType(subjectId)
 
@@ -29,12 +23,7 @@ export function SubjectDetailPage() {
           />
           <h1 className="text-[15px] font-semibold text-text-primary">{subject.name}</h1>
         </div>
-        <CreateHeftButton
-          subjectId={subjectId}
-          onCreated={(sectionTypeId) =>
-            navigate(`/subjects/${subjectId}/sections/${sectionTypeId}`)
-          }
-        />
+        <CreateMenu subjectId={subjectId} />
       </div>
 
       {subject.noteSectionTypes.length === 0 ? (
@@ -50,89 +39,6 @@ export function SubjectDetailPage() {
             />
           ))}
         </ul>
-      )}
-    </div>
-  )
-}
-
-function CreateHeftButton({
-  subjectId,
-  onCreated,
-}: {
-  subjectId: string
-  onCreated: (sectionTypeId: string) => void
-}) {
-  const createSectionType = useCreateSectionType(subjectId)
-  const [open, setOpen] = useState(false)
-  const [name, setName] = useState('')
-  const [error, setError] = useState<string | null>(null)
-
-  async function handleCreate(e: FormEvent) {
-    e.preventDefault()
-    setError(null)
-    try {
-      const sectionType = await createSectionType.mutateAsync({ name })
-      setName('')
-      setOpen(false)
-      onCreated(sectionType.id)
-    } catch (err) {
-      setError(
-        err instanceof ApiRequestError ? err.message : 'Heft konnte nicht angelegt werden',
-      )
-    }
-  }
-
-  return (
-    <div className="relative">
-      <button
-        type="button"
-        onClick={() => setOpen((v) => !v)}
-        title="Neues Heft"
-        className="relative z-20 flex h-[30px] w-[30px] items-center justify-center rounded-md bg-accent text-accent-ink hover:bg-accent-hover"
-      >
-        <svg
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2.25"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          className="h-[15px] w-[15px]"
-        >
-          <path d="M5 12h14" />
-          <path d="M12 5v14" />
-        </svg>
-      </button>
-      {open && (
-        <>
-          <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
-          <div className="absolute right-0 top-full z-20 w-64 pt-1.5">
-            <form
-              onSubmit={(e) => void handleCreate(e)}
-              className="flex flex-col gap-2 rounded-md border border-border bg-bg-2 p-3 shadow-lg"
-            >
-              <label className="text-xs text-text-secondary">
-                Neues Heft
-                <input
-                  autoFocus
-                  required
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="z.B. Regelheft, Vokabelheft"
-                  className="mt-1 block w-full rounded-md border border-border bg-bg-muted px-2.5 py-1.5 text-sm text-text-primary placeholder:text-text-muted"
-                />
-              </label>
-              <button
-                type="submit"
-                disabled={createSectionType.isPending}
-                className="self-start rounded-md bg-accent px-3 py-1.5 text-xs font-semibold text-accent-ink disabled:opacity-50"
-              >
-                Anlegen
-              </button>
-              {error && <p className="text-xs text-red-400">{error}</p>}
-            </form>
-          </div>
-        </>
       )}
     </div>
   )

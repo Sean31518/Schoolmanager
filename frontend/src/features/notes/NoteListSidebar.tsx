@@ -1,6 +1,8 @@
 import { useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { SidebarResizeHandle } from '../../components/SidebarResizeHandle'
 import { formatRelativeTime } from '../../lib/relativeTime'
+import { useResizableSidebar } from '../../lib/useResizableSidebar'
 import { useSubject } from '../subjects/hooks'
 import {
   useCreateNoteInTopic,
@@ -24,6 +26,12 @@ export function NoteListSidebar({
   const { data: subject } = useSubject(subjectId)
   const { data: groups, isLoading } = useSectionTypeNotes(sectionTypeId)
   const [query, setQuery] = useState('')
+  const { width, collapsed, setCollapsed, startResize } = useResizableSidebar(
+    'sidebar-notes',
+    264,
+    200,
+    480,
+  )
 
   const sectionType = subject?.noteSectionTypes.find((st) => st.id === sectionTypeId)
 
@@ -40,21 +48,74 @@ export function NoteListSidebar({
     }))
     .filter((group) => !q || group.notes.length > 0)
 
-  return (
-    <div className="flex w-[264px] shrink-0 flex-col border-r border-border">
-      <div className="flex flex-col gap-2 border-b border-border p-3.5">
-        <Link
-          to={`/subjects/${subjectId}`}
-          className="flex items-center gap-2 text-text-primary hover:text-accent"
+  if (collapsed) {
+    return (
+      <div className="flex w-9 shrink-0 flex-col items-center gap-2 border-r border-border py-3.5">
+        {subject && (
+          <span
+            className="h-[9px] w-[9px] shrink-0 rounded-[2px]"
+            style={{ backgroundColor: subject.color }}
+          />
+        )}
+        <button
+          type="button"
+          onClick={() => setCollapsed(false)}
+          title="Seitenleiste einblenden"
+          aria-label="Seitenleiste einblenden"
+          className="flex h-6 w-6 items-center justify-center rounded-md text-text-muted hover:bg-bg-hover hover:text-text-primary"
         >
-          {subject && (
-            <span
-              className="h-[9px] w-[9px] shrink-0 rounded-[2px]"
-              style={{ backgroundColor: subject.color }}
-            />
-          )}
-          <span className="truncate text-sm font-semibold">{subject?.name}</span>
-        </Link>
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="h-3.5 w-3.5"
+          >
+            <path d="m9 18 6-6-6-6" />
+          </svg>
+        </button>
+      </div>
+    )
+  }
+
+  return (
+    <div style={{ width }} className="relative flex shrink-0 flex-col border-r border-border">
+      <div className="flex flex-col gap-2 border-b border-border p-3.5">
+        <div className="flex items-center justify-between gap-2">
+          <Link
+            to={`/subjects/${subjectId}`}
+            className="flex min-w-0 items-center gap-2 text-text-primary hover:text-accent"
+          >
+            {subject && (
+              <span
+                className="h-[9px] w-[9px] shrink-0 rounded-[2px]"
+                style={{ backgroundColor: subject.color }}
+              />
+            )}
+            <span className="truncate text-sm font-semibold">{subject?.name}</span>
+          </Link>
+          <button
+            type="button"
+            onClick={() => setCollapsed(true)}
+            title="Seitenleiste ausblenden"
+            aria-label="Seitenleiste ausblenden"
+            className="flex h-5 w-5 shrink-0 items-center justify-center rounded-md text-text-muted hover:bg-bg-hover hover:text-text-primary"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="h-3.5 w-3.5"
+            >
+              <path d="m15 18-6-6 6-6" />
+            </svg>
+          </button>
+        </div>
         <div className="flex items-center gap-1.5">
           <label className="flex flex-1 items-center gap-1.5 rounded-md border border-border px-2.5 py-1.5 text-xs text-text-muted focus-within:border-text-disabled">
             <svg
@@ -95,6 +156,8 @@ export function NoteListSidebar({
           />
         ))}
       </div>
+
+      <SidebarResizeHandle onMouseDown={startResize} />
     </div>
   )
 }

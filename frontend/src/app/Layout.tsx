@@ -1,7 +1,9 @@
 import type { ReactNode } from 'react'
 import { NavLink, Outlet } from 'react-router-dom'
+import { SidebarResizeHandle } from '../components/SidebarResizeHandle'
 import { useAuth } from '../features/auth/AuthContext'
 import { useSubjects } from '../features/subjects/hooks'
+import { useResizableSidebar } from '../lib/useResizableSidebar'
 
 const navItems = [
   {
@@ -78,18 +80,82 @@ function NavIcon({ children }: { children: ReactNode }) {
 export function Layout() {
   const { user } = useAuth()
   const { data: subjects } = useSubjects()
+  const { width, collapsed, setCollapsed, startResize } = useResizableSidebar(
+    'sidebar-main',
+    210,
+    170,
+    360,
+  )
+
+  if (collapsed) {
+    return (
+      <div className="flex min-h-screen bg-bg-0 font-sans text-text-primary">
+        <aside className="flex w-11 shrink-0 flex-col items-center gap-3 border-r border-border bg-bg-2 py-4">
+          <NavLink to="/" title="Schulmanager">
+            <span className="flex h-6 w-6 items-center justify-center rounded-md bg-accent font-mono text-xs font-semibold text-accent-ink">
+              S
+            </span>
+          </NavLink>
+          <button
+            type="button"
+            onClick={() => setCollapsed(false)}
+            title="Seitenleiste einblenden"
+            aria-label="Seitenleiste einblenden"
+            className="flex h-6 w-6 items-center justify-center rounded-md text-text-muted hover:bg-bg-hover hover:text-text-primary"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="h-3.5 w-3.5"
+            >
+              <path d="m9 18 6-6-6-6" />
+            </svg>
+          </button>
+        </aside>
+        <main className="flex-1 min-w-0 px-8 py-8">
+          <Outlet />
+        </main>
+      </div>
+    )
+  }
 
   return (
     <div className="flex min-h-screen bg-bg-0 font-sans text-text-primary">
-      <aside className="flex w-[210px] shrink-0 flex-col gap-4 border-r border-border bg-bg-2 px-3 py-4">
-        <NavLink to="/" className="flex items-center gap-2.5 px-1">
-          <span className="flex h-6 w-6 items-center justify-center rounded-md bg-accent font-mono text-xs font-semibold text-accent-ink">
-            S
-          </span>
-          <span className="flex flex-col leading-tight">
-            <span className="text-[13px] font-semibold">Schulmanager</span>
-          </span>
-        </NavLink>
+      <aside
+        style={{ width }}
+        className="relative flex shrink-0 flex-col gap-4 border-r border-border bg-bg-2 px-3 py-4"
+      >
+        <div className="flex items-center justify-between gap-2 px-1">
+          <NavLink to="/" className="flex min-w-0 items-center gap-2.5">
+            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-accent font-mono text-xs font-semibold text-accent-ink">
+              S
+            </span>
+            <span className="truncate text-[13px] font-semibold">Schulmanager</span>
+          </NavLink>
+          <button
+            type="button"
+            onClick={() => setCollapsed(true)}
+            title="Seitenleiste ausblenden"
+            aria-label="Seitenleiste ausblenden"
+            className="flex h-5 w-5 shrink-0 items-center justify-center rounded-md text-text-muted hover:bg-bg-hover hover:text-text-primary"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="h-3.5 w-3.5"
+            >
+              <path d="m15 18-6-6 6-6" />
+            </svg>
+          </button>
+        </div>
 
         <nav className="flex flex-col gap-0.5">
           {navItems.map((item) => (
@@ -183,6 +249,8 @@ export function Layout() {
             </svg>
           </NavLink>
         </div>
+
+        <SidebarResizeHandle onMouseDown={startResize} />
       </aside>
 
       <main className="flex-1 min-w-0 px-8 py-8">

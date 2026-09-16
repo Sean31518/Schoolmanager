@@ -17,18 +17,22 @@ interface MergedSlot extends TimetableSlotSummaryDto {
 /** Consecutive same-subject lessons ("Doppelstunden") collapse into a single
  * row spanning the combined time range, matching how the main Stundenplan
  * grid merges them. Subject names are unique per user, so comparing by name
- * is equivalent to comparing by subject id here. */
+ * is equivalent to comparing by subject id here. Consecutive Freistunden
+ * (empty LESSON slots) merge the same way, so two free periods back to back
+ * end up exactly as tall as a Doppelstunde would. */
 function mergeDoppelstunden(slots: TimetableSlotSummaryDto[]): MergedSlot[] {
   const merged: MergedSlot[] = []
   for (const slot of slots) {
     const prev = merged[merged.length - 1]
-    if (
+    const sameLesson =
       prev &&
       prev.type === 'LESSON' &&
       slot.type === 'LESSON' &&
       prev.subjectName &&
       prev.subjectName === slot.subjectName
-    ) {
+    const bothFree =
+      prev && prev.type === 'LESSON' && slot.type === 'LESSON' && !prev.subjectName && !slot.subjectName
+    if (sameLesson || bothFree) {
       merged[merged.length - 1] = { ...prev, endTime: slot.endTime, periodCount: prev.periodCount + 1 }
       continue
     }
@@ -70,11 +74,15 @@ function SlotRow({ slot, isNow }: { slot: MergedSlot; isNow: boolean }) {
     )
   }
 
-  // Freistunde: no text, no border — just a thin gap, unless it happens to
-  // be the current period, in which case it still needs to say so.
+  // Freistunde: no text, no border — just a gap the same height a lesson of
+  // the same length would take up, so a Doppel-Freistunde reads as clearly
+  // longer than a single one. JETZT still shows if it's the current period.
   if (!slot.subjectName) {
     return (
-      <div className={`flex min-h-[10px] items-center justify-end pr-2 ${isNow ? 'ml-1.5' : ''}`}>
+      <div
+        className={`flex items-center justify-end pr-2 ${isNow ? 'ml-1.5' : ''}`}
+        style={{ minHeight: `${slot.periodCount * 2.25}rem` }}
+      >
         {isNow && <JetztBadge />}
       </div>
     )
