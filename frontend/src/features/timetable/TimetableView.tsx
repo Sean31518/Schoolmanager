@@ -159,10 +159,10 @@ export function TimetableView() {
                   const spanEnd = timeGridSlots[i + (span?.rowSpan ?? 1) - 1]
                   const isNow = isToday && isNowWithin(slot.startTime, spanEnd.endTime)
                   return (
-                    <td key={day.value} rowSpan={span?.rowSpan ?? 1} className="align-top">
+                    <td key={day.value} rowSpan={span?.rowSpan ?? 1} className="relative">
                       {cellColor ? (
                         <div
-                          className="flex h-full min-h-[2.75rem] w-full flex-col justify-center gap-1 overflow-hidden rounded-[5px] bg-bg-3 px-2.5 py-2 text-xs font-semibold text-text-primary"
+                          className="absolute inset-0 flex flex-col justify-center gap-1 overflow-hidden rounded-[5px] bg-bg-3 px-2.5 py-2 text-xs font-semibold text-text-primary"
                           style={{ borderLeft: `4px solid ${cellColor}` }}
                         >
                           <span className="flex items-center justify-between gap-1.5">
@@ -182,7 +182,7 @@ export function TimetableView() {
                           )}
                         </div>
                       ) : (
-                        <div className="flex min-h-[2.75rem] w-full items-center rounded-[5px] border border-dashed border-border-subtle px-2.5 py-2 text-xs text-text-disabled">
+                        <div className="absolute inset-0 flex min-h-[2.75rem] items-center rounded-[5px] border border-dashed border-border-subtle px-2.5 py-2 text-xs text-text-disabled">
                           frei
                         </div>
                       )}
