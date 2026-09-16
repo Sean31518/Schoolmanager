@@ -5,6 +5,7 @@ export function createHomework(data: {
   title: string
   subjectId?: string | null
   dueDate?: string | null
+  linkedNoteId?: string | null
 }) {
   return apiFetch<HomeworkDto>('/homework', { method: 'POST', body: JSON.stringify(data) })
 }
@@ -16,6 +17,7 @@ export function updateHomework(
     title: string
     subjectId: string | null
     dueDate: string | null
+    linkedNoteId: string | null
   }>,
 ) {
   return apiFetch<HomeworkDto>(`/homework/${id}`, {

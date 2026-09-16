@@ -1,7 +1,7 @@
+import { CreateMenu } from '../../components/CreateMenu'
 import { useAuth } from '../auth/AuthContext'
 import { GeneralNotesWidget } from '../generalNotes/GeneralNotesWidget'
 import { HomeworkWidget } from '../homework/HomeworkWidget'
-import { CreateMenu } from './CreateMenu'
 import { ExamHighlightWidget } from './ExamHighlightWidget'
 import { RecentNotesWidget } from './RecentNotesWidget'
 import { RemindersWidget } from './RemindersWidget'

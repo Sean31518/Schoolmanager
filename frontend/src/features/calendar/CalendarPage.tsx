@@ -1,10 +1,9 @@
-import { useMemo, useState, type FormEvent } from 'react'
+import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ApiRequestError } from '../../lib/apiClient'
-import { useSubjects } from '../subjects/hooks'
+import { CreateMenu } from '../../components/CreateMenu'
 import { EventEditModal } from './EventEditModal'
 import { TYPE_COLORS, TYPE_LABELS } from './eventColors'
-import { useCalendarEvents, useCreateCalendarEvent } from './hooks'
+import { useCalendarEvents } from './hooks'
 import { WeekRow } from './WeekRow'
 import type { CalendarEventDto, CalendarEventType } from './types'
 
@@ -43,35 +42,12 @@ export function CalendarPage() {
   const rangeTo = toDateKey(monthGrid[monthGrid.length - 1])
 
   const { data: events, isLoading } = useCalendarEvents({ from: rangeFrom, to: rangeTo })
-  const { data: subjects } = useSubjects()
-  const createEvent = useCreateCalendarEvent()
-
-  const [title, setTitle] = useState('')
-  const [type, setType] = useState<'MANUAL' | 'EXAM'>('MANUAL')
-  const [startDate, setStartDate] = useState('')
-  const [subjectId, setSubjectId] = useState('')
-  const [error, setError] = useState<string | null>(null)
   const [editingEvent, setEditingEvent] = useState<CalendarEventDto | null>(null)
 
   function goToMonth(delta: number) {
     const next = new Date(Date.UTC(year, month + delta, 1))
     setYear(next.getUTCFullYear())
     setMonth(next.getUTCMonth())
-  }
-
-  async function handleCreate(e: FormEvent) {
-    e.preventDefault()
-    setError(null)
-    try {
-      await createEvent.mutateAsync({ title, type, startDate, subjectId: subjectId || null })
-      setTitle('')
-      setStartDate('')
-      setSubjectId('')
-    } catch (err) {
-      setError(
-        err instanceof ApiRequestError ? err.message : 'Termin konnte nicht angelegt werden',
-      )
-    }
   }
 
   const weeks = useMemo(() => {
@@ -91,22 +67,25 @@ export function CalendarPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-[15px] font-semibold text-text-primary">Kalender</h1>
-        <div className="flex items-center gap-2 text-sm">
-          <button
-            onClick={() => goToMonth(-1)}
-            className="rounded-md border border-border px-2 py-1 text-text-secondary hover:border-text-disabled"
-          >
-            ←
-          </button>
-          <span className="min-w-[10rem] text-center text-[13px] font-medium capitalize text-text-primary">
-            {monthLabel}
-          </span>
-          <button
-            onClick={() => goToMonth(1)}
-            className="rounded-md border border-border px-2 py-1 text-text-secondary hover:border-text-disabled"
-          >
-            →
-          </button>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 text-sm">
+            <button
+              onClick={() => goToMonth(-1)}
+              className="rounded-md border border-border px-2 py-1 text-text-secondary hover:border-text-disabled"
+            >
+              ←
+            </button>
+            <span className="min-w-[10rem] text-center text-[13px] font-medium capitalize text-text-primary">
+              {monthLabel}
+            </span>
+            <button
+              onClick={() => goToMonth(1)}
+              className="rounded-md border border-border px-2 py-1 text-text-secondary hover:border-text-disabled"
+            >
+              →
+            </button>
+          </div>
+          <CreateMenu />
         </div>
       </div>
 
@@ -116,65 +95,6 @@ export function CalendarPage() {
           In den Einstellungen
         </Link>
       </p>
-
-      <div className="rounded-lg border border-border bg-bg-1 p-4">
-        <h2 className="text-[13px] font-semibold text-text-primary">Neuer Termin</h2>
-        <form onSubmit={handleCreate} className="mt-3 flex flex-wrap items-end gap-3">
-          <label className="text-sm text-text-secondary">
-            Titel
-            <input
-              required
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              className="mt-1 block rounded-md border border-border bg-bg-muted px-3 py-2 text-sm text-text-primary"
-            />
-          </label>
-          <label className="text-sm text-text-secondary">
-            Typ
-            <select
-              value={type}
-              onChange={(e) => setType(e.target.value as 'MANUAL' | 'EXAM')}
-              className="mt-1 block rounded-md border border-border bg-bg-muted px-3 py-2 text-sm text-text-primary"
-            >
-              <option value="MANUAL">Termin</option>
-              <option value="EXAM">Klausur</option>
-            </select>
-          </label>
-          <label className="text-sm text-text-secondary">
-            Datum
-            <input
-              type="date"
-              required
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-              className="mt-1 block rounded-md border border-border bg-bg-muted px-3 py-2 text-sm text-text-primary"
-            />
-          </label>
-          <label className="text-sm text-text-secondary">
-            Fach (optional)
-            <select
-              value={subjectId}
-              onChange={(e) => setSubjectId(e.target.value)}
-              className="mt-1 block rounded-md border border-border bg-bg-muted px-3 py-2 text-sm text-text-primary"
-            >
-              <option value="">–</option>
-              {(subjects ?? []).map((subject) => (
-                <option key={subject.id} value={subject.id}>
-                  {subject.name}
-                </option>
-              ))}
-            </select>
-          </label>
-          <button
-            type="submit"
-            disabled={createEvent.isPending}
-            className="rounded-md bg-accent px-4 py-2 text-sm font-semibold text-accent-ink disabled:opacity-50"
-          >
-            Anlegen
-          </button>
-        </form>
-        {error && <p className="mt-2 text-sm text-red-400">{error}</p>}
-      </div>
 
       <div className="rounded-lg border border-border bg-bg-1 p-4">
         {isLoading ? (

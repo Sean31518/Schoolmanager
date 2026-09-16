@@ -144,6 +144,7 @@ model Note {
 
   blocks        NoteBlock[]
   examPrepItems ExamPrepItem[]
+  homework      Homework[]
 
   @@index([topicId])
 }
@@ -260,21 +261,24 @@ model ExamPrepItem {
 }
 
 model Homework {
-  id        String    @id @default(cuid())
-  userId    String
-  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  title     String
-  subjectId String?
-  subject   Subject?  @relation(fields: [subjectId], references: [id], onDelete: SetNull)
-  dueDate   DateTime?
-  done      Boolean   @default(false)
-  note      String?
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  id           String    @id @default(cuid())
+  userId       String
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title        String
+  subjectId    String?
+  subject      Subject?  @relation(fields: [subjectId], references: [id], onDelete: SetNull)
+  dueDate      DateTime?
+  done         Boolean   @default(false)
+  note         String?
+  linkedNoteId String?
+  linkedNote   Note?     @relation(fields: [linkedNoteId], references: [id], onDelete: SetNull)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 
   subtasks HomeworkSubtask[]
 
   @@index([userId, dueDate])
+  @@index([linkedNoteId])
 }
 
 model HomeworkSubtask {

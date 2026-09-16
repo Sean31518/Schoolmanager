@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react'
-import { ApiRequestError } from '../../lib/apiClient'
-import { useCreateCalendarEvent } from '../calendar/hooks'
-import { useSubjects } from '../subjects/hooks'
+import { ApiRequestError } from '../lib/apiClient'
+import { useCreateCalendarEvent } from '../features/calendar/hooks'
+import { useSubjects } from '../features/subjects/hooks'
 
 export function CreateTerminModal({ onClose }: { onClose: () => void }) {
   const { data: subjects } = useSubjects()

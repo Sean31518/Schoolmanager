@@ -1,5 +1,6 @@
 import { weekdays } from "../../lib/enums.js";
 import { prisma } from "../../lib/prisma.js";
+import { mapHomework, withSubtasks } from "../homework/homework.service.js";
 import { getTimetable } from "../timetable/timetable.service.js";
 
 function weekdayFor(date: Date) {
@@ -13,11 +14,11 @@ export async function getDashboard(userId: string) {
 
   const now = new Date();
 
-  const [upcomingHomework, upcomingEvents, generalNotesRaw, recentNotes, { timeGridSlots, timetableSlots }] =
+  const [upcomingHomeworkRaw, upcomingEvents, generalNotesRaw, recentNotes, { timeGridSlots, timetableSlots }] =
     await Promise.all([
       prisma.homework.findMany({
         where: { userId, done: false },
-        include: { subject: true, subtasks: { orderBy: { sortOrder: "asc" } } },
+        include: withSubtasks,
         orderBy: [{ dueDate: "asc" }],
         take: 10,
       }),
@@ -36,6 +37,8 @@ export async function getDashboard(userId: string) {
       }),
       getTimetable(userId),
     ]);
+
+  const upcomingHomework = upcomingHomeworkRaw.map(mapHomework);
 
   const generalNotes = generalNotesRaw.map((note) => ({
     ...note,

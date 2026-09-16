@@ -1,7 +1,8 @@
 import { useState, type FormEvent } from 'react'
-import { ApiRequestError } from '../../lib/apiClient'
-import { useCreateHomework } from '../homework/hooks'
-import { useSubjects } from '../subjects/hooks'
+import { ApiRequestError } from '../lib/apiClient'
+import { useCreateHomework } from '../features/homework/hooks'
+import { useSubjectNotes } from '../features/notes/hooks'
+import { useSubjects } from '../features/subjects/hooks'
 
 export function CreateHausaufgabeModal({ onClose }: { onClose: () => void }) {
   const { data: subjects } = useSubjects()
@@ -10,7 +11,9 @@ export function CreateHausaufgabeModal({ onClose }: { onClose: () => void }) {
   const [title, setTitle] = useState('')
   const [dueDate, setDueDate] = useState('')
   const [subjectId, setSubjectId] = useState('')
+  const [linkedNoteId, setLinkedNoteId] = useState('')
   const [error, setError] = useState<string | null>(null)
+  const { data: notes } = useSubjectNotes(subjectId)
 
   async function handleCreate(e: FormEvent) {
     e.preventDefault()
@@ -20,6 +23,7 @@ export function CreateHausaufgabeModal({ onClose }: { onClose: () => void }) {
         title,
         dueDate: dueDate || null,
         subjectId: subjectId || null,
+        linkedNoteId: linkedNoteId || null,
       })
       onClose()
     } catch (err) {
@@ -56,7 +60,10 @@ export function CreateHausaufgabeModal({ onClose }: { onClose: () => void }) {
           Fach (optional)
           <select
             value={subjectId}
-            onChange={(e) => setSubjectId(e.target.value)}
+            onChange={(e) => {
+              setSubjectId(e.target.value)
+              setLinkedNoteId('')
+            }}
             className="mt-1 block w-full rounded-md border border-border bg-bg-muted px-3 py-2 text-sm text-text-primary"
           >
             <option value="">–</option>
@@ -67,6 +74,24 @@ export function CreateHausaufgabeModal({ onClose }: { onClose: () => void }) {
             ))}
           </select>
         </label>
+
+        {subjectId && (
+          <label className="mt-3 block text-sm text-text-secondary">
+            Verknüpfte Notiz (optional)
+            <select
+              value={linkedNoteId}
+              onChange={(e) => setLinkedNoteId(e.target.value)}
+              className="mt-1 block w-full rounded-md border border-border bg-bg-muted px-3 py-2 text-sm text-text-primary"
+            >
+              <option value="">–</option>
+              {(notes ?? []).map((note) => (
+                <option key={note.id} value={note.id}>
+                  {note.title}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
 
         <label className="mt-3 block text-sm text-text-secondary">
           Fällig am (optional)

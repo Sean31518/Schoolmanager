@@ -5,6 +5,7 @@ export const createHomeworkSchema = z.object({
   subjectId: z.string().nullable().optional(),
   dueDate: z.coerce.date().nullable().optional(),
   note: z.string().max(2000).nullable().optional(),
+  linkedNoteId: z.string().nullable().optional(),
 });
 
 export const updateHomeworkSchema = createHomeworkSchema.partial().extend({

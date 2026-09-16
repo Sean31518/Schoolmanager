@@ -1,4 +1,6 @@
 import { useState, type FormEvent } from 'react'
+import { Link } from 'react-router-dom'
+import { useSubjectNotes } from '../notes/hooks'
 import { useSubjects } from '../subjects/hooks'
 import {
   useCreateSubtask,
@@ -145,6 +147,7 @@ function HomeworkItem({ hw }: { hw: HomeworkDto }) {
         >
           {hw.subtasks.length > 0 ? `${doneSubtasks}/${hw.subtasks.length}` : '+'}
         </button>
+        <LinkedNoteControl hw={hw} />
         <button
           onClick={() => void deleteHomework.mutateAsync(hw.id)}
           className="shrink-0 text-text-muted hover:text-red-400"
@@ -152,6 +155,28 @@ function HomeworkItem({ hw }: { hw: HomeworkDto }) {
           ×
         </button>
       </div>
+
+      {hw.linkedNote && (
+        <Link
+          to={`/subjects/${hw.linkedNote.subjectId}/sections/${hw.linkedNote.sectionTypeId}/notes/${hw.linkedNote.id}`}
+          className="mt-1.5 ml-6 flex items-center gap-1.5 text-xs text-text-tertiary hover:text-accent"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.75"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="h-3 w-3 shrink-0"
+          >
+            <path d="m9 17 6-6" />
+            <path d="M13 6.5a5 5 0 0 1 7.5 6.5l-4 4a5 5 0 0 1-7-7" />
+            <path d="M11 17.5a5 5 0 0 1-7.5-6.5l4-4a5 5 0 0 1 7 7" />
+          </svg>
+          <span className="truncate">{hw.linkedNote.title}</span>
+        </Link>
+      )}
 
       {showSubtasks && (
         <div className="mt-2 ml-6 space-y-1 border-l border-border-subtle pl-3">
@@ -170,6 +195,90 @@ function HomeworkItem({ hw }: { hw: HomeworkDto }) {
             </button>
           </form>
         </div>
+      )}
+    </div>
+  )
+}
+
+function LinkedNoteControl({ hw }: { hw: HomeworkDto }) {
+  const [open, setOpen] = useState(false)
+  const updateHomework = useUpdateHomework()
+  const { data: notes } = useSubjectNotes(hw.subjectId ?? '')
+
+  function pick(noteId: string | null) {
+    setOpen(false)
+    void updateHomework.mutateAsync({ id: hw.id, data: { linkedNoteId: noteId } })
+  }
+
+  return (
+    <div className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        title={hw.linkedNote ? 'Verknüpfung ändern' : 'Mit Notiz verknüpfen'}
+        className={
+          hw.linkedNote
+            ? 'relative z-20 shrink-0 text-accent'
+            : 'relative z-20 shrink-0 text-text-muted hover:text-text-primary'
+        }
+      >
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.75"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="h-3.5 w-3.5"
+        >
+          <path d="m9 17 6-6" />
+          <path d="M13 6.5a5 5 0 0 1 7.5 6.5l-4 4a5 5 0 0 1-7-7" />
+          <path d="M11 17.5a5 5 0 0 1-7.5-6.5l4-4a5 5 0 0 1 7 7" />
+        </svg>
+      </button>
+      {open && (
+        <>
+          <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
+          <div className="absolute right-0 top-full z-20 mt-1 w-56 rounded-md border border-border bg-bg-2 p-1.5 shadow-lg">
+            {!hw.subjectId && (
+              <p className="px-1.5 py-1 text-xs text-text-tertiary">
+                Wähle zuerst ein Fach, um eine Notiz zu verknüpfen.
+              </p>
+            )}
+            {hw.subjectId && (notes?.length ?? 0) === 0 && (
+              <p className="px-1.5 py-1 text-xs text-text-tertiary">
+                Keine Notizen in diesem Fach.
+              </p>
+            )}
+            {hw.subjectId &&
+              notes?.map((note) => (
+                <button
+                  key={note.id}
+                  type="button"
+                  onClick={() => pick(note.id)}
+                  className={
+                    note.id === hw.linkedNoteId
+                      ? 'block w-full truncate rounded px-1.5 py-1 text-left text-xs font-semibold text-accent'
+                      : 'block w-full truncate rounded px-1.5 py-1 text-left text-xs text-text-secondary hover:bg-bg-hover'
+                  }
+                >
+                  {note.title}
+                </button>
+              ))}
+            {hw.linkedNoteId && (
+              <>
+                <div className="my-1 h-px bg-border" />
+                <button
+                  type="button"
+                  onClick={() => pick(null)}
+                  className="block w-full rounded px-1.5 py-1 text-left text-xs text-red-400 hover:bg-bg-hover"
+                >
+                  Verknüpfung entfernen
+                </button>
+              </>
+            )}
+          </div>
+        </>
       )}
     </div>
   )
