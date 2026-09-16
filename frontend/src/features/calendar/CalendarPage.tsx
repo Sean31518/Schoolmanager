@@ -69,9 +69,9 @@ export function CalendarPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-[15px] font-semibold text-text-primary">Kalender</h1>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <div className="flex items-center gap-2 text-sm">
             <button
               onClick={() => goToMonth(-1)}
@@ -98,24 +98,28 @@ export function CalendarPage() {
           <p className="text-text-tertiary">Lädt...</p>
         ) : (
           <>
-            <div className="grid grid-cols-7 rounded-t-md border border-b-0 border-border-subtle font-mono text-[10px] tracking-wider text-text-muted">
-              {WEEKDAY_LABELS.map((label) => (
-                <div key={label} className="bg-bg-muted px-2 py-1 text-center">
-                  {label}
+            <div className="overflow-x-auto">
+              <div className="min-w-[560px]">
+                <div className="grid grid-cols-7 rounded-t-md border border-b-0 border-border-subtle font-mono text-[10px] tracking-wider text-text-muted">
+                  {WEEKDAY_LABELS.map((label) => (
+                    <div key={label} className="bg-bg-muted px-2 py-1 text-center">
+                      {label}
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-            <div className="overflow-hidden rounded-b-md border border-border-subtle">
-              {weeks.map((week) => (
-                <WeekRow
-                  key={toDateKey(week[0])}
-                  week={week}
-                  month={month}
-                  todayKey={todayKey}
-                  events={events ?? []}
-                  onEventClick={setEditingEvent}
-                />
-              ))}
+                <div className="overflow-hidden rounded-b-md border border-border-subtle">
+                  {weeks.map((week) => (
+                    <WeekRow
+                      key={toDateKey(week[0])}
+                      week={week}
+                      month={month}
+                      todayKey={todayKey}
+                      events={events ?? []}
+                      onEventClick={setEditingEvent}
+                    />
+                  ))}
+                </div>
+              </div>
             </div>
             <div className="mt-3 flex flex-wrap gap-3 text-xs text-text-tertiary">
               {(Object.keys(TYPE_LABELS) as CalendarEventType[])

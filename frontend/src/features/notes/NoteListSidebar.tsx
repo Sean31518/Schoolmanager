@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { SidebarResizeHandle } from '../../components/SidebarResizeHandle'
 import { formatRelativeTime } from '../../lib/relativeTime'
+import { useMediaQuery } from '../../lib/useMediaQuery'
 import { useResizableSidebar } from '../../lib/useResizableSidebar'
 import { useSubject } from '../subjects/hooks'
 import {
@@ -32,6 +33,7 @@ export function NoteListSidebar({
     200,
     480,
   )
+  const isDesktop = useMediaQuery('(min-width: 768px)')
 
   const sectionType = subject?.noteSectionTypes.find((st) => st.id === sectionTypeId)
 
@@ -48,7 +50,7 @@ export function NoteListSidebar({
     }))
     .filter((group) => !q || group.notes.length > 0)
 
-  if (collapsed) {
+  if (collapsed && isDesktop) {
     return (
       <div className="flex w-9 shrink-0 flex-col items-center gap-2 border-r border-border py-3.5">
         {subject && (
@@ -81,7 +83,10 @@ export function NoteListSidebar({
   }
 
   return (
-    <div style={{ width }} className="relative flex shrink-0 flex-col border-r border-border">
+    <div
+      style={isDesktop ? { width } : undefined}
+      className="relative flex w-full shrink-0 flex-col border-r border-border md:w-auto"
+    >
       <div className="flex flex-col gap-2 border-b border-border p-3.5">
         <div className="flex items-center justify-between gap-2">
           <Link
@@ -101,7 +106,7 @@ export function NoteListSidebar({
             onClick={() => setCollapsed(true)}
             title="Seitenleiste ausblenden"
             aria-label="Seitenleiste ausblenden"
-            className="flex h-5 w-5 shrink-0 items-center justify-center rounded-md text-text-muted hover:bg-bg-hover hover:text-text-primary"
+            className="hidden h-5 w-5 shrink-0 items-center justify-center rounded-md text-text-muted hover:bg-bg-hover hover:text-text-primary md:flex"
           >
             <svg
               viewBox="0 0 24 24"
@@ -157,7 +162,7 @@ export function NoteListSidebar({
         ))}
       </div>
 
-      <SidebarResizeHandle onMouseDown={startResize} />
+      {isDesktop && <SidebarResizeHandle onMouseDown={startResize} />}
     </div>
   )
 }
