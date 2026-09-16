@@ -23,7 +23,7 @@ export function NoteEditorPage() {
   }, [noteId, groups, subjectId, sectionTypeId, navigate])
 
   return (
-    <div className="-m-8 flex h-[calc(100vh-4rem)] rounded-lg border border-border">
+    <div className="-m-8 flex h-screen rounded-lg border border-border">
       <NoteListSidebar subjectId={subjectId} sectionTypeId={sectionTypeId} activeNoteId={noteId} />
       <div className="flex-1 min-w-0 overflow-y-auto p-8">
         {noteId ? (
