@@ -43,9 +43,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           skipAuthRetry: true,
         })
         setAccessToken(data.accessToken)
+      } catch {
+        // Refresh fails both when the session is genuinely invalid and when
+        // we're offline and never reached the server at all — those cases
+        // need different outcomes, so don't give up yet. /auth/me is a GET
+        // the service worker caches; try it regardless of whether refresh
+        // just gave us a fresh token. Offline, it resolves from cache and
+        // keeps a previously logged-in user logged in (with stale data)
+        // instead of bouncing them to the login screen for lack of network.
+        setAccessToken(null)
+      }
+      try {
         await loadMe()
       } catch {
-        setAccessToken(null)
         setStatus('unauthenticated')
       }
     })()
