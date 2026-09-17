@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { useState } from 'react'
 import { NavLink, Outlet } from 'react-router-dom'
+import { GlobalSearchModal } from '../components/GlobalSearchModal'
 import { SidebarResizeHandle } from '../components/SidebarResizeHandle'
 import { useAuth } from '../features/auth/AuthContext'
 import type { SubjectDto } from '../features/subjects/types'
@@ -83,12 +84,38 @@ function NavIcon({ children }: { children: ReactNode }) {
 function SidebarNavList({
   subjects,
   onNavigate,
+  onOpenSearch,
 }: {
   subjects: SubjectDto[]
   onNavigate?: () => void
+  onOpenSearch: () => void
 }) {
   return (
     <>
+      <button
+        type="button"
+        onClick={onOpenSearch}
+        title="Suchen (Strg+K)"
+        className="flex items-center gap-2 rounded-md border border-border px-2.5 py-1.5 text-[13px] text-text-tertiary hover:border-text-disabled hover:text-text-secondary"
+      >
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.75"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="h-[13px] w-[13px] shrink-0"
+        >
+          <path d="m21 21-4.34-4.34" />
+          <circle cx="11" cy="11" r="8" />
+        </svg>
+        <span className="flex-1 text-left">Suchen...</span>
+        <kbd className="hidden shrink-0 rounded border border-border-subtle px-1 font-mono text-[9px] text-text-muted md:inline">
+          Strg K
+        </kbd>
+      </button>
+
       <nav className="flex flex-col gap-0.5">
         {navItems.map((item) => (
           <NavLink
@@ -235,6 +262,7 @@ export function Layout() {
     360,
   )
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
+  const [searchOpen, setSearchOpen] = useState(false)
 
   return (
     <div className="flex min-h-screen flex-col bg-bg-0 font-sans text-text-primary md:flex-row">
@@ -304,6 +332,10 @@ export function Layout() {
             <SidebarNavList
               subjects={subjects ?? []}
               onNavigate={() => setMobileNavOpen(false)}
+              onOpenSearch={() => {
+                setMobileNavOpen(false)
+                setSearchOpen(true)
+              }}
             />
             <SidebarFooterRow
               userName={user?.displayName}
@@ -375,7 +407,10 @@ export function Layout() {
             </button>
           </div>
 
-          <SidebarNavList subjects={subjects ?? []} />
+          <SidebarNavList
+            subjects={subjects ?? []}
+            onOpenSearch={() => setSearchOpen(true)}
+          />
           <SidebarFooterRow userName={user?.displayName} theme={theme} toggleTheme={toggleTheme} />
 
           <SidebarResizeHandle onMouseDown={startResize} />
@@ -385,6 +420,8 @@ export function Layout() {
       <main className="min-w-0 flex-1 px-4 py-4 md:px-8 md:py-8">
         <Outlet />
       </main>
+
+      <GlobalSearchModal open={searchOpen} onOpenChange={setSearchOpen} />
     </div>
   )
 }

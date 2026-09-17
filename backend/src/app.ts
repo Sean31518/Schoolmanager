@@ -20,6 +20,7 @@ import { blockByIdRouter, noteBlocksRouter } from "./modules/noteBlocks/noteBloc
 import { sectionTypeByIdRouter } from "./modules/noteSectionTypes/noteSectionTypes.routes.js";
 import { noteByIdRouter, notesRouter } from "./modules/notes/notes.routes.js";
 import { pushRouter } from "./modules/push/push.routes.js";
+import { searchRouter } from "./modules/search/search.routes.js";
 import { settingsRouter } from "./modules/settings/settings.routes.js";
 import { subjectsRouter } from "./modules/subjects/subjects.routes.js";
 import { timeGridRouter } from "./modules/timeGrid/timeGrid.routes.js";
@@ -63,6 +64,7 @@ export function createApp() {
   app.use("/api/export", exportRouter);
   app.use("/api/import", importRouter);
   app.use("/api/push", pushRouter);
+  app.use("/api/search", searchRouter);
   app.use("/api/calendar-events/:eventId/exam-prep", examPrepRouter);
   app.use("/api/calendar-events", calendarEventsRouter);
 
