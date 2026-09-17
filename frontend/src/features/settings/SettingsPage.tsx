@@ -1,5 +1,5 @@
-import { useEffect, useState, type FormEvent, type ReactNode } from 'react'
-import { ApiRequestError, getAccessToken } from '../../lib/apiClient'
+import { useEffect, useRef, useState, type ChangeEvent, type FormEvent, type ReactNode } from 'react'
+import { apiFetch, ApiRequestError, getAccessToken } from '../../lib/apiClient'
 import { FEDERAL_STATES } from '../../lib/federalStates'
 import { useAuth } from '../auth/AuthContext'
 import { HolidayImportForm } from '../calendar/HolidayImportForm'
@@ -150,6 +150,7 @@ export function SettingsPage() {
 
       <SettingsSection title="Daten">
         <ExportDataButton />
+        <ImportDataButton />
       </SettingsSection>
 
       <SettingsSection title="Konto">
@@ -212,6 +213,125 @@ function ExportDataButton() {
         {isExporting ? 'Exportiere...' : 'Alle Daten exportieren'}
       </button>
       {error && <p className="mt-2 text-sm text-red-400">{error}</p>}
+    </div>
+  )
+}
+
+interface ImportSummary {
+  subjects: number
+  noteSectionTypes: number
+  topics: number
+  notes: number
+  blocksSkipped: number
+  flashcards: number
+  timeGridSlots: number
+  timetableSlots: number
+  calendarEvents: number
+  examPrepItems: number
+  homework: number
+  generalNotes: number
+}
+
+const IMPORT_SUMMARY_LABELS: Array<[keyof ImportSummary, string]> = [
+  ['subjects', 'Fächer'],
+  ['noteSectionTypes', 'Hefte'],
+  ['topics', 'Themen'],
+  ['notes', 'Notizen'],
+  ['flashcards', 'Karteikarten'],
+  ['timeGridSlots', 'Zeitraster-Einträge'],
+  ['timetableSlots', 'Stundenplan-Einträge'],
+  ['calendarEvents', 'Termine'],
+  ['homework', 'Hausaufgaben'],
+  ['generalNotes', 'allgemeine Notizen'],
+]
+
+function ImportDataButton() {
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [isImporting, setIsImporting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [summary, setSummary] = useState<ImportSummary | null>(null)
+
+  async function handleFileSelected(e: ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file) return
+
+    if (
+      !confirm(
+        'Die Daten aus dieser Datei werden zu deinem Konto hinzugefügt. Bestehende Daten werden nicht gelöscht oder überschrieben. Fortfahren?',
+      )
+    ) {
+      return
+    }
+
+    setError(null)
+    setSummary(null)
+    setIsImporting(true)
+    try {
+      const text = await file.text()
+      const parsed = JSON.parse(text)
+      const result = await apiFetch<{ summary: ImportSummary }>('/import', {
+        method: 'POST',
+        body: JSON.stringify(parsed),
+      })
+      setSummary(result.summary)
+    } catch {
+      // The backend only ever fails here with a generic Zod validation
+      // error or a parse error — neither is meaningful to show verbatim,
+      // so this stays a single friendly message regardless of cause.
+      setError('Import fehlgeschlagen. Ist das eine gültige Export-Datei?')
+    } finally {
+      setIsImporting(false)
+    }
+  }
+
+  return (
+    <div className="mt-5 border-t border-border-subtle pt-5">
+      <p className="text-sm text-text-secondary">
+        Importiert Daten aus einer zuvor exportierten JSON-Datei. Inhalte werden zu deinem Konto
+        hinzugefügt — nichts Bestehendes wird dabei gelöscht oder überschrieben.
+      </p>
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="application/json"
+        onChange={(e) => void handleFileSelected(e)}
+        className="hidden"
+      />
+      <button
+        type="button"
+        onClick={() => fileInputRef.current?.click()}
+        disabled={isImporting}
+        className="mt-3 rounded-md border border-border px-4 py-2 text-sm text-text-secondary hover:bg-bg-hover disabled:opacity-50"
+      >
+        {isImporting ? 'Importiere...' : 'Daten importieren'}
+      </button>
+      {error && <p className="mt-2 text-sm text-red-400">{error}</p>}
+      {summary && (
+        <div className="mt-3 rounded-md border border-border-subtle bg-bg-muted p-3 text-sm">
+          <p className="font-semibold text-text-primary">Import abgeschlossen.</p>
+          <ul className="mt-1.5 space-y-0.5 text-xs text-text-secondary">
+            {IMPORT_SUMMARY_LABELS.filter(([key]) => summary[key] > 0).map(([key, label]) => (
+              <li key={key}>
+                {summary[key]} {label}
+              </li>
+            ))}
+          </ul>
+          {summary.blocksSkipped > 0 && (
+            <p className="mt-2 text-xs text-text-tertiary">
+              {summary.blocksSkipped} Anhänge (Bilder/PDFs) wurden übersprungen, da die
+              Originaldatei nicht im Export enthalten war.
+            </p>
+          )}
+          <button
+            type="button"
+            onClick={() => window.location.reload()}
+            className="mt-3 rounded-md bg-accent px-3 py-1.5 text-xs font-semibold text-accent-ink"
+          >
+            Seite neu laden
+          </button>
+        </div>
+      )}
     </div>
   )
 }

@@ -10,6 +10,7 @@ import { calendarEventsRouter } from "./modules/calendarEvents/calendarEvents.ro
 import { dashboardRouter } from "./modules/dashboard/dashboard.routes.js";
 import { examPrepRouter } from "./modules/examPrep/examPrep.routes.js";
 import { exportRouter } from "./modules/export/export.routes.js";
+import { importRouter } from "./modules/export/import.routes.js";
 import { filesRouter } from "./modules/files/files.routes.js";
 import { flashcardByIdRouter, flashcardsRouter } from "./modules/flashcards/flashcards.routes.js";
 import { generalNotesRouter } from "./modules/generalNotes/generalNotes.routes.js";
@@ -33,7 +34,9 @@ export function createApp() {
   const app = express();
 
   app.use(cors({ credentials: true }));
-  app.use(express.json());
+  // Default 100kb is too small for a full-account data import (many notes
+  // with rich TipTap content easily exceed it).
+  app.use(express.json({ limit: "15mb" }));
   app.use(cookieParser());
 
   app.use("/api/health", healthRouter);
@@ -57,6 +60,7 @@ export function createApp() {
   app.use("/api/general-notes", generalNotesRouter);
   app.use("/api/dashboard", dashboardRouter);
   app.use("/api/export", exportRouter);
+  app.use("/api/import", importRouter);
   app.use("/api/calendar-events/:eventId/exam-prep", examPrepRouter);
   app.use("/api/calendar-events", calendarEventsRouter);
 
