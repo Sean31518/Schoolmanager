@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react'
-import { ApiRequestError } from '../../lib/apiClient'
+import { ApiRequestError, getAccessToken } from '../../lib/apiClient'
 import { FEDERAL_STATES } from '../../lib/federalStates'
 import { useAuth } from '../auth/AuthContext'
 import { HolidayImportForm } from '../calendar/HolidayImportForm'
@@ -148,6 +148,10 @@ export function SettingsPage() {
         <HolidayImportForm />
       </SettingsSection>
 
+      <SettingsSection title="Daten">
+        <ExportDataButton />
+      </SettingsSection>
+
       <SettingsSection title="Konto">
         <button
           onClick={() => void logout()}
@@ -156,6 +160,58 @@ export function SettingsPage() {
           Abmelden
         </button>
       </SettingsSection>
+    </div>
+  )
+}
+
+function ExportDataButton() {
+  const [isExporting, setIsExporting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  async function handleExport() {
+    setError(null)
+    setIsExporting(true)
+    try {
+      const token = getAccessToken()
+      const res = await fetch('/api/export', {
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+        credentials: 'include',
+      })
+      if (!res.ok) throw new Error('Export fehlgeschlagen')
+      const blob = await res.blob()
+      const disposition = res.headers.get('Content-Disposition') ?? ''
+      const filename = disposition.match(/filename="([^"]+)"/)?.[1] ?? 'schulmanager-export.json'
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = filename
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+      URL.revokeObjectURL(url)
+    } catch {
+      setError('Export fehlgeschlagen. Bitte versuche es erneut.')
+    } finally {
+      setIsExporting(false)
+    }
+  }
+
+  return (
+    <div>
+      <p className="text-sm text-text-secondary">
+        Lädt alle deine Daten (Fächer, Notizen, Hausaufgaben, Stundenplan, Termine) als JSON-Datei
+        herunter. Angehängte Dateien (Bilder/PDFs) sind darin nur als Verweis enthalten, nicht mit
+        ihrem Inhalt.
+      </p>
+      <button
+        type="button"
+        onClick={() => void handleExport()}
+        disabled={isExporting}
+        className="mt-3 rounded-md border border-border px-4 py-2 text-sm text-text-secondary hover:bg-bg-hover disabled:opacity-50"
+      >
+        {isExporting ? 'Exportiere...' : 'Alle Daten exportieren'}
+      </button>
+      {error && <p className="mt-2 text-sm text-red-400">{error}</p>}
     </div>
   )
 }

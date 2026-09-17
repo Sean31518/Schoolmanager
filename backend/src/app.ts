@@ -9,6 +9,7 @@ import { authRouter } from "./modules/auth/auth.routes.js";
 import { calendarEventsRouter } from "./modules/calendarEvents/calendarEvents.routes.js";
 import { dashboardRouter } from "./modules/dashboard/dashboard.routes.js";
 import { examPrepRouter } from "./modules/examPrep/examPrep.routes.js";
+import { exportRouter } from "./modules/export/export.routes.js";
 import { filesRouter } from "./modules/files/files.routes.js";
 import { flashcardByIdRouter, flashcardsRouter } from "./modules/flashcards/flashcards.routes.js";
 import { generalNotesRouter } from "./modules/generalNotes/generalNotes.routes.js";
@@ -55,6 +56,7 @@ export function createApp() {
   app.use("/api/homework", homeworkRouter);
   app.use("/api/general-notes", generalNotesRouter);
   app.use("/api/dashboard", dashboardRouter);
+  app.use("/api/export", exportRouter);
   app.use("/api/calendar-events/:eventId/exam-prep", examPrepRouter);
   app.use("/api/calendar-events", calendarEventsRouter);
 
