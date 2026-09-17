@@ -1,6 +1,12 @@
 import { useEffect, useRef, useState, type ChangeEvent, type FormEvent, type ReactNode } from 'react'
 import { apiFetch, ApiRequestError, getAccessToken } from '../../lib/apiClient'
 import { FEDERAL_STATES } from '../../lib/federalStates'
+import {
+  disablePushNotifications,
+  enablePushNotifications,
+  getPushStatus,
+  isPushSupported,
+} from '../../lib/pushNotifications'
 import { useAuth } from '../auth/AuthContext'
 import { HolidayImportForm } from '../calendar/HolidayImportForm'
 import { SubjectManager } from '../subjects/SubjectManager'
@@ -146,6 +152,10 @@ export function SettingsPage() {
 
       <SettingsSection title="Kalender">
         <HolidayImportForm />
+      </SettingsSection>
+
+      <SettingsSection title="Erinnerungen">
+        <NotificationsSettings />
       </SettingsSection>
 
       <SettingsSection title="Daten">
@@ -332,6 +342,71 @@ function ImportDataButton() {
           </button>
         </div>
       )}
+    </div>
+  )
+}
+
+function NotificationsSettings() {
+  const supported = isPushSupported()
+  const [status, setStatus] = useState<{ active: boolean; configured: boolean } | null>(null)
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!supported) return
+    void getPushStatus()
+      .then(setStatus)
+      .catch(() => undefined)
+  }, [supported])
+
+  async function handleToggle() {
+    setError(null)
+    setBusy(true)
+    try {
+      if (status?.active) {
+        await disablePushNotifications()
+      } else {
+        await enablePushNotifications()
+      }
+      setStatus(await getPushStatus())
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Das hat leider nicht geklappt.')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  if (!supported) {
+    return (
+      <p className="text-sm text-text-tertiary">
+        Dein Browser unterstützt keine Push-Benachrichtigungen.
+      </p>
+    )
+  }
+
+  if (status && !status.configured) {
+    return (
+      <p className="text-sm text-text-tertiary">
+        Push-Benachrichtigungen sind auf diesem Server nicht eingerichtet.
+      </p>
+    )
+  }
+
+  return (
+    <div>
+      <p className="text-sm text-text-secondary">
+        Erhalte eine Benachrichtigung, wenn eine Klausur in 3 Tagen oder morgen ansteht, oder eine
+        Hausaufgabe morgen fällig ist — auch wenn Schulmanager gerade nicht geöffnet ist.
+      </p>
+      <button
+        type="button"
+        onClick={() => void handleToggle()}
+        disabled={busy || !status}
+        className="mt-3 rounded-md border border-border px-4 py-2 text-sm text-text-secondary hover:bg-bg-hover disabled:opacity-50"
+      >
+        {status?.active ? 'Benachrichtigungen deaktivieren' : 'Benachrichtigungen aktivieren'}
+      </button>
+      {error && <p className="mt-2 text-sm text-red-400">{error}</p>}
     </div>
   )
 }

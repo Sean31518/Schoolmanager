@@ -33,6 +33,34 @@ model User {
   generalNotes   GeneralNote[]
   refreshTokens  RefreshToken[]
   uploadedFiles  UploadedFile[]
+  pushSubscriptions PushSubscription[]
+  notificationLogs  NotificationLog[]
+}
+
+model PushSubscription {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+// key identifies one specific reminder occasion, e.g. "exam:<calendarEventId>:3d"
+// or "homework:<homeworkId>:1d" - checked before sending so a reminder is
+// never pushed twice for the same thing.
+model NotificationLog {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  key       String
+  sentAt    DateTime @default(now())
+
+  @@unique([userId, key])
+  @@index([userId])
 }
 
 model RefreshToken {

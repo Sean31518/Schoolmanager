@@ -19,6 +19,7 @@ import { homeworkRouter } from "./modules/homework/homework.routes.js";
 import { blockByIdRouter, noteBlocksRouter } from "./modules/noteBlocks/noteBlocks.routes.js";
 import { sectionTypeByIdRouter } from "./modules/noteSectionTypes/noteSectionTypes.routes.js";
 import { noteByIdRouter, notesRouter } from "./modules/notes/notes.routes.js";
+import { pushRouter } from "./modules/push/push.routes.js";
 import { settingsRouter } from "./modules/settings/settings.routes.js";
 import { subjectsRouter } from "./modules/subjects/subjects.routes.js";
 import { timeGridRouter } from "./modules/timeGrid/timeGrid.routes.js";
@@ -61,6 +62,7 @@ export function createApp() {
   app.use("/api/dashboard", dashboardRouter);
   app.use("/api/export", exportRouter);
   app.use("/api/import", importRouter);
+  app.use("/api/push", pushRouter);
   app.use("/api/calendar-events/:eventId/exam-prep", examPrepRouter);
   app.use("/api/calendar-events", calendarEventsRouter);
 

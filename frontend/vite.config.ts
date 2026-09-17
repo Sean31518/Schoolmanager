@@ -9,6 +9,14 @@ export default defineConfig({
     react(),
     tailwindcss(),
     VitePWA({
+      // A custom service worker (src/sw.ts) is required to handle Web Push
+      // `push`/`notificationclick` events — the default generateSW strategy
+      // only supports declarative runtime-caching config, not custom event
+      // listeners. Its runtime caching (see sw.ts) replicates what used to
+      // be configured here via `workbox.runtimeCaching`.
+      strategies: 'injectManifest',
+      srcDir: 'src',
+      filename: 'sw.ts',
       registerType: 'autoUpdate',
       injectRegister: 'auto',
       manifest: {
@@ -25,24 +33,6 @@ export default defineConfig({
           { src: 'icon-192.png', sizes: '192x192', type: 'image/png' },
           { src: 'icon-512.png', sizes: '512x512', type: 'image/png' },
           { src: 'icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
-        ],
-      },
-      workbox: {
-        // App shell + built assets are precached automatically. API GET
-        // requests additionally get a network-first runtime cache so the
-        // last-loaded timetable/homework/etc. still render when offline,
-        // instead of a blank error screen.
-        runtimeCaching: [
-          {
-            urlPattern: ({ url }: { url: URL }) => url.pathname.startsWith('/api/'),
-            handler: 'NetworkFirst',
-            options: {
-              cacheName: 'api-cache',
-              networkTimeoutSeconds: 5,
-              cacheableResponse: { statuses: [0, 200] },
-              expiration: { maxEntries: 200, maxAgeSeconds: 60 * 60 * 24 * 7 },
-            },
-          },
         ],
       },
     }),

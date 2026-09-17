@@ -17,6 +17,11 @@ const envSchema = z.object({
     .string()
     .default("false")
     .transform((v) => v === "true"),
+  // Web Push reminders are disabled (silently, not an error) when these
+  // aren't set - see modules/push/push.service.ts.
+  VAPID_PUBLIC_KEY: z.string().optional(),
+  VAPID_PRIVATE_KEY: z.string().optional(),
+  VAPID_SUBJECT: z.string().default("mailto:admin@example.com"),
 });
 
 export const env = envSchema.parse(process.env);

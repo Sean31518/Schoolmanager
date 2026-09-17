@@ -14,6 +14,14 @@ process.env.JWT_REFRESH_EXPIRES_IN = "30d";
 process.env.ALLOW_REGISTRATION = "true";
 process.env.COOKIE_SECURE = "false";
 process.env.PORT = "0";
+// Reused from backend/.env (both are dev-only, gitignored) - a validly
+// formatted key pair is required just to make webpush.setVapidDetails not
+// throw at module load; no real push service is ever contacted in tests
+// with a fake subscription endpoint.
+process.env.VAPID_PUBLIC_KEY =
+  "BAWxREGjpMX_D78Ipug0aRCccseJwLjQeSSMcvECYUY2gNxYQKJYV1J57jUvXjZnGc-A7WB8q0OV_YDQeEhDaMQ";
+process.env.VAPID_PRIVATE_KEY = "5h615EPTlEhD7mPOGeuCYDwQzBGrvHD9Y4zl19Jp7ic";
+process.env.VAPID_SUBJECT = "mailto:admin@example.com";
 
 execSync("npx prisma migrate deploy", {
   cwd: backendRoot,
