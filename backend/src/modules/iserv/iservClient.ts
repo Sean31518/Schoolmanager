@@ -103,14 +103,38 @@ function cookieHeaderFromJar(jar: Map<string, string>): string {
 
 const MAX_LOGIN_REDIRECTS = 15;
 
+interface LoginHop {
+  method: string;
+  path: string;
+  status: number;
+  hasLocation: boolean;
+}
+
+function formatTrace(trace: LoginHop[]): string {
+  return trace.map((h) => `${h.method} ${h.path}->${h.status}${h.hasLocation ? "" : "(end)"}`).join(" | ");
+}
+
+export interface LoginResult {
+  cookieHeader: string;
+  trace: string;
+}
+
 /** Follows IServ's OIDC login redirect chain exactly like a browser would:
  * GET-follow every redirect, merging cookies at each hop, until the login
  * form's URL is reached, then POST credentials there and keep following the
- * rest of the chain (through the auth code exchange) until it ends. */
-async function login(host: string, username: string, password: string): Promise<string> {
+ * rest of the chain (through the auth code exchange) until it ends.
+ *
+ * Symfony's login failure path (wrong credentials) also redirects - usually
+ * back to the same login URL to re-render it with an error - so a redirect
+ * response right after the POST does NOT by itself mean success. The only
+ * reliable signal is where the chain ends up: if the final page (the first
+ * one with no further Location header) is still /iserv/auth/login, the
+ * login was rejected, no matter how many redirects happened in between. */
+async function login(host: string, username: string, password: string): Promise<LoginResult> {
   const jar = new Map<string, string>();
   let url = buildAuthorizeUrl(host);
   let credentialsSent = false;
+  const trace: LoginHop[] = [];
 
   for (let hop = 0; hop < MAX_LOGIN_REDIRECTS; hop++) {
     const target = new URL(url);
@@ -134,29 +158,34 @@ async function login(host: string, username: string, password: string): Promise<
     });
 
     mergeCookies(jar, res.headers);
+    const location = res.headers.get("location");
+    trace.push({
+      method: shouldPostCredentials ? "POST" : "GET",
+      path: target.pathname,
+      status: res.status,
+      hasLocation: Boolean(location),
+    });
+    if (shouldPostCredentials) credentialsSent = true;
 
-    if (shouldPostCredentials) {
-      credentialsSent = true;
-      if (res.status < 300 || res.status >= 400) {
+    if (!location) {
+      if (target.pathname === "/iserv/auth/login") {
         throw new IServAuthError(
-          "IServ hat die Zugangsdaten abgelehnt (Login-Formular kam ohne Weiterleitung zurück). Benutzername/Passwort prüfen.",
+          `IServ hat die Zugangsdaten abgelehnt (Login-Formular erneut angezeigt). Benutzername/Passwort prüfen. Ablauf: ${formatTrace(trace)}`,
         );
       }
-    }
-
-    const location = res.headers.get("location");
-    if (!location) {
       if (!credentialsSent) {
         throw new IServAuthError(
-          "IServ hat vor dem Login-Formular keine Weiterleitung geliefert - unerwarteter Login-Ablauf für diese IServ-Instanz.",
+          `IServ hat vor dem Login-Formular keine Weiterleitung geliefert - unerwarteter Login-Ablauf für diese IServ-Instanz. Ablauf: ${formatTrace(trace)}`,
         );
       }
-      return cookieHeaderFromJar(jar);
+      return { cookieHeader: cookieHeaderFromJar(jar), trace: formatTrace(trace) };
     }
     url = new URL(location, url).toString();
   }
 
-  throw new IServAuthError("IServ-Login: zu viele Weiterleitungen, Anmeldung nicht abgeschlossen.");
+  throw new IServAuthError(
+    `IServ-Login: zu viele Weiterleitungen, Anmeldung nicht abgeschlossen. Ablauf: ${formatTrace(trace)}`,
+  );
 }
 
 async function logout(host: string, cookieHeader: string): Promise<void> {
@@ -195,6 +224,7 @@ async function fetchWeekTimetable(
   host: string,
   cookieHeader: string,
   monday: Date,
+  loginTrace: string,
 ): Promise<DieSchulAppEntry[]> {
   const url = `https://${host}/iserv/dieschulapp/api/1.0/current-timetable/?date=${isoDate(monday)}&week=true&substitutions=true`;
   const res = await fetch(url, { headers: { Cookie: cookieHeader, Accept: "application/json" } });
@@ -207,12 +237,13 @@ async function fetchWeekTimetable(
   }
 
   if (!res.ok) {
-    // IServ sets a session cookie even for a rejected login, so an invalid
-    // session isn't caught until an actual data request like this one comes
-    // back 401/403 - report that distinctly from a genuine shape mismatch.
+    // login() already verified the chain didn't end back on the login form,
+    // so a 401 here means the resulting session simply isn't accepted by
+    // this specific API - include the login trace since that's otherwise
+    // invisible once we get this far.
     const b = body as { message?: string } | null;
     throw new IServAuthError(
-      `IServ hat den Stundenplan-Abruf abgelehnt (HTTP ${res.status}${b?.message ? `: ${b.message}` : ""}). Login vermutlich nicht abgeschlossen.`,
+      `IServ hat den Stundenplan-Abruf abgelehnt (HTTP ${res.status}${b?.message ? `: ${b.message}` : ""}). Login-Ablauf: ${loginTrace}`,
     );
   }
 
@@ -279,7 +310,7 @@ export async function fetchIServTimetable(
   dates: Date[],
 ): Promise<Map<string, IServPeriod[]>> {
   const host = normalizeHost(creds.host);
-  const cookieHeader = await login(host, creds.username, creds.password);
+  const { cookieHeader, trace } = await login(host, creds.username, creds.password);
 
   const wantedKeys = new Set(dates.map(isoDate));
   const result = new Map<string, IServPeriod[]>();
@@ -293,7 +324,7 @@ export async function fetchIServTimetable(
 
   try {
     for (const monday of mondays.values()) {
-      const entries = await fetchWeekTimetable(host, cookieHeader, monday);
+      const entries = await fetchWeekTimetable(host, cookieHeader, monday, trace);
       for (const entry of entries) {
         const date = new Date(monday);
         date.setUTCDate(date.getUTCDate() + entry.weekday);
