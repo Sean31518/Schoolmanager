@@ -96,6 +96,12 @@ model Settings {
   // Klassenfilter für IServs Stundenplan-Endpunkt - optional, da Nutzer mit
   // individueller Kurswahl (Oberstufe) evtl. keinen sinnvollen hier haben.
   iservClass             String?
+  // Ein/Aus-Schalter, unabhängig von den gespeicherten Zugangsdaten - lässt
+  // den Sync pausieren, ohne Host/Benutzername/Passwort zu verlieren. Wenn
+  // aktiv, ersetzt IServs Stundenplan (inkl. normaler, nicht vertretener
+  // Stunden) den manuell gepflegten Plan für die synchronisierten Tage,
+  // statt nur Vertretungen darüberzulegen.
+  iservActive            Boolean      @default(false)
   iservLastSyncAt        DateTime?
   iservLastSyncError     String?
 }

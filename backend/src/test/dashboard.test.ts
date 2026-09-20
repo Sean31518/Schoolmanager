@@ -340,4 +340,49 @@ describe("Dashboard IServ Vertretung overlay", () => {
       vertretung: "CHANGED",
     });
   });
+
+  it("shows a NORMAL override's subject/room (no badge) only while iservActive is on, falling back to the manual plan otherwise", async () => {
+    const user = await registerUser();
+    const headers = { Authorization: `Bearer ${user.accessToken}` };
+
+    const mathe = await request(app)
+      .post("/api/subjects")
+      .set(headers)
+      .send({ name: "Mathe", color: "#3B82F6" });
+    const lesson1 = await request(app)
+      .post("/api/time-grid")
+      .set(headers)
+      .send({ label: "1. Stunde", type: "LESSON", startTime: "08:00", endTime: "08:45" });
+
+    const monday = new Date("2026-09-21T10:00:00Z");
+    await request(app)
+      .put(`/api/timetable/MONDAY/${lesson1.body.id}`)
+      .set(headers)
+      .send({ subjectId: mathe.body.id });
+
+    await prisma.timetableOverride.create({
+      data: {
+        userId: user.userId,
+        date: new Date("2026-09-21T00:00:00.000Z"),
+        timeGridSlotId: lesson1.body.id,
+        type: "NORMAL",
+        subjectName: "Englisch",
+        room: "R204",
+      },
+    });
+
+    // iservActive is false by default - the manual plan (Mathe) wins, and
+    // the NORMAL override is ignored entirely (no vertretung badge either).
+    const before = await getDashboard(user.userId, monday);
+    expect(before.todayTimetable[0]).toMatchObject({ subjectName: "Mathe" });
+    expect(before.todayTimetable[0].vertretung).toBeUndefined();
+
+    await request(app).patch("/api/settings").set(headers).send({ iservActive: true });
+
+    // Now the same already-synced override takes over immediately - no new
+    // sync needed, and still no vertretung badge since it's not a deviation.
+    const after = await getDashboard(user.userId, monday);
+    expect(after.todayTimetable[0]).toMatchObject({ subjectName: "Englisch", room: "R204" });
+    expect(after.todayTimetable[0].vertretung).toBeUndefined();
+  });
 });

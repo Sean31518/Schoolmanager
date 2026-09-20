@@ -15,6 +15,7 @@ export interface SettingsDto {
   iservHost: string | null;
   iservUsername: string | null;
   iservClass: string | null;
+  iservActive: boolean;
   iservLastSyncAt: string | null;
   iservLastSyncError: string | null;
   iservConfigured: boolean;

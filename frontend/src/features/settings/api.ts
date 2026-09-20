@@ -14,6 +14,7 @@ export function updateSettings(
     iservUsername: string | null
     iservPassword: string
     iservClass: string | null
+    iservActive: boolean
   }>,
 ) {
   return apiFetch<SettingsDto>('/settings', { method: 'PATCH', body: JSON.stringify(data) })

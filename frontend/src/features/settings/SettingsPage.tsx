@@ -483,6 +483,16 @@ function IservSettings() {
     }
   }
 
+  async function handleToggleActive() {
+    if (!settings) return
+    setError(null)
+    try {
+      await updateSettings.mutateAsync({ iservActive: !settings.iservActive })
+    } catch (err) {
+      setError(err instanceof ApiRequestError ? err.message : 'Konnte nicht umgeschaltet werden.')
+    }
+  }
+
   if (!settings) return null
 
   return (
@@ -558,6 +568,34 @@ function IservSettings() {
       </form>
       {saved && <p className="mt-2 text-sm text-green-400">Gespeichert.</p>}
       {error && <p className="mt-2 text-sm text-red-400">{error}</p>}
+      {settings.iservConfigured && (
+        <div className="mt-4 flex items-center gap-3 border-t border-border pt-3">
+          <button
+            type="button"
+            role="switch"
+            aria-checked={settings.iservActive}
+            onClick={() => void handleToggleActive()}
+            disabled={updateSettings.isPending}
+            className={`relative h-6 w-11 shrink-0 rounded-full transition-colors disabled:opacity-50 ${
+              settings.iservActive ? 'bg-accent' : 'bg-bg-hover'
+            }`}
+          >
+            <span
+              className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-transform ${
+                settings.iservActive ? 'translate-x-5' : 'translate-x-0.5'
+              }`}
+            />
+          </button>
+          <div>
+            <p className="text-sm text-text-primary">IServ-Stundenplan aktiv</p>
+            <p className="text-xs text-text-secondary">
+              Wenn aktiv, ersetzt IServs Stundenplan (auch normale, nicht vertretene Stunden) den
+              manuell gepflegten Plan für die synchronisierten Tage. Wenn aus, werden nur Ausfälle/
+              Vertretungen über den manuellen Plan gelegt.
+            </p>
+          </div>
+        </div>
+      )}
       {settings.iservConfigured && (
         <p className="mt-3 text-xs text-text-tertiary">
           {settings.iservLastSyncAt

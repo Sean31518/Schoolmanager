@@ -118,6 +118,59 @@ describe("IServ period-to-override mapping", () => {
     );
     expect(overrides).toHaveLength(0);
   });
+
+  it("with includeUnchanged, maps an unmodified period to a NORMAL override instead of skipping it", () => {
+    const overrides = mapPeriodsToOverrides(
+      "user-1",
+      date,
+      [{ period: 1, subject: "Eng", room: "12", change: null }],
+      lessonSlots,
+      subjects,
+      true,
+    );
+    expect(overrides).toEqual([
+      {
+        userId: "user-1",
+        date,
+        timeGridSlotId: "slot-1",
+        type: "NORMAL",
+        subjectName: "Englisch",
+        room: "12",
+      },
+    ]);
+  });
+
+  it("with includeUnchanged, still maps changed periods as CANCELLED/CHANGED, not NORMAL", () => {
+    const overrides = mapPeriodsToOverrides(
+      "user-1",
+      date,
+      [{ period: 2, subject: "M", room: "101", change: { changeTypes: ["0"] } }],
+      lessonSlots,
+      subjects,
+      true,
+    );
+    expect(overrides).toEqual([
+      {
+        userId: "user-1",
+        date,
+        timeGridSlotId: "slot-2",
+        type: "CANCELLED",
+        subjectName: null,
+        room: null,
+      },
+    ]);
+  });
+
+  it("without includeUnchanged (default), still skips unmodified periods", () => {
+    const overrides = mapPeriodsToOverrides(
+      "user-1",
+      date,
+      [{ period: 1, subject: "Eng", room: "12", change: null }],
+      lessonSlots,
+      subjects,
+    );
+    expect(overrides).toHaveLength(0);
+  });
 });
 
 describe("Settings: IServ credentials", () => {
@@ -197,5 +250,25 @@ describe("Settings: IServ credentials", () => {
       .set({ Authorization: `Bearer ${user.accessToken}` })
       .send({ iservPassword: "" });
     expect(res.status).toBe(400);
+  });
+
+  it("defaults iservActive to false, can be toggled on, and resets to false on disconnect", async () => {
+    const user = await registerUser();
+    const headers = { Authorization: `Bearer ${user.accessToken}` };
+
+    const configured = await request(app)
+      .patch("/api/settings")
+      .set(headers)
+      .send({ iservHost: "meine-schule.de", iservUsername: "u", iservPassword: "pw" });
+    expect(configured.body.iservActive).toBe(false);
+
+    const activated = await request(app)
+      .patch("/api/settings")
+      .set(headers)
+      .send({ iservActive: true });
+    expect(activated.body.iservActive).toBe(true);
+
+    const disconnected = await request(app).delete("/api/settings/iserv").set(headers);
+    expect(disconnected.body.iservActive).toBe(false);
   });
 });

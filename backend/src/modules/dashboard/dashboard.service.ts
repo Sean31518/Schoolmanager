@@ -175,6 +175,22 @@ export async function getDashboard(userId: string, now: Date = new Date()) {
           vertretung: "CHANGED" as const,
         };
       }
+      // "IServ replaces the manual plan" toggle: a NORMAL override is
+      // IServ's own (non-substituted) lesson for this exact date, gated live
+      // on the current setting (not just at sync time) so toggling off
+      // immediately reverts to the manual plan even for already-synced
+      // dates, without needing to wait for/trigger another sync.
+      if (override?.type === "NORMAL" && settings?.iservActive) {
+        return {
+          type: "LESSON" as const,
+          label: slot.label,
+          startTime: slot.startTime,
+          endTime: slot.endTime,
+          subjectName: override.subjectName ?? cell?.subject?.name ?? null,
+          subjectColor: cell?.subject?.color ?? null,
+          room: override.room,
+        };
+      }
       return {
         type: "LESSON" as const,
         label: slot.label,

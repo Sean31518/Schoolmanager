@@ -11,4 +11,5 @@ export const updateSettingsSchema = z.object({
   // is rejected on purpose; use DELETE /api/settings/iserv to disconnect.
   iservPassword: z.string().min(1).max(500).optional(),
   iservClass: z.string().max(100).nullable().optional(),
+  iservActive: z.boolean().optional(),
 });

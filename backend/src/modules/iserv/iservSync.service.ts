@@ -41,29 +41,49 @@ interface OverrideDraft {
   userId: string;
   date: Date;
   timeGridSlotId: string;
-  type: "CANCELLED" | "CHANGED";
+  type: "CANCELLED" | "CHANGED" | "NORMAL";
   subjectName: string | null;
   room: string | null;
 }
 
-/** Maps one day's IServ periods to override rows - periods without a
- * `change` are a normal, unmodified lesson and produce nothing. Period
- * numbers are 1-indexed and matched positionally against the user's own
- * LESSON-type TimeGridSlots ordered by sortOrder, since IServ's period
- * number has no other correlation to this app's own time grid. */
+/** Maps one day's IServ periods to override rows. Period numbers are
+ * 1-indexed and matched positionally against the user's own LESSON-type
+ * TimeGridSlots ordered by sortOrder, since IServ's period number has no
+ * other correlation to this app's own time grid.
+ *
+ * By default (includeUnchanged=false), periods without a `change` are a
+ * normal, unmodified lesson and produce nothing - Vertretungen are layered
+ * on top of the manually-entered weekly plan. With includeUnchanged=true
+ * (the "IServ replaces the manual plan" toggle), every period produces a
+ * draft - unchanged ones as type "NORMAL", carrying IServ's own subject/room
+ * so IServ's schedule fully replaces the manual one, not just deviations
+ * from it. */
 export function mapPeriodsToOverrides(
   userId: string,
   date: Date,
   periods: IServPeriod[],
   lessonSlotsInOrder: { id: string }[],
   subjects: { name: string }[],
+  includeUnchanged = false,
 ): OverrideDraft[] {
   const drafts: OverrideDraft[] = [];
 
   for (const period of periods) {
-    if (!period.change) continue;
     const slot = lessonSlotsInOrder[period.period - 1];
     if (!slot) continue;
+
+    if (!period.change) {
+      if (!includeUnchanged) continue;
+      drafts.push({
+        userId,
+        date,
+        timeGridSlotId: slot.id,
+        type: "NORMAL",
+        subjectName: resolveSubjectName(subjects, period.subject),
+        room: period.room || null,
+      });
+      continue;
+    }
 
     const isCancelled = period.change.changeTypes.includes("0");
     if (isCancelled) {
@@ -143,7 +163,14 @@ export async function syncUserIservTimetable(userId: string, now: Date = new Dat
 
     for (const [dateKey, periods] of byDate) {
       const date = dateKeyToDate(dateKey);
-      const drafts = mapPeriodsToOverrides(userId, date, periods, lessonSlots, subjects);
+      const drafts = mapPeriodsToOverrides(
+        userId,
+        date,
+        periods,
+        lessonSlots,
+        subjects,
+        settings.iservActive,
+      );
       await applyDayOverrides(userId, date, drafts);
     }
 
@@ -162,11 +189,17 @@ export async function syncUserIservTimetable(userId: string, now: Date = new Dat
 }
 
 export async function runIservSyncForAllUsers(now: Date = new Date()): Promise<void> {
+  // The scheduled job only runs for users who've explicitly turned the
+  // integration on - saved credentials alone don't trigger background
+  // syncing, so toggling off pauses it without losing them. Manual
+  // "Jetzt synchronisieren" (triggerIservSync) bypasses this and works off
+  // isIservConfigured() alone, since it's a deliberate, one-off action.
   const usersWithIserv = await prisma.settings.findMany({
     where: {
       iservHost: { not: null },
       iservUsername: { not: null },
       iservPasswordEncrypted: { not: null },
+      iservActive: true,
     },
     select: { userId: true },
   });

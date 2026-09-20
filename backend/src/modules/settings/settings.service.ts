@@ -52,6 +52,7 @@ export async function disconnectIserv(userId: string) {
       iservUsername: null,
       iservPasswordEncrypted: null,
       iservClass: null,
+      iservActive: false,
       iservLastSyncAt: null,
       iservLastSyncError: null,
     },
