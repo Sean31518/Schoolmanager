@@ -39,5 +39,7 @@ export interface DashboardDto {
   upcomingReminders: ReminderDto[]
   todayTimetable: TimetableSlotSummaryDto[]
   tomorrowTimetable: TimetableSlotSummaryDto[]
+  todayLabel: string
+  tomorrowLabel: string
   recentlyViewedNotes: RecentlyViewedNoteDto[]
 }

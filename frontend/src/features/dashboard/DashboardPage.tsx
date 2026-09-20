@@ -38,7 +38,12 @@ export function DashboardPage() {
 
           <div className="flex flex-col gap-3.5 min-w-0">
             <ExamHighlightWidget />
-            <TodayTomorrowWidget today={data.todayTimetable} tomorrow={data.tomorrowTimetable} />
+            <TodayTomorrowWidget
+              today={data.todayTimetable}
+              tomorrow={data.tomorrowTimetable}
+              todayLabel={data.todayLabel}
+              tomorrowLabel={data.tomorrowLabel}
+            />
             <RemindersWidget items={data.upcomingReminders} />
           </div>
         </div>

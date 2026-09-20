@@ -8,6 +8,20 @@ function weekdayFor(date: Date) {
   return jsDay === 0 ? "SUNDAY" : weekdays[jsDay - 1];
 }
 
+const GERMAN_WEEKDAY_LABELS: Record<string, string> = {
+  MONDAY: "MONTAG",
+  TUESDAY: "DIENSTAG",
+  WEDNESDAY: "MITTWOCH",
+  THURSDAY: "DONNERSTAG",
+  FRIDAY: "FREITAG",
+  SATURDAY: "SAMSTAG",
+  SUNDAY: "SONNTAG",
+};
+
+function isSameCalendarDay(a: Date, b: Date) {
+  return a.toDateString() === b.toDateString();
+}
+
 function isWeekend(date: Date) {
   const jsDay = date.getDay();
   return jsDay === 0 || jsDay === 6;
@@ -125,6 +139,18 @@ export async function getDashboard(userId: string, now: Date = new Date()) {
   const todayTimetable = slotsForWeekday(weekdayFor(dayA));
   const tomorrowTimetable = slotsForWeekday(weekdayFor(dayB));
 
+  // The widget's toggle button says "HEUTE"/"MORGEN" only when that's
+  // actually true - on a weekend (or a Friday's "tomorrow"), dayA/dayB
+  // have rolled forward past the real today/tomorrow, so the button shows
+  // the actual weekday name instead (e.g. "MONTAG") to avoid lying about
+  // what's being displayed.
+  const trueTomorrow = new Date(now);
+  trueTomorrow.setDate(trueTomorrow.getDate() + 1);
+  const todayLabel = isSameCalendarDay(dayA, now) ? "HEUTE" : GERMAN_WEEKDAY_LABELS[weekdayFor(dayA)];
+  const tomorrowLabel = isSameCalendarDay(dayB, trueTomorrow)
+    ? "MORGEN"
+    : GERMAN_WEEKDAY_LABELS[weekdayFor(dayB)];
+
   const recentlyViewedNotes = recentNotes.map((note) => ({
     id: note.id,
     title: note.title,
@@ -145,6 +171,8 @@ export async function getDashboard(userId: string, now: Date = new Date()) {
     upcomingReminders,
     todayTimetable,
     tomorrowTimetable,
+    todayLabel,
+    tomorrowLabel,
     recentlyViewedNotes,
   };
 }

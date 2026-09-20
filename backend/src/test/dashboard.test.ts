@@ -204,7 +204,29 @@ describe("Dashboard today/tomorrow weekend rollover", () => {
       const dashboard = await getDashboard(user.userId, day);
       expect(dashboard.todayTimetable[0]).toMatchObject({ subjectName: "Mathe" });
       expect(dashboard.tomorrowTimetable[0]).toMatchObject({ subjectName: "Deutsch" });
+      // The button must say "MONTAG"/"DIENSTAG", not "HEUTE"/"MORGEN" - it's
+      // not actually today, and claiming otherwise is exactly the bug report
+      // this covers.
+      expect(dashboard.todayLabel).toBe("MONTAG");
+      expect(dashboard.tomorrowLabel).toBe("DIENSTAG");
     }
+  });
+
+  it("labels a real weekday as HEUTE/MORGEN, but Friday's rolled-forward tomorrow as MONTAG", async () => {
+    const user = await registerUser();
+
+    // 2026-09-21 is a Monday - both today and tomorrow are real.
+    const monday = new Date("2026-09-21T10:00:00Z");
+    const mondayDashboard = await getDashboard(user.userId, monday);
+    expect(mondayDashboard.todayLabel).toBe("HEUTE");
+    expect(mondayDashboard.tomorrowLabel).toBe("MORGEN");
+
+    // 2026-09-18 is a Friday - "today" is real, but "tomorrow" rolls past
+    // Saturday to Monday, so it must say MONTAG, not MORGEN.
+    const friday = new Date("2026-09-18T10:00:00Z");
+    const fridayDashboard = await getDashboard(user.userId, friday);
+    expect(fridayDashboard.todayLabel).toBe("HEUTE");
+    expect(fridayDashboard.tomorrowLabel).toBe("MONTAG");
   });
 
   it("rolls Friday's 'tomorrow' forward to Monday instead of showing an empty Saturday", async () => {

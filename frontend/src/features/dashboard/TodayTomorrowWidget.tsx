@@ -9,14 +9,6 @@ function isNowWithin(startTime: string, endTime: string) {
   return minutesNow >= startH * 60 + startM && minutesNow < endH * 60 + endM
 }
 
-/** On a weekend, the "today" slot list is actually next Monday's (see
- * dashboard.service.ts) - nothing should ever read as happening JETZT
- * then, since Monday hasn't arrived yet regardless of what the clock says. */
-function isRealWeekday() {
-  const day = new Date().getDay()
-  return day !== 0 && day !== 6
-}
-
 interface MergedSlot extends TimetableSlotSummaryDto {
   /** How many original periods this row represents — 2+ for a Doppelstunde. */
   periodCount: number
@@ -119,12 +111,21 @@ function SlotRow({ slot, isNow }: { slot: MergedSlot; isNow: boolean }) {
 export function TodayTomorrowWidget({
   today,
   tomorrow,
+  todayLabel,
+  tomorrowLabel,
 }: {
   today: TimetableSlotSummaryDto[]
   tomorrow: TimetableSlotSummaryDto[]
+  todayLabel: string
+  tomorrowLabel: string
 }) {
   const [view, setView] = useState<'today' | 'tomorrow'>('today')
   const slots = trimTrailingFree(mergeDoppelstunden(view === 'today' ? today : tomorrow))
+  const label = view === 'today' ? todayLabel : tomorrowLabel
+  // JETZT only makes sense while actually looking at the real today (backend
+  // says so via todayLabel — on a weekend it's "MONTAG" etc. instead of
+  // "HEUTE", since dayA/dayB have rolled forward to the next weekday).
+  const isRealToday = view === 'today' && todayLabel === 'HEUTE'
 
   return (
     <div className="overflow-hidden rounded-lg border border-border bg-bg-1">
@@ -138,7 +139,7 @@ export function TodayTomorrowWidget({
           title={view === 'today' ? 'Zu morgen wechseln' : 'Zu heute wechseln'}
           className="shrink-0 rounded-md border border-border px-2 py-1 font-mono text-[10px] tracking-wider text-text-secondary hover:border-text-disabled hover:text-text-primary"
         >
-          {view === 'today' ? 'HEUTE' : 'MORGEN'} ⇄
+          {label} ⇄
         </button>
       </div>
 
@@ -150,7 +151,7 @@ export function TodayTomorrowWidget({
             <SlotRow
               key={i}
               slot={slot}
-              isNow={view === 'today' && isRealWeekday() && isNowWithin(slot.startTime, slot.endTime)}
+              isNow={isRealToday && isNowWithin(slot.startTime, slot.endTime)}
             />
           ))}
         </div>
