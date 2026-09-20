@@ -9,6 +9,14 @@ function isNowWithin(startTime: string, endTime: string) {
   return minutesNow >= startH * 60 + startM && minutesNow < endH * 60 + endM
 }
 
+/** On a weekend, the "today" slot list is actually next Monday's (see
+ * dashboard.service.ts) - nothing should ever read as happening JETZT
+ * then, since Monday hasn't arrived yet regardless of what the clock says. */
+function isRealWeekday() {
+  const day = new Date().getDay()
+  return day !== 0 && day !== 6
+}
+
 interface MergedSlot extends TimetableSlotSummaryDto {
   /** How many original periods this row represents — 2+ for a Doppelstunde. */
   periodCount: number
@@ -142,7 +150,7 @@ export function TodayTomorrowWidget({
             <SlotRow
               key={i}
               slot={slot}
-              isNow={view === 'today' && isNowWithin(slot.startTime, slot.endTime)}
+              isNow={view === 'today' && isRealWeekday() && isNowWithin(slot.startTime, slot.endTime)}
             />
           ))}
         </div>

@@ -8,11 +8,32 @@ function weekdayFor(date: Date) {
   return jsDay === 0 ? "SUNDAY" : weekdays[jsDay - 1];
 }
 
-export async function getDashboard(userId: string) {
+function isWeekend(date: Date) {
+  const jsDay = date.getDay();
+  return jsDay === 0 || jsDay === 6;
+}
+
+/** Today if it's a weekday, otherwise the next Monday - there's no lesson
+ * data for Sat/Sun, so showing them would just be an empty widget. */
+function nextWeekday(date: Date): Date {
+  const d = new Date(date);
+  while (isWeekend(d)) {
+    d.setDate(d.getDate() + 1);
+  }
+  return d;
+}
+
+/** The weekday after `date`, itself rolled forward past any weekend - so
+ * Friday's "tomorrow" is Monday, not Saturday. */
+function nextWeekdayAfter(date: Date): Date {
+  const d = new Date(date);
+  d.setDate(d.getDate() + 1);
+  return nextWeekday(d);
+}
+
+export async function getDashboard(userId: string, now: Date = new Date()) {
   const settings = await prisma.settings.findUnique({ where: { userId } });
   const currentGradeLevel = settings?.currentGradeLevel ?? 5;
-
-  const now = new Date();
 
   const [upcomingHomeworkRaw, upcomingEvents, generalNotesRaw, recentNotes, { timeGridSlots, timetableSlots }] =
     await Promise.all([
@@ -99,10 +120,10 @@ export async function getDashboard(userId: string) {
     });
   }
 
-  const tomorrow = new Date(now);
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  const todayTimetable = slotsForWeekday(weekdayFor(now));
-  const tomorrowTimetable = slotsForWeekday(weekdayFor(tomorrow));
+  const dayA = nextWeekday(now);
+  const dayB = nextWeekdayAfter(dayA);
+  const todayTimetable = slotsForWeekday(weekdayFor(dayA));
+  const tomorrowTimetable = slotsForWeekday(weekdayFor(dayB));
 
   const recentlyViewedNotes = recentNotes.map((note) => ({
     id: note.id,
