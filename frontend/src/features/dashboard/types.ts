@@ -17,6 +17,9 @@ export interface TimetableSlotSummaryDto {
   endTime: string
   subjectName: string | null
   subjectColor: string | null
+  /** Set when an IServ-synced Vertretung applies to this exact date. */
+  vertretung?: 'CANCELLED' | 'CHANGED'
+  room?: string | null
 }
 
 export interface RecentlyViewedNoteDto {

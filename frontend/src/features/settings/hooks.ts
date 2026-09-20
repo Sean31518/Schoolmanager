@@ -18,3 +18,25 @@ export function useUpdateSettings() {
     },
   })
 }
+
+export function useDisconnectIserv() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: api.disconnectIserv,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['settings'] })
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] })
+    },
+  })
+}
+
+export function useSyncIservNow() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: api.syncIservNow,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['settings'] })
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] })
+    },
+  })
+}

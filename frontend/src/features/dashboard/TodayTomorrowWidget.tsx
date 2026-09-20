@@ -29,7 +29,8 @@ function mergeDoppelstunden(slots: TimetableSlotSummaryDto[]): MergedSlot[] {
       prev.type === 'LESSON' &&
       slot.type === 'LESSON' &&
       prev.subjectName &&
-      prev.subjectName === slot.subjectName
+      prev.subjectName === slot.subjectName &&
+      prev.vertretung === slot.vertretung
     const bothFree =
       prev && prev.type === 'LESSON' && slot.type === 'LESSON' && !prev.subjectName && !slot.subjectName
     if (sameLesson || bothFree) {
@@ -55,6 +56,16 @@ function trimTrailingFree(slots: MergedSlot[]): MergedSlot[] {
 const JetztBadge = () => (
   <span className="shrink-0 rounded-[3px] bg-accent px-[5px] py-px font-mono text-[9px] font-semibold tracking-wider text-accent-ink">
     JETZT
+  </span>
+)
+
+const VertretungBadge = ({ cancelled }: { cancelled: boolean }) => (
+  <span
+    className={`shrink-0 rounded-[3px] px-[5px] py-px font-mono text-[9px] font-semibold tracking-wider ${
+      cancelled ? 'bg-red-400/20 text-red-400' : 'bg-accent/20 text-accent-text'
+    }`}
+  >
+    {cancelled ? 'ENTFÄLLT' : 'VERTRETUNG'}
   </span>
 )
 
@@ -88,6 +99,8 @@ function SlotRow({ slot, isNow }: { slot: MergedSlot; isNow: boolean }) {
     )
   }
 
+  const cancelled = slot.vertretung === 'CANCELLED'
+
   return (
     <div
       className={`flex flex-col justify-center gap-1 rounded-[5px] bg-bg-3 px-2.5 py-1.5 ${
@@ -99,9 +112,19 @@ function SlotRow({ slot, isNow }: { slot: MergedSlot; isNow: boolean }) {
         <span className="w-9 shrink-0 font-mono text-[10px] text-text-tertiary">
           {slot.startTime}
         </span>
-        <span className="flex-1 truncate text-xs font-semibold text-text-primary">
+        <span
+          className={`flex-1 truncate text-xs font-semibold ${
+            cancelled ? 'text-text-muted line-through' : 'text-text-primary'
+          }`}
+        >
           {slot.subjectName}
+          {slot.vertretung === 'CHANGED' && slot.room && (
+            <span className="ml-1.5 font-mono text-[10px] font-normal text-text-tertiary">
+              Raum {slot.room}
+            </span>
+          )}
         </span>
+        {slot.vertretung && <VertretungBadge cancelled={cancelled} />}
         {isNow && <JetztBadge />}
       </span>
     </div>

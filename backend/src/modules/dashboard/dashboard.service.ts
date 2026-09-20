@@ -22,6 +22,14 @@ function isSameCalendarDay(a: Date, b: Date) {
   return a.toDateString() === b.toDateString();
 }
 
+function toDateKey(date: Date): string {
+  return date.toISOString().slice(0, 10);
+}
+
+function dateKeyToMidnightUTC(dateKey: string): Date {
+  return new Date(`${dateKey}T00:00:00.000Z`);
+}
+
 function isWeekend(date: Date) {
   const jsDay = date.getDay();
   return jsDay === 0 || jsDay === 6;
@@ -104,11 +112,30 @@ export async function getDashboard(userId: string, now: Date = new Date()) {
     .sort((a, b) => a.date.localeCompare(b.date))
     .slice(0, 5);
 
+  const dayA = nextWeekday(now);
+  const dayB = nextWeekdayAfter(dayA);
+  const dayAKey = toDateKey(dayA);
+  const dayBKey = toDateKey(dayB);
+
+  // IServ-synced Vertretungen (see modules/iserv) for the two dates being
+  // shown, keyed by "dateKey:timeGridSlotId" for O(1) lookup per slot.
+  const overrides = await prisma.timetableOverride.findMany({
+    where: {
+      userId,
+      date: { in: [dateKeyToMidnightUTC(dayAKey), dateKeyToMidnightUTC(dayBKey)] },
+    },
+  });
+  const overrideByKey = new Map(
+    overrides.map((o) => [`${toDateKey(o.date)}:${o.timeGridSlotId}`, o]),
+  );
+
   // Today/tomorrow timetable: reuse the same slot data the Stundenplan
   // pages already fetch, just filtered down to the relevant weekday(s).
   // Every slot is included (breaks and free periods too) so the dashboard
   // widget always shows what's currently going on, not just lessons.
-  function slotsForWeekday(weekday: string) {
+  // Vertretungen are layered on top of the regular recurring TimetableSlot
+  // for the exact date being shown, not stored as a separate list.
+  function slotsForDate(weekday: string, dateKey: string) {
     return timeGridSlots.map((slot) => {
       if (slot.type === "BREAK") {
         return {
@@ -123,6 +150,31 @@ export async function getDashboard(userId: string, now: Date = new Date()) {
       const cell = timetableSlots.find(
         (s) => s.weekday === weekday && s.timeGridSlotId === slot.id,
       );
+      const override = overrideByKey.get(`${dateKey}:${slot.id}`);
+
+      if (override?.type === "CANCELLED") {
+        return {
+          type: "LESSON" as const,
+          label: slot.label,
+          startTime: slot.startTime,
+          endTime: slot.endTime,
+          subjectName: cell?.subject?.name ?? null,
+          subjectColor: cell?.subject?.color ?? null,
+          vertretung: "CANCELLED" as const,
+        };
+      }
+      if (override?.type === "CHANGED") {
+        return {
+          type: "LESSON" as const,
+          label: slot.label,
+          startTime: slot.startTime,
+          endTime: slot.endTime,
+          subjectName: override.subjectName ?? cell?.subject?.name ?? null,
+          subjectColor: cell?.subject?.color ?? null,
+          room: override.room,
+          vertretung: "CHANGED" as const,
+        };
+      }
       return {
         type: "LESSON" as const,
         label: slot.label,
@@ -134,10 +186,8 @@ export async function getDashboard(userId: string, now: Date = new Date()) {
     });
   }
 
-  const dayA = nextWeekday(now);
-  const dayB = nextWeekdayAfter(dayA);
-  const todayTimetable = slotsForWeekday(weekdayFor(dayA));
-  const tomorrowTimetable = slotsForWeekday(weekdayFor(dayB));
+  const todayTimetable = slotsForDate(weekdayFor(dayA), dayAKey);
+  const tomorrowTimetable = slotsForDate(weekdayFor(dayB), dayBKey);
 
   // The widget's toggle button says "HEUTE"/"MORGEN" only when that's
   // actually true - on a weekend (or a Friday's "tomorrow"), dayA/dayB

@@ -12,7 +12,12 @@ import { HolidayImportForm } from '../calendar/HolidayImportForm'
 import { SubjectManager } from '../subjects/SubjectManager'
 import { TimeGridEditor } from '../timetable/TimeGridEditor'
 import { TimetableGrid } from '../timetable/TimetableGrid'
-import { useSettings, useUpdateSettings } from './hooks'
+import {
+  useDisconnectIserv,
+  useSettings,
+  useSyncIservNow,
+  useUpdateSettings,
+} from './hooks'
 
 const GRADE_LEVELS = Array.from({ length: 13 }, (_, i) => i + 1)
 
@@ -148,6 +153,10 @@ export function SettingsPage() {
             </div>
           </div>
         </div>
+      </SettingsSection>
+
+      <SettingsSection title="IServ">
+        <IservSettings />
       </SettingsSection>
 
       <SettingsSection title="Kalender">
@@ -407,6 +416,158 @@ function NotificationsSettings() {
         {status?.active ? 'Benachrichtigungen deaktivieren' : 'Benachrichtigungen aktivieren'}
       </button>
       {error && <p className="mt-2 text-sm text-red-400">{error}</p>}
+    </div>
+  )
+}
+
+function IservSettings() {
+  const { data: settings } = useSettings()
+  const updateSettings = useUpdateSettings()
+  const disconnect = useDisconnectIserv()
+  const syncNow = useSyncIservNow()
+
+  const [host, setHost] = useState('')
+  const [username, setUsername] = useState('')
+  const [password, setPassword] = useState('')
+  const [schoolClass, setSchoolClass] = useState('')
+  const [error, setError] = useState<string | null>(null)
+  const [saved, setSaved] = useState(false)
+
+  useEffect(() => {
+    if (settings) {
+      setHost(settings.iservHost ?? '')
+      setUsername(settings.iservUsername ?? '')
+      setSchoolClass(settings.iservClass ?? '')
+    }
+  }, [settings])
+
+  async function handleSubmit(e: FormEvent) {
+    e.preventDefault()
+    setError(null)
+    setSaved(false)
+    try {
+      await updateSettings.mutateAsync({
+        iservHost: host.trim() || null,
+        iservUsername: username.trim() || null,
+        ...(password.trim() ? { iservPassword: password.trim() } : {}),
+        iservClass: schoolClass.trim() || null,
+      })
+      setPassword('')
+      setSaved(true)
+    } catch (err) {
+      setError(err instanceof ApiRequestError ? err.message : 'Speichern fehlgeschlagen.')
+    }
+  }
+
+  async function handleDisconnect() {
+    if (
+      !confirm(
+        'IServ-Zugangsdaten wirklich entfernen? Bereits übernommene Vertretungen bleiben bis zum nächsten Sync im Stundenplan stehen.',
+      )
+    ) {
+      return
+    }
+    setHost('')
+    setUsername('')
+    setSchoolClass('')
+    setPassword('')
+    await disconnect.mutateAsync()
+  }
+
+  async function handleSyncNow() {
+    setError(null)
+    try {
+      await syncNow.mutateAsync()
+    } catch (err) {
+      setError(err instanceof ApiRequestError ? err.message : 'Synchronisierung fehlgeschlagen.')
+    }
+  }
+
+  if (!settings) return null
+
+  return (
+    <div>
+      <p className="text-sm text-text-secondary">
+        Holt deinen Vertretungsplan von IServ und markiert Ausfälle/Vertretungen direkt im
+        Stundenplan-Widget auf dem Dashboard. Dein IServ-Passwort wird verschlüsselt gespeichert
+        und nirgends im Klartext angezeigt.
+      </p>
+      <form onSubmit={(e) => void handleSubmit(e)} className="mt-3 flex flex-wrap items-end gap-3">
+        <label className="text-sm text-text-secondary">
+          IServ-Domain
+          <input
+            value={host}
+            onChange={(e) => setHost(e.target.value)}
+            placeholder="deine-schule.de"
+            className="mt-1 block rounded-md border border-border bg-bg-muted px-3 py-2 text-sm text-text-primary placeholder:text-text-muted"
+          />
+        </label>
+        <label className="text-sm text-text-secondary">
+          Benutzername
+          <input
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            className="mt-1 block rounded-md border border-border bg-bg-muted px-3 py-2 text-sm text-text-primary"
+          />
+        </label>
+        <label className="text-sm text-text-secondary">
+          Passwort
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder={settings.iservConfigured ? '••••••••' : ''}
+            className="mt-1 block rounded-md border border-border bg-bg-muted px-3 py-2 text-sm text-text-primary placeholder:text-text-muted"
+          />
+        </label>
+        <label className="text-sm text-text-secondary">
+          Klasse (optional)
+          <input
+            value={schoolClass}
+            onChange={(e) => setSchoolClass(e.target.value)}
+            placeholder="leer bei eigenen Kursen"
+            className="mt-1 block rounded-md border border-border bg-bg-muted px-3 py-2 text-sm text-text-primary placeholder:text-text-muted"
+          />
+        </label>
+        <button
+          type="submit"
+          disabled={updateSettings.isPending}
+          className="rounded-md bg-accent px-4 py-2 text-sm font-semibold text-accent-ink disabled:opacity-50"
+        >
+          Speichern
+        </button>
+        {settings.iservConfigured && (
+          <button
+            type="button"
+            onClick={() => void handleSyncNow()}
+            disabled={syncNow.isPending}
+            className="rounded-md border border-border px-4 py-2 text-sm text-text-secondary hover:bg-bg-hover disabled:opacity-50"
+          >
+            {syncNow.isPending ? 'Synchronisiere...' : 'Jetzt synchronisieren'}
+          </button>
+        )}
+        {settings.iservConfigured && (
+          <button
+            type="button"
+            onClick={() => void handleDisconnect()}
+            className="rounded-md border border-border px-4 py-2 text-sm text-red-400 hover:bg-bg-hover"
+          >
+            Trennen
+          </button>
+        )}
+      </form>
+      {saved && <p className="mt-2 text-sm text-green-400">Gespeichert.</p>}
+      {error && <p className="mt-2 text-sm text-red-400">{error}</p>}
+      {settings.iservConfigured && (
+        <p className="mt-3 text-xs text-text-tertiary">
+          {settings.iservLastSyncAt
+            ? `Zuletzt synchronisiert: ${new Date(settings.iservLastSyncAt).toLocaleString('de-DE')}`
+            : 'Noch nicht synchronisiert.'}
+        </p>
+      )}
+      {settings.iservLastSyncError && (
+        <p className="mt-1 text-xs text-red-400">Letzter Fehler: {settings.iservLastSyncError}</p>
+      )}
     </div>
   )
 }

@@ -24,3 +24,19 @@ settingsRouter.patch(
     res.json(settings);
   }),
 );
+
+settingsRouter.delete(
+  "/iserv",
+  asyncHandler(async (req, res) => {
+    const settings = await settingsService.disconnectIserv(req.user!.id);
+    res.json(settings);
+  }),
+);
+
+settingsRouter.post(
+  "/iserv/sync",
+  asyncHandler(async (req, res) => {
+    const settings = await settingsService.triggerIservSync(req.user!.id);
+    res.json(settings);
+  }),
+);

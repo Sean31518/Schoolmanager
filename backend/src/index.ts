@@ -1,5 +1,6 @@
 import { createApp } from "./app.js";
 import { env } from "./config/env.js";
+import { runIservSyncForAllUsers } from "./modules/iserv/iservSync.service.js";
 import { runReminderCheck } from "./modules/reminders/reminders.service.js";
 
 const app = createApp();
@@ -17,3 +18,13 @@ function checkReminders() {
 }
 checkReminders();
 setInterval(checkReminders, REMINDER_CHECK_INTERVAL_MS);
+
+// Vertretungspläne ändern sich tagsüber - alle 30 Minuten synchronisieren,
+// zusätzlich zum manuellen "Jetzt synchronisieren" in den Einstellungen.
+// No-ops per-user if IServ isn't configured for them (see isIservConfigured).
+const ISERV_SYNC_INTERVAL_MS = 30 * 60 * 1000;
+function syncIserv() {
+  runIservSyncForAllUsers().catch((err) => console.error("IServ sync failed", err));
+}
+syncIserv();
+setInterval(syncIserv, ISERV_SYNC_INTERVAL_MS);

@@ -1,5 +1,6 @@
 import request from "supertest";
 import { describe, expect, it } from "vitest";
+import { prisma } from "../lib/prisma.js";
 import { getDashboard } from "../modules/dashboard/dashboard.service.js";
 import { app, registerUser } from "./helpers.js";
 
@@ -251,5 +252,92 @@ describe("Dashboard today/tomorrow weekend rollover", () => {
     const friday = new Date("2026-09-18T10:00:00Z");
     const dashboard = await getDashboard(user.userId, friday);
     expect(dashboard.tomorrowTimetable[0]).toMatchObject({ subjectName: "Mathe" });
+  });
+});
+
+describe("Dashboard IServ Vertretung overlay", () => {
+  it("layers a CANCELLED override onto the regular slot without touching other slots", async () => {
+    const user = await registerUser();
+    const headers = { Authorization: `Bearer ${user.accessToken}` };
+
+    const mathe = await request(app)
+      .post("/api/subjects")
+      .set(headers)
+      .send({ name: "Mathe", color: "#3B82F6" });
+    const lesson1 = await request(app)
+      .post("/api/time-grid")
+      .set(headers)
+      .send({ label: "1. Stunde", type: "LESSON", startTime: "08:00", endTime: "08:45" });
+    const lesson2 = await request(app)
+      .post("/api/time-grid")
+      .set(headers)
+      .send({ label: "2. Stunde", type: "LESSON", startTime: "09:00", endTime: "09:45" });
+
+    // 2026-09-21 is a Monday.
+    const monday = new Date("2026-09-21T10:00:00Z");
+    await request(app)
+      .put(`/api/timetable/MONDAY/${lesson1.body.id}`)
+      .set(headers)
+      .send({ subjectId: mathe.body.id });
+    await request(app)
+      .put(`/api/timetable/MONDAY/${lesson2.body.id}`)
+      .set(headers)
+      .send({ subjectId: mathe.body.id });
+
+    await prisma.timetableOverride.create({
+      data: {
+        userId: user.userId,
+        date: new Date("2026-09-21T00:00:00.000Z"),
+        timeGridSlotId: lesson1.body.id,
+        type: "CANCELLED",
+      },
+    });
+
+    const dashboard = await getDashboard(user.userId, monday);
+    expect(dashboard.todayTimetable[0]).toMatchObject({
+      subjectName: "Mathe",
+      vertretung: "CANCELLED",
+    });
+    // The second lesson has no override and must stay a normal, unmarked slot.
+    expect(dashboard.todayTimetable[1]).toMatchObject({ subjectName: "Mathe" });
+    expect(dashboard.todayTimetable[1].vertretung).toBeUndefined();
+  });
+
+  it("layers a CHANGED override with its own subject/room, overriding the regular subject", async () => {
+    const user = await registerUser();
+    const headers = { Authorization: `Bearer ${user.accessToken}` };
+
+    const mathe = await request(app)
+      .post("/api/subjects")
+      .set(headers)
+      .send({ name: "Mathe", color: "#3B82F6" });
+    const lesson1 = await request(app)
+      .post("/api/time-grid")
+      .set(headers)
+      .send({ label: "1. Stunde", type: "LESSON", startTime: "08:00", endTime: "08:45" });
+
+    const monday = new Date("2026-09-21T10:00:00Z");
+    await request(app)
+      .put(`/api/timetable/MONDAY/${lesson1.body.id}`)
+      .set(headers)
+      .send({ subjectId: mathe.body.id });
+
+    await prisma.timetableOverride.create({
+      data: {
+        userId: user.userId,
+        date: new Date("2026-09-21T00:00:00.000Z"),
+        timeGridSlotId: lesson1.body.id,
+        type: "CHANGED",
+        subjectName: "Vertretung Deutsch",
+        room: "Raum 204",
+      },
+    });
+
+    const dashboard = await getDashboard(user.userId, monday);
+    expect(dashboard.todayTimetable[0]).toMatchObject({
+      subjectName: "Vertretung Deutsch",
+      room: "Raum 204",
+      vertretung: "CHANGED",
+    });
   });
 });

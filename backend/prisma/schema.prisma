@@ -35,6 +35,7 @@ model User {
   uploadedFiles  UploadedFile[]
   pushSubscriptions PushSubscription[]
   notificationLogs  NotificationLog[]
+  timetableOverrides TimetableOverride[]
 }
 
 model PushSubscription {
@@ -84,6 +85,19 @@ model Settings {
   federalState           String   @default("BW")
   createdAt              DateTime @default(now())
   updatedAt              DateTime     @updatedAt
+
+  // IServ-Anbindung (Vertretungsplan-Sync) - pro Nutzer, da jeder eigene
+  // IServ-Zugangsdaten und ggf. eigene Kurse hat (Kursstufe). Passwort liegt
+  // verschlüsselt vor (siehe lib/credentialsCrypto.ts), nie im Klartext in
+  // der DB und nie an das Frontend zurückgegeben.
+  iservHost              String?
+  iservUsername          String?
+  iservPasswordEncrypted String?
+  // Klassenfilter für IServs Stundenplan-Endpunkt - optional, da Nutzer mit
+  // individueller Kurswahl (Oberstufe) evtl. keinen sinnvollen hier haben.
+  iservClass             String?
+  iservLastSyncAt        DateTime?
+  iservLastSyncError     String?
 }
 
 model Subject {
@@ -228,8 +242,33 @@ model TimeGridSlot {
   updatedAt DateTime         @updatedAt
 
   timetableSlots TimetableSlot[]
+  timetableOverrides TimetableOverride[]
 
   @@index([userId])
+}
+
+// Date-specific Vertretung (substitution) for a single TimeGridSlot on a
+// single day, sourced from an IServ sync - separate from TimetableSlot
+// (the recurring weekly template) since a Vertretung only applies once.
+// A sync replaces every row for a given (userId, date) wholesale rather
+// than merging, so a reverted substitution doesn't linger as a stale row.
+model TimetableOverride {
+  id             String       @id @default(cuid())
+  userId         String
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date           DateTime
+  timeGridSlotId String
+  timeGridSlot   TimeGridSlot @relation(fields: [timeGridSlotId], references: [id], onDelete: Cascade)
+  // CANCELLED (entfällt) | CHANGED (Vertretung: anderes Fach/Raum)
+  type           String
+  subjectName    String?
+  room           String?
+  note           String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@unique([userId, date, timeGridSlotId])
+  @@index([userId, date])
 }
 
 model TimetableSlot {

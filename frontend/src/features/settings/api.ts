@@ -10,7 +10,19 @@ export function updateSettings(
     currentGradeLevel: number
     currentSchoolYearLabel: string | null
     federalState: string
+    iservHost: string | null
+    iservUsername: string | null
+    iservPassword: string
+    iservClass: string | null
   }>,
 ) {
   return apiFetch<SettingsDto>('/settings', { method: 'PATCH', body: JSON.stringify(data) })
+}
+
+export function disconnectIserv() {
+  return apiFetch<SettingsDto>('/settings/iserv', { method: 'DELETE' })
+}
+
+export function syncIservNow() {
+  return apiFetch<SettingsDto>('/settings/iserv/sync', { method: 'POST' })
 }

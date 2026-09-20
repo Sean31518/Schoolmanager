@@ -22,6 +22,8 @@ process.env.VAPID_PUBLIC_KEY =
   "BAWxREGjpMX_D78Ipug0aRCccseJwLjQeSSMcvECYUY2gNxYQKJYV1J57jUvXjZnGc-A7WB8q0OV_YDQeEhDaMQ";
 process.env.VAPID_PRIVATE_KEY = "5h615EPTlEhD7mPOGeuCYDwQzBGrvHD9Y4zl19Jp7ic";
 process.env.VAPID_SUBJECT = "mailto:admin@example.com";
+process.env.CREDENTIALS_ENCRYPTION_KEY =
+  "ad44a99656017d08c47a556e009dce1c196513b3acbdfc95fd86314a1e2a1636";
 
 execSync("npx prisma migrate deploy", {
   cwd: backendRoot,
