@@ -43,6 +43,33 @@ Dashboard und Kalender mit automatischem Ferien-/Feiertage-Import.
 Die Daten liegen persistent im Docker-Volume `schulmanager-data`
 (SQLite-Datei `/data/schulmanager.db` im Container).
 
+### Push-Benachrichtigungen (Erinnerungen) einrichten
+
+Optional: Erinnert per Push-Benachrichtigung an Klausuren (in 3 Tagen/morgen)
+und an morgen fällige Hausaufgaben - auch wenn die App gerade nicht offen ist.
+Ohne Einrichtung bleibt die Funktion einfach deaktiviert, der Rest der App
+läuft unverändert weiter.
+
+Voraussetzungen:
+- Die Seite muss über **HTTPS** erreichbar sein (Browser verlangen das für
+  Service Worker/Push) - z.B. über einen Reverse Proxy mit TLS-Zertifikat.
+- Ein VAPID-Schlüsselpaar in der `.env`:
+
+  ```sh
+  npx web-push generate-vapid-keys
+  ```
+
+  Beide Werte plus eine Kontaktadresse in die `.env` eintragen:
+
+  ```
+  VAPID_PUBLIC_KEY=...
+  VAPID_PRIVATE_KEY=...
+  VAPID_SUBJECT=mailto:deine-adresse@example.com
+  ```
+
+- Container neu starten (`docker compose up -d`), dann in den Einstellungen
+  unter "Erinnerungen" auf "Benachrichtigungen aktivieren" tippen.
+
 ### Backup
 
 Da die gesamte Anwendung eine einzelne SQLite-Datei nutzt, genügt es, diese
