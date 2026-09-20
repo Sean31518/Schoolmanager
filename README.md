@@ -38,7 +38,8 @@ Dashboard und Kalender mit automatischem Ferien-/Feiertage-Import.
    docker compose up --build -d
    ```
 
-3. Im Browser öffnen: <http://localhost:6969>
+3. Im Browser öffnen: <http://localhost:6969> (bzw. der in `.env` unter
+   `PORT` gesetzte Port)
 
 Die Daten liegen persistent im Docker-Volume `schulmanager-data`
 (SQLite-Datei `/data/schulmanager.db` im Container).

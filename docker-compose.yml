@@ -5,19 +5,19 @@ services:
       dockerfile: docker/Dockerfile
     image: schulmanager:latest
     ports:
-      - "6969:6969"
+      - "${PORT:-6969}:${PORT:-6969}"
     volumes:
       - schulmanager-data:/data
     env_file:
       - .env
     environment:
-      - PORT=6969
+      - PORT=${PORT:-6969}
       - NODE_ENV=production
       - DATABASE_URL=file:/data/schulmanager.db
       - UPLOADS_DIR=/data/uploads
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:6969/api/health"]
+      test: ["CMD", "wget", "-qO-", "http://localhost:${PORT:-6969}/api/health"]
       interval: 30s
       timeout: 5s
       retries: 3
