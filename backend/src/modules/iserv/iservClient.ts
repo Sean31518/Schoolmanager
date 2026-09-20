@@ -142,6 +142,18 @@ async function fetchDayTimetable(
     throw new IServRequestError("Antwort von IServ konnte nicht als JSON gelesen werden.");
   }
 
+  if (!res.ok) {
+    // IServ sets a session cookie even for a failed login, so an invalid
+    // session isn't caught until an actual data request like this one comes
+    // back 401/403 - report that distinctly from a genuine shape mismatch.
+    const b = body as { message?: string; class?: string } | null;
+    throw new IServAuthError(
+      `IServ hat den Login-Cookie beim Stundenplan-Abruf abgelehnt (HTTP ${res.status}` +
+        (b?.message ? `: ${b.message}` : "") +
+        "). Benutzername/Passwort prüfen, oder diese IServ-Instanz nutzt einen anderen Login-Ablauf.",
+    );
+  }
+
   const periods = extractPeriods(body);
   if (!periods) {
     // The exact response shape varies between IServ instances/versions and
