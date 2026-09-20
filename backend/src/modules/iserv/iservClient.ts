@@ -6,14 +6,20 @@
  *
  * Two things are different from that reference project:
  *
- * 1. Login is a full OIDC authorization-code flow (client_id/nonce/
- *    redirect_uri/response_type=code), not a single form POST. A real
- *    browser follows a chain of redirects to complete it; login() below
- *    replicates that by following redirects manually and merging cookies
- *    at every hop, the same way a browser would. DIESCHULAPP_CLIENT_ID and
- *    DIESCHULAPP_SCOPE were read off a live browser session - they look
- *    like fixed properties of the "dieschulapp" app itself rather than
- *    something per-school, but that's an assumption, not a confirmed fact.
+ * 1. Login is a full OIDC authorization-code flow. Its `state` parameter is
+ *    a JWT signed by IServ itself (confirmed by decoding one from a live
+ *    browser session - alg ES256, iss https://<host>/iserv/, with exp/nbf
+ *    claims) - not something a client is free to invent, which an earlier
+ *    version of this file tried to do by self-constructing the whole
+ *    authorize URL with a random UUID as state. That's why login() instead
+ *    starts at plain https://<host>/iserv/ and follows every redirect (a
+ *    real browser's own network trace confirmed IServ's server-side
+ *    redirect chain - iserv/ -> auth/auth?...&state=<signed-jwt> - mints
+ *    this token itself before the OIDC dance even starts) rather than
+ *    constructing any OIDC parameters itself. A real browser also follows a
+ *    chain of further redirects to complete the flow after that; login()
+ *    replicates that by following redirects manually and merging cookies at
+ *    every hop, the same way a browser would.
  *
  * 2. The timetable endpoint (/iserv/dieschulapp/api/1.0/current-timetable/)
  *    is inherently a *personal* endpoint - it takes an optional
@@ -35,8 +41,6 @@
  * presence of specific fields that are very unlikely to appear on a normal
  * entry. Needs a real example to confirm/fix.
  */
-
-import { randomUUID } from "node:crypto";
 
 export interface IServCredentials {
   host: string;
@@ -64,24 +68,6 @@ export class IServRequestError extends Error {}
 
 function normalizeHost(host: string): string {
   return host.trim().replace(/^https?:\/\//, "").replace(/\/+$/, "");
-}
-
-// Read off a live browser login to sk-bw.de's IServ - see module docblock.
-const DIESCHULAPP_CLIENT_ID = "6be3cd34-d7d9-4206-88f7-037adf5c511b";
-const DIESCHULAPP_SCOPE =
-  "openid uuid iserv:session-id iserv:web-ui iserv:2fa:configuration iserv:access-groups";
-
-function buildAuthorizeUrl(host: string): string {
-  const params = new URLSearchParams({
-    _iserv_app_url: "/iserv/",
-    client_id: DIESCHULAPP_CLIENT_ID,
-    nonce: randomUUID(),
-    redirect_uri: `https://${host}/iserv/app/authentication/redirect`,
-    response_type: "code",
-    scope: DIESCHULAPP_SCOPE,
-    state: randomUUID(),
-  });
-  return `https://${host}/iserv/auth/auth?${params.toString()}`;
 }
 
 function mergeCookies(jar: Map<string, string>, headers: Headers): void {
@@ -147,7 +133,10 @@ export interface LoginResult {
  * login was rejected, no matter how many redirects happened in between. */
 async function login(host: string, username: string, password: string): Promise<LoginResult> {
   const jar = new Map<string, string>();
-  let url = buildAuthorizeUrl(host);
+  // Starting at the app root, not a self-built OIDC authorize URL - IServ's
+  // own server-side redirect chain from here mints the properly-signed
+  // state token, which a client can't construct itself (see module docblock).
+  let url = `https://${host}/iserv/`;
   let credentialsSent = false;
   const trace: LoginHop[] = [];
 
