@@ -114,6 +114,15 @@ function formatTrace(trace: LoginHop[]): string {
   return trace.map((h) => `${h.method} ${h.path}->${h.status}${h.hasLocation ? "" : "(end)"}`).join(" | ");
 }
 
+/** Extracts the target URL from a <meta http-equiv="refresh"> tag, decoding
+ * the HTML entities IServ encodes its query string with (e.g. &amp;). */
+function extractMetaRefreshUrl(html: string): string | null {
+  const match = html.match(
+    /<meta[^>]+http-equiv=["']refresh["'][^>]*content=["']\s*\d+\s*;\s*url=([^"']+)["']/i,
+  );
+  return match ? match[1].replace(/&amp;/g, "&") : null;
+}
+
 export interface LoginResult {
   cookieHeader: string;
   trace: string;
@@ -179,15 +188,21 @@ async function login(host: string, username: string, password: string): Promise<
         );
       }
       if (target.pathname.startsWith("/iserv/auth/")) {
-        // Login itself succeeded (we got here via a redirect, not a bounce
-        // back to the login form), but the OIDC flow ended inside /iserv/auth/
-        // instead of reaching redirect_uri - most likely an OAuth consent
-        // screen ("allow dieschulapp access?") a browser would show once per
-        // account and require a click through, which this never submits.
-        // Capture what actually came back so that step can be replicated.
-        const snippet = (await res.text().catch(() => "")).replace(/\s+/g, " ").slice(0, 1000);
+        // A 200 landing inside /iserv/auth/ with no Location header is a
+        // client-side continuation, not a dead end - confirmed live to be a
+        // <meta http-equiv="refresh" content="0;url=..."> page finishing the
+        // OIDC code exchange, which a real browser follows automatically but
+        // fetch() never does since it doesn't parse HTML. Follow it manually;
+        // only give up if the page turns out not to have one after all.
+        const body = await res.text().catch(() => "");
+        const metaRefreshUrl = extractMetaRefreshUrl(body);
+        if (metaRefreshUrl) {
+          url = new URL(metaRefreshUrl, url).toString();
+          continue;
+        }
+        const snippet = body.replace(/\s+/g, " ").slice(0, 1000);
         throw new IServAuthError(
-          `IServ-Login hat sich innerhalb von /iserv/auth/ festgefahren (vermutlich eine Bestätigungsseite, die nicht automatisch bestätigt wird). Ablauf: ${formatTrace(trace)} - Seiteninhalt (gekürzt): ${snippet}`,
+          `IServ-Login hat sich innerhalb von /iserv/auth/ festgefahren (keine Weiterleitung und kein meta-refresh gefunden). Ablauf: ${formatTrace(trace)} - Seiteninhalt (gekürzt): ${snippet}`,
         );
       }
       return { cookieHeader: cookieHeaderFromJar(jar), trace: formatTrace(trace) };
