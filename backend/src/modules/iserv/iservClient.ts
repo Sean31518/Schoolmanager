@@ -176,7 +176,10 @@ async function login(host: string, username: string, password: string): Promise<
     const location = res.headers.get("location");
     trace.push({
       method: shouldPostCredentials ? "POST" : "GET",
-      path: target.pathname,
+      // Full path+query, not just pathname - OAuth2 error redirects
+      // conventionally carry the actual reason as ?error=...&error_description=...
+      // on the URL itself, which pathname-only logging was silently discarding.
+      path: target.pathname + target.search,
       status: res.status,
       hasLocation: Boolean(location),
       cookieNames: Array.from(jar.keys()),
