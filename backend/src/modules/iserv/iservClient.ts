@@ -142,12 +142,33 @@ async function fetchDayTimetable(
     throw new IServRequestError("Antwort von IServ konnte nicht als JSON gelesen werden.");
   }
 
-  const periods = (body as { data?: { timetable?: unknown[] } } | null)?.data?.timetable;
-  if (!Array.isArray(periods)) {
-    throw new IServRequestError("Unerwartetes Antwortformat vom IServ-Stundenplan-Endpunkt.");
+  const periods = extractPeriods(body);
+  if (!periods) {
+    // The exact response shape varies between IServ instances/versions and
+    // isn't something we can test against ahead of time - surface a
+    // truncated dump of what actually came back (this school's own
+    // timetable data, not credentials) so it can be read from
+    // Settings > IServ and used to fix the parsing.
+    const snippet = JSON.stringify(body).slice(0, 500);
+    throw new IServRequestError(
+      `Unerwartetes Antwortformat vom IServ-Stundenplan-Endpunkt. Rohdaten (gekürzt): ${snippet}`,
+    );
   }
 
   return periods.map(mapPeriod);
+}
+
+/** Tries every response shape known to be plausible for this endpoint
+ * before giving up - the reference implementation assumed `data.timetable`,
+ * but that may not hold for every IServ version/instance. */
+function extractPeriods(body: unknown): unknown[] | null {
+  if (Array.isArray(body)) return body;
+  const b = body as Record<string, unknown> | null;
+  if (Array.isArray(b?.timetable)) return b.timetable as unknown[];
+  if (Array.isArray(b?.data)) return b.data as unknown[];
+  const data = b?.data as Record<string, unknown> | undefined;
+  if (Array.isArray(data?.timetable)) return data.timetable as unknown[];
+  return null;
 }
 
 /**
