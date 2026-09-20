@@ -34,6 +34,23 @@ export default defineConfig({
           { src: 'icon-512.png', sizes: '512x512', type: 'image/png' },
           { src: 'icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
         ],
+        // Enables the richer install dialog (with a preview) on both
+        // desktop and mobile - Chrome needs at least one screenshot per
+        // form_factor, otherwise it silently falls back to a plain dialog.
+        screenshots: [
+          {
+            src: 'screenshot-wide.png',
+            sizes: '1280x800',
+            type: 'image/png',
+            form_factor: 'wide',
+          },
+          {
+            src: 'screenshot-narrow.png',
+            sizes: '390x844',
+            type: 'image/png',
+            form_factor: 'narrow',
+          },
+        ],
       },
     }),
   ],
