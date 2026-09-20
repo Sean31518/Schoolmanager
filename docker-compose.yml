@@ -12,9 +12,9 @@ services:
       - .env
     environment:
       - PORT=${PORT:-6969}
-      - NODE_ENV=production
-      - DATABASE_URL=file:/data/schulmanager.db
-      - UPLOADS_DIR=/data/uploads
+      - NODE_ENV=${NODE_ENV:-production}
+      - DATABASE_URL=${DATABASE_URL:-file:/data/schulmanager.db}
+      - UPLOADS_DIR=${UPLOADS_DIR:-/data/uploads}
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://localhost:${PORT:-6969}/api/health"]
