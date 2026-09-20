@@ -108,10 +108,16 @@ interface LoginHop {
   path: string;
   status: number;
   hasLocation: boolean;
+  cookieNames: string[];
 }
 
 function formatTrace(trace: LoginHop[]): string {
-  return trace.map((h) => `${h.method} ${h.path}->${h.status}${h.hasLocation ? "" : "(end)"}`).join(" | ");
+  return trace
+    .map(
+      (h) =>
+        `${h.method} ${h.path}->${h.status}${h.hasLocation ? "" : "(end)"}[cookies:${h.cookieNames.join(",")}]`,
+    )
+    .join(" | ");
 }
 
 /** Extracts the target URL from a <meta http-equiv="refresh"> tag, decoding
@@ -173,6 +179,7 @@ async function login(host: string, username: string, password: string): Promise<
       path: target.pathname,
       status: res.status,
       hasLocation: Boolean(location),
+      cookieNames: Array.from(jar.keys()),
     });
     if (shouldPostCredentials) credentialsSent = true;
 
@@ -187,8 +194,8 @@ async function login(host: string, username: string, password: string): Promise<
           `IServ hat vor dem Login-Formular keine Weiterleitung geliefert - unerwarteter Login-Ablauf für diese IServ-Instanz. Ablauf: ${formatTrace(trace)}`,
         );
       }
-      if (target.pathname.startsWith("/iserv/auth/")) {
-        // A 200 landing inside /iserv/auth/ with no Location header is a
+      if (target.pathname.startsWith("/iserv/auth/") && res.ok) {
+        // A 2xx landing inside /iserv/auth/ with no Location header is a
         // client-side continuation, not a dead end - confirmed live to be a
         // <meta http-equiv="refresh" content="0;url=..."> page finishing the
         // OIDC code exchange, which a real browser follows automatically but
@@ -203,6 +210,16 @@ async function login(host: string, username: string, password: string): Promise<
         const snippet = body.replace(/\s+/g, " ").slice(0, 1000);
         throw new IServAuthError(
           `IServ-Login hat sich innerhalb von /iserv/auth/ festgefahren (keine Weiterleitung und kein meta-refresh gefunden). Ablauf: ${formatTrace(trace)} - Seiteninhalt (gekürzt): ${snippet}`,
+        );
+      }
+      if (!res.ok) {
+        // The chain ended on an error page (e.g. the OIDC code exchange at
+        // /iserv/app/authentication/redirect bouncing to .../error) - this is
+        // not a successful login, whatever the path. Capture the body since
+        // it may explain why (invalid_state, session mismatch, etc.).
+        const snippet = (await res.text().catch(() => "")).replace(/\s+/g, " ").slice(0, 1000);
+        throw new IServAuthError(
+          `IServ-Login endete auf einer Fehlerseite (HTTP ${res.status}). Ablauf: ${formatTrace(trace)} - Seiteninhalt (gekürzt): ${snippet}`,
         );
       }
       return { cookieHeader: cookieHeaderFromJar(jar), trace: formatTrace(trace) };
