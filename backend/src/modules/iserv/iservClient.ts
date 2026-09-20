@@ -178,6 +178,18 @@ async function login(host: string, username: string, password: string): Promise<
           `IServ hat vor dem Login-Formular keine Weiterleitung geliefert - unerwarteter Login-Ablauf für diese IServ-Instanz. Ablauf: ${formatTrace(trace)}`,
         );
       }
+      if (target.pathname.startsWith("/iserv/auth/")) {
+        // Login itself succeeded (we got here via a redirect, not a bounce
+        // back to the login form), but the OIDC flow ended inside /iserv/auth/
+        // instead of reaching redirect_uri - most likely an OAuth consent
+        // screen ("allow dieschulapp access?") a browser would show once per
+        // account and require a click through, which this never submits.
+        // Capture what actually came back so that step can be replicated.
+        const snippet = (await res.text().catch(() => "")).replace(/\s+/g, " ").slice(0, 1000);
+        throw new IServAuthError(
+          `IServ-Login hat sich innerhalb von /iserv/auth/ festgefahren (vermutlich eine Bestätigungsseite, die nicht automatisch bestätigt wird). Ablauf: ${formatTrace(trace)} - Seiteninhalt (gekürzt): ${snippet}`,
+        );
+      }
       return { cookieHeader: cookieHeaderFromJar(jar), trace: formatTrace(trace) };
     }
     url = new URL(location, url).toString();
