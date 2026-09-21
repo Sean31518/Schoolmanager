@@ -265,10 +265,20 @@ model TimetableOverride {
   date           DateTime
   timeGridSlotId String
   timeGridSlot   TimeGridSlot @relation(fields: [timeGridSlotId], references: [id], onDelete: Cascade)
-  // CANCELLED (entfällt) | CHANGED (Vertretung: anderes Fach/Raum)
+  // CANCELLED (entfällt) | CHANGED (Vertretung: anderes Fach/Raum) | NORMAL
+  // (unveränderte Stunde, nur relevant wenn iservActive den manuellen Plan
+  // ersetzt statt nur Vertretungen darüberzulegen)
   type           String
   subjectName    String?
   room           String?
+  // Lehrkraft/Kurs/Zeiten aus IServ - für die Detailansicht im Stundenplan;
+  // stammen von der ursprünglich geplanten Stunde, nicht von einer eventuellen
+  // Vertretung (deren genaue Feldnamen bei IServ noch nicht bestätigt sind).
+  startTime      String?
+  endTime        String?
+  teacherName    String?
+  teacherAcronym String?
+  courseName     String?
   note           String?
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt

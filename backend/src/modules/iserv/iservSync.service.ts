@@ -44,6 +44,11 @@ interface OverrideDraft {
   type: "CANCELLED" | "CHANGED" | "NORMAL";
   subjectName: string | null;
   room: string | null;
+  startTime: string | null;
+  endTime: string | null;
+  teacherName: string | null;
+  teacherAcronym: string | null;
+  courseName: string | null;
 }
 
 /** Maps one day's IServ periods to override rows. Period numbers are
@@ -72,6 +77,18 @@ export function mapPeriodsToOverrides(
     const slot = lessonSlotsInOrder[period.period - 1];
     if (!slot) continue;
 
+    // Teacher/course/times always come from the base (non-substituted)
+    // entry, for the Stundenplan detail view - populated regardless of
+    // includeUnchanged, so a Vertretung's detail popup can still show them
+    // even when IServ isn't replacing the whole manual plan.
+    const baseDetails = {
+      startTime: period.startTime,
+      endTime: period.endTime,
+      teacherName: period.teacherName,
+      teacherAcronym: period.teacherAcronym,
+      courseName: period.courseName,
+    };
+
     if (!period.change) {
       if (!includeUnchanged) continue;
       drafts.push({
@@ -81,6 +98,7 @@ export function mapPeriodsToOverrides(
         type: "NORMAL",
         subjectName: resolveSubjectName(subjects, period.subject),
         room: period.room || null,
+        ...baseDetails,
       });
       continue;
     }
@@ -94,6 +112,7 @@ export function mapPeriodsToOverrides(
         type: "CANCELLED",
         subjectName: null,
         room: null,
+        ...baseDetails,
       });
     } else {
       const rawSubject = period.change.substitutionSubject || period.subject;
@@ -104,6 +123,7 @@ export function mapPeriodsToOverrides(
         type: "CHANGED",
         subjectName: resolveSubjectName(subjects, rawSubject),
         room: period.change.substitutionRoom || period.room || null,
+        ...baseDetails,
       });
     }
   }

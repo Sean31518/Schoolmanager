@@ -1,8 +1,26 @@
 import request from "supertest";
 import { describe, expect, it } from "vitest";
 import { decryptSecret, encryptSecret } from "../lib/credentialsCrypto.js";
+import type { IServChangeInfo, IServPeriod } from "../modules/iserv/iservClient.js";
 import { mapPeriodsToOverrides } from "../modules/iserv/iservSync.service.js";
 import { app, registerUser } from "./helpers.js";
+
+const BASE_DETAILS = {
+  startTime: "08:00",
+  endTime: "08:45",
+  teacherName: "Erika Musterfrau",
+  teacherAcronym: "MUS",
+  courseName: "Kurs-1",
+};
+
+function period(p: {
+  period: number;
+  subject: string;
+  room: string;
+  change: IServChangeInfo | null;
+}): IServPeriod {
+  return { ...BASE_DETAILS, ...p };
+}
 
 describe("Credentials encryption", () => {
   it("round-trips a secret", () => {
@@ -36,25 +54,18 @@ describe("IServ period-to-override mapping", () => {
     const overrides = mapPeriodsToOverrides(
       "user-1",
       date,
-      [{ period: 1, subject: "M", room: "101", change: null }],
+      [period({ period: 1, subject: "M", room: "101", change: null })],
       lessonSlots,
       subjects,
     );
     expect(overrides).toHaveLength(0);
   });
 
-  it("maps a cancelled period (change_types includes '0') without a subject/room", () => {
+  it("maps a cancelled period (change_types includes '0') without a subject/room, but keeps the base lesson's details", () => {
     const overrides = mapPeriodsToOverrides(
       "user-1",
       date,
-      [
-        {
-          period: 2,
-          subject: "M",
-          room: "101",
-          change: { changeTypes: ["0"] },
-        },
-      ],
+      [period({ period: 2, subject: "M", room: "101", change: { changeTypes: ["0"] } })],
       lessonSlots,
       subjects,
     );
@@ -66,6 +77,7 @@ describe("IServ period-to-override mapping", () => {
         type: "CANCELLED",
         subjectName: null,
         room: null,
+        ...BASE_DETAILS,
       },
     ]);
   });
@@ -75,12 +87,12 @@ describe("IServ period-to-override mapping", () => {
       "user-1",
       date,
       [
-        {
+        period({
           period: 3,
           subject: "M",
           room: "101",
           change: { changeTypes: ["1"], substitutionSubject: "Deu", substitutionRoom: "204" },
-        },
+        }),
       ],
       lessonSlots,
       subjects,
@@ -93,6 +105,7 @@ describe("IServ period-to-override mapping", () => {
         type: "CHANGED",
         subjectName: "Deutsch",
         room: "204",
+        ...BASE_DETAILS,
       },
     ]);
   });
@@ -101,7 +114,14 @@ describe("IServ period-to-override mapping", () => {
     const overrides = mapPeriodsToOverrides(
       "user-1",
       date,
-      [{ period: 1, subject: "M", room: "101", change: { changeTypes: ["1"], substitutionSubject: "PXE" } }],
+      [
+        period({
+          period: 1,
+          subject: "M",
+          room: "101",
+          change: { changeTypes: ["1"], substitutionSubject: "PXE" },
+        }),
+      ],
       lessonSlots,
       subjects,
     );
@@ -112,18 +132,18 @@ describe("IServ period-to-override mapping", () => {
     const overrides = mapPeriodsToOverrides(
       "user-1",
       date,
-      [{ period: 9, subject: "M", room: "101", change: { changeTypes: ["0"] } }],
+      [period({ period: 9, subject: "M", room: "101", change: { changeTypes: ["0"] } })],
       lessonSlots,
       subjects,
     );
     expect(overrides).toHaveLength(0);
   });
 
-  it("with includeUnchanged, maps an unmodified period to a NORMAL override instead of skipping it", () => {
+  it("with includeUnchanged, maps an unmodified period to a NORMAL override carrying the lesson's details", () => {
     const overrides = mapPeriodsToOverrides(
       "user-1",
       date,
-      [{ period: 1, subject: "Eng", room: "12", change: null }],
+      [period({ period: 1, subject: "Eng", room: "12", change: null })],
       lessonSlots,
       subjects,
       true,
@@ -136,6 +156,7 @@ describe("IServ period-to-override mapping", () => {
         type: "NORMAL",
         subjectName: "Englisch",
         room: "12",
+        ...BASE_DETAILS,
       },
     ]);
   });
@@ -144,7 +165,7 @@ describe("IServ period-to-override mapping", () => {
     const overrides = mapPeriodsToOverrides(
       "user-1",
       date,
-      [{ period: 2, subject: "M", room: "101", change: { changeTypes: ["0"] } }],
+      [period({ period: 2, subject: "M", room: "101", change: { changeTypes: ["0"] } })],
       lessonSlots,
       subjects,
       true,
@@ -157,6 +178,7 @@ describe("IServ period-to-override mapping", () => {
         type: "CANCELLED",
         subjectName: null,
         room: null,
+        ...BASE_DETAILS,
       },
     ]);
   });
@@ -165,7 +187,7 @@ describe("IServ period-to-override mapping", () => {
     const overrides = mapPeriodsToOverrides(
       "user-1",
       date,
-      [{ period: 1, subject: "Eng", room: "12", change: null }],
+      [period({ period: 1, subject: "Eng", room: "12", change: null })],
       lessonSlots,
       subjects,
     );

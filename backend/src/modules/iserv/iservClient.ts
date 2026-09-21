@@ -40,6 +40,12 @@
  * "cancelled" on a normal lesson), since detectChange only fires on the
  * presence of specific fields that are very unlikely to appear on a normal
  * entry. Needs a real example to confirm/fix.
+ *
+ * convertEntry() also reads teacher name/acronym, course name, and the
+ * period's own start/end time from the base (non-substituted) entry, for
+ * the Stundenplan detail view - these are NOT re-derived from a
+ * substitution's own data even when one exists, since that shape is
+ * unconfirmed (see detectChange).
  */
 
 export interface IServCredentials {
@@ -60,6 +66,11 @@ export interface IServPeriod {
   period: number;
   subject: string;
   room: string;
+  startTime: string | null;
+  endTime: string | null;
+  teacherName: string | null;
+  teacherAcronym: string | null;
+  courseName: string | null;
   change: IServChangeInfo | null;
 }
 
@@ -235,10 +246,22 @@ async function logout(host: string, cookieHeader: string): Promise<void> {
   }
 }
 
+interface DieSchulAppTeacher {
+  forename?: string;
+  surname?: string;
+  displayname?: string;
+  externalId?: string;
+}
+
 interface DieSchulAppEntry {
   weekday: number;
   timeTableSlot?: { number?: number; startTime?: string; endTime?: string; name?: string };
-  courseSubject?: { subject?: { name?: string; acronym?: string }; type?: string } | null;
+  courseSubject?: {
+    subject?: { name?: string; acronym?: string };
+    course?: { name?: string };
+    teachers?: DieSchulAppTeacher[];
+    type?: string;
+  } | null;
   room?: { name?: string } | null;
   [key: string]: unknown;
 }
@@ -326,12 +349,25 @@ function detectChange(raw: DieSchulAppEntry): IServChangeInfo | null {
   return null;
 }
 
+/** Joins multiple teachers (team teaching) with a comma; null if there are
+ * none rather than an empty string, so the UI can cleanly omit the field. */
+function joinTeachers(teachers: DieSchulAppTeacher[], pick: (t: DieSchulAppTeacher) => string | undefined) {
+  const names = teachers.map(pick).filter((n): n is string => Boolean(n));
+  return names.length ? names.join(", ") : null;
+}
+
 function convertEntry(raw: DieSchulAppEntry): IServPeriod {
   const subject = raw.courseSubject?.subject;
+  const teachers = raw.courseSubject?.teachers ?? [];
   return {
     period: raw.timeTableSlot?.number ?? 0,
     subject: subject?.acronym || subject?.name || "",
     room: raw.room?.name ?? "",
+    startTime: raw.timeTableSlot?.startTime ?? null,
+    endTime: raw.timeTableSlot?.endTime ?? null,
+    teacherName: joinTeachers(teachers, (t) => t.displayname || [t.forename, t.surname].filter(Boolean).join(" ")),
+    teacherAcronym: joinTeachers(teachers, (t) => t.externalId),
+    courseName: raw.courseSubject?.course?.name ?? null,
     change: detectChange(raw),
   };
 }
