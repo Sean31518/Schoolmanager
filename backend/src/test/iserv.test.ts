@@ -110,6 +110,24 @@ describe("IServ period-to-override mapping", () => {
     ]);
   });
 
+  it("resolves a code with a trailing course-level number (e.g. IServ's 'E1') against a same-prefix Subject", () => {
+    const overrides = mapPeriodsToOverrides(
+      "user-1",
+      date,
+      [
+        period({
+          period: 1,
+          subject: "M",
+          room: "101",
+          change: { changeTypes: ["1"], substitutionSubject: "E1" },
+        }),
+      ],
+      lessonSlots,
+      subjects,
+    );
+    expect(overrides[0].subjectName).toBe("Englisch");
+  });
+
   it("falls back to the raw IServ code when no subject matches", () => {
     const overrides = mapPeriodsToOverrides(
       "user-1",

@@ -15,11 +15,24 @@ export function isIservConfigured(settings: IservSettings): boolean {
   return Boolean(settings.iservHost && settings.iservUsername && settings.iservPasswordEncrypted);
 }
 
+/** IServ's subject codes here are things like "E1", "nwt1", "Ph1" - a short
+ * abbreviation plus a trailing course-level number (Leistungskurs/Basiskurs
+ * numbering), not the plain abbreviation a user's own Subject name would
+ * usually be a prefix match for. Stripping that trailing number before the
+ * prefix check ("E1" -> "e") is what actually lets "E1" resolve to a
+ * same-user Subject named "Englisch" - matching on the raw code alone
+ * ("e1") never would, since "englisch" doesn't start with "e1". */
 function resolveSubjectName(subjects: { name: string }[], rawSubject: string): string {
   const lower = rawSubject.toLowerCase();
-  const match = subjects.find(
-    (s) => s.name.toLowerCase() === lower || s.name.toLowerCase().startsWith(lower),
-  );
+  const strippedLower = lower.replace(/\d+$/, "");
+  const match = subjects.find((s) => {
+    const subjectLower = s.name.toLowerCase();
+    return (
+      subjectLower === lower ||
+      subjectLower.startsWith(lower) ||
+      (strippedLower.length > 0 && subjectLower.startsWith(strippedLower))
+    );
+  });
   return match?.name ?? rawSubject;
 }
 
