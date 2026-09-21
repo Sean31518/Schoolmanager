@@ -119,11 +119,16 @@ export async function getDashboard(userId: string, now: Date = new Date()) {
 
   // IServ-synced Vertretungen (see modules/iserv) for the two dates being
   // shown, keyed by "dateKey:timeGridSlotId" for O(1) lookup per slot.
+  // subject is joined so a linked Subject's own color/name is used instead
+  // of whatever happens to be manually assigned in this same slot - that
+  // manual assignment is a coincidental correlation at best, and outright
+  // wrong once a Vertretung genuinely changes the subject.
   const overrides = await prisma.timetableOverride.findMany({
     where: {
       userId,
       date: { in: [dateKeyToMidnightUTC(dayAKey), dateKeyToMidnightUTC(dayBKey)] },
     },
+    include: { subject: true },
   });
   const overrideByKey = new Map(
     overrides.map((o) => [`${toDateKey(o.date)}:${o.timeGridSlotId}`, o]),
@@ -158,8 +163,10 @@ export async function getDashboard(userId: string, now: Date = new Date()) {
           label: slot.label,
           startTime: slot.startTime,
           endTime: slot.endTime,
-          subjectName: cell?.subject?.name ?? null,
-          subjectColor: cell?.subject?.color ?? null,
+          subjectName: override.subjectName ?? cell?.subject?.name ?? null,
+          subjectColor: override.subject?.color ?? cell?.subject?.color ?? null,
+          subjectId: override.subjectId,
+          rawSubjectCode: override.rawSubjectCode,
           room: override.room,
           teacherName: override.teacherName,
           courseName: override.courseName,
@@ -173,7 +180,9 @@ export async function getDashboard(userId: string, now: Date = new Date()) {
           startTime: slot.startTime,
           endTime: slot.endTime,
           subjectName: override.subjectName ?? cell?.subject?.name ?? null,
-          subjectColor: cell?.subject?.color ?? null,
+          subjectColor: override.subject?.color ?? cell?.subject?.color ?? null,
+          subjectId: override.subjectId,
+          rawSubjectCode: override.rawSubjectCode,
           room: override.room,
           teacherName: override.teacherName,
           courseName: override.courseName,
@@ -192,7 +201,9 @@ export async function getDashboard(userId: string, now: Date = new Date()) {
           startTime: slot.startTime,
           endTime: slot.endTime,
           subjectName: override.subjectName ?? cell?.subject?.name ?? null,
-          subjectColor: cell?.subject?.color ?? null,
+          subjectColor: override.subject?.color ?? cell?.subject?.color ?? null,
+          subjectId: override.subjectId,
+          rawSubjectCode: override.rawSubjectCode,
           room: override.room,
           teacherName: override.teacherName,
           courseName: override.courseName,

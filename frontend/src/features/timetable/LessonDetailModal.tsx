@@ -1,3 +1,6 @@
+import { useState } from 'react'
+import { CreateSubjectModal } from '../../components/CreateSubjectModal'
+import { useSyncIservNow } from '../settings/hooks'
 import type { IservVertretungType } from './types'
 
 export interface LessonDetailData {
@@ -10,6 +13,10 @@ export interface LessonDetailData {
   teacherName: string | null
   courseName: string | null
   vertretung?: IservVertretungType
+  /** Set (with subjectId null) when this lesson came from IServ but isn't
+   * linked to a local Subject yet - lets the modal offer to create one. */
+  subjectId?: string | null
+  rawSubjectCode?: string | null
 }
 
 const FALLBACK_COLOR = '#71717a'
@@ -24,6 +31,9 @@ export function LessonDetailModal({
   const color = lesson.subjectColor ?? FALLBACK_COLOR
   const isCancelled = lesson.vertretung === 'CANCELLED'
   const isChanged = lesson.vertretung === 'CHANGED'
+  const isUnlinked = !lesson.subjectId && Boolean(lesson.rawSubjectCode)
+  const [showCreate, setShowCreate] = useState(false)
+  const syncNow = useSyncIservNow()
 
   return (
     <div
@@ -89,8 +99,41 @@ export function LessonDetailModal({
               </div>
             )}
           </dl>
+
+          {isUnlinked && (
+            <div className="mt-4 border-t border-border-subtle pt-3">
+              <p className="text-xs text-text-tertiary">
+                Dieses Fach von IServ ist noch keinem lokalen Fach zugeordnet.
+              </p>
+              <button
+                type="button"
+                onClick={() => setShowCreate(true)}
+                className="mt-2 rounded-md bg-accent px-3 py-1.5 text-sm font-semibold text-accent-ink hover:bg-accent-hover"
+              >
+                Fach anlegen
+              </button>
+            </div>
+          )}
         </div>
       </div>
+
+      {showCreate && (
+        <CreateSubjectModal
+          initialName={lesson.subjectName}
+          initialAlias={lesson.rawSubjectCode ?? ''}
+          onClose={() => setShowCreate(false)}
+          onCreated={() => {
+            // The link only takes effect on the next sync (which re-resolves
+            // every override's subject) - trigger one immediately so the
+            // color/link show up without the user needing to wait or find
+            // the manual sync button themselves. Best-effort only - if it
+            // fails (e.g. IServ briefly unreachable), the regular scheduled
+            // sync will pick the link up later regardless.
+            syncNow.mutateAsync().catch(() => {})
+            onClose()
+          }}
+        />
+      )}
     </div>
   )
 }

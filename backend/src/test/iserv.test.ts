@@ -2,7 +2,8 @@ import request from "supertest";
 import { describe, expect, it } from "vitest";
 import { decryptSecret, encryptSecret } from "../lib/credentialsCrypto.js";
 import type { IServChangeInfo, IServPeriod } from "../modules/iserv/iservClient.js";
-import { mapPeriodsToOverrides } from "../modules/iserv/iservSync.service.js";
+import { mapPeriodsToOverrides, syncTimeGridFromIserv } from "../modules/iserv/iservSync.service.js";
+import { prisma } from "../lib/prisma.js";
 import { app, registerUser } from "./helpers.js";
 
 const BASE_DETAILS = {
@@ -19,7 +20,7 @@ function period(p: {
   room: string;
   change: IServChangeInfo | null;
 }): IServPeriod {
-  return { ...BASE_DETAILS, ...p };
+  return { label: null, ...BASE_DETAILS, ...p };
 }
 
 describe("Credentials encryption", () => {
@@ -47,7 +48,11 @@ describe("Credentials encryption", () => {
 
 describe("IServ period-to-override mapping", () => {
   const lessonSlots = [{ id: "slot-1" }, { id: "slot-2" }, { id: "slot-3" }];
-  const subjects = [{ name: "Mathe" }, { name: "Englisch" }, { name: "Deutsch" }];
+  const subjects = [
+    { id: "subj-mathe", name: "Mathe" },
+    { id: "subj-englisch", name: "Englisch" },
+    { id: "subj-deutsch", name: "Deutsch" },
+  ];
   const date = new Date("2026-09-22T00:00:00.000Z");
 
   it("ignores periods with no change (a normal, unmodified lesson)", () => {
@@ -61,11 +66,11 @@ describe("IServ period-to-override mapping", () => {
     expect(overrides).toHaveLength(0);
   });
 
-  it("maps a cancelled period (change_types includes '0') without a subject/room, but keeps the base lesson's details", () => {
+  it("maps a cancelled period (change_types includes '0'), resolving its original subject for name/color/no room", () => {
     const overrides = mapPeriodsToOverrides(
       "user-1",
       date,
-      [period({ period: 2, subject: "M", room: "101", change: { changeTypes: ["0"] } })],
+      [period({ period: 2, subject: "Mathe", room: "101", change: { changeTypes: ["0"] } })],
       lessonSlots,
       subjects,
     );
@@ -75,7 +80,9 @@ describe("IServ period-to-override mapping", () => {
         date,
         timeGridSlotId: "slot-2",
         type: "CANCELLED",
-        subjectName: null,
+        subjectName: "Mathe",
+        subjectId: "subj-mathe",
+        rawSubjectCode: "Mathe",
         room: null,
         ...BASE_DETAILS,
       },
@@ -104,6 +111,8 @@ describe("IServ period-to-override mapping", () => {
         timeGridSlotId: "slot-3",
         type: "CHANGED",
         subjectName: "Deutsch",
+        subjectId: "subj-deutsch",
+        rawSubjectCode: "Deu",
         room: "204",
         ...BASE_DETAILS,
       },
@@ -131,8 +140,8 @@ describe("IServ period-to-override mapping", () => {
   it("resolves via a user-configured iservAlias when the code isn't a name prefix at all (e.g. 'bk3' for 'Kunst')", () => {
     const subjectsWithAliases = [
       ...subjects,
-      { name: "Kunst", iservAlias: "bk3" },
-      { name: "Gemeinschaftskunde", iservAlias: "gm" },
+      { id: "subj-kunst", name: "Kunst", iservAlias: "bk3" },
+      { id: "subj-gk", name: "Gemeinschaftskunde", iservAlias: "gm" },
     ];
     const overrides = mapPeriodsToOverrides(
       "user-1",
@@ -152,7 +161,10 @@ describe("IServ period-to-override mapping", () => {
     // Both "Erdkunde" and "Englisch" start with "e", so the plain prefix
     // heuristic alone can't tell "e2" apart - the alias on "Englisch"
     // should win regardless of which subject the array lists first.
-    const subjectsWithAliases = [{ name: "Erdkunde" }, { name: "Englisch", iservAlias: "e2" }];
+    const subjectsWithAliases = [
+      { id: "subj-erdkunde", name: "Erdkunde" },
+      { id: "subj-englisch", name: "Englisch", iservAlias: "e2" },
+    ];
     const overrides = mapPeriodsToOverrides(
       "user-1",
       date,
@@ -179,6 +191,7 @@ describe("IServ period-to-override mapping", () => {
       subjects,
     );
     expect(overrides[0].subjectName).toBe("PXE");
+    expect(overrides[0].subjectId).toBeNull();
   });
 
   it("skips a period beyond the number of configured lesson slots instead of crashing", () => {
@@ -208,6 +221,8 @@ describe("IServ period-to-override mapping", () => {
         timeGridSlotId: "slot-1",
         type: "NORMAL",
         subjectName: "Englisch",
+        subjectId: "subj-englisch",
+        rawSubjectCode: "Eng",
         room: "12",
         ...BASE_DETAILS,
       },
@@ -218,7 +233,7 @@ describe("IServ period-to-override mapping", () => {
     const overrides = mapPeriodsToOverrides(
       "user-1",
       date,
-      [period({ period: 2, subject: "M", room: "101", change: { changeTypes: ["0"] } })],
+      [period({ period: 2, subject: "Mathe", room: "101", change: { changeTypes: ["0"] } })],
       lessonSlots,
       subjects,
       true,
@@ -229,7 +244,9 @@ describe("IServ period-to-override mapping", () => {
         date,
         timeGridSlotId: "slot-2",
         type: "CANCELLED",
-        subjectName: null,
+        subjectName: "Mathe",
+        subjectId: "subj-mathe",
+        rawSubjectCode: "Mathe",
         room: null,
         ...BASE_DETAILS,
       },
@@ -245,6 +262,108 @@ describe("IServ period-to-override mapping", () => {
       subjects,
     );
     expect(overrides).toHaveLength(0);
+  });
+});
+
+describe("Zeitraster auto-population from IServ", () => {
+  function fakePeriod(period: number, startTime: string, endTime: string, label: string | null): IServPeriod {
+    return {
+      period,
+      label,
+      subject: "M",
+      room: "101",
+      startTime,
+      endTime,
+      teacherName: null,
+      teacherAcronym: null,
+      courseName: null,
+      change: null,
+    };
+  }
+
+  it("creates LESSON slots for periods with no existing TimeGridSlot yet (fresh account)", async () => {
+    const user = await registerUser();
+    const byDate = new Map<string, IServPeriod[]>([
+      [
+        "2026-09-21",
+        [
+          fakePeriod(1, "08:00", "08:45", "1. Stunde"),
+          fakePeriod(2, "08:45", "09:30", "2. Stunde"),
+        ],
+      ],
+    ]);
+
+    const lessonSlots = await syncTimeGridFromIserv(user.userId, byDate);
+    expect(lessonSlots).toHaveLength(2);
+
+    const created = await prisma.timeGridSlot.findMany({
+      where: { userId: user.userId },
+      orderBy: { sortOrder: "asc" },
+    });
+    expect(created).toEqual([
+      expect.objectContaining({ type: "LESSON", label: "1. Stunde", startTime: "08:00", endTime: "08:45" }),
+      expect.objectContaining({ type: "LESSON", label: "2. Stunde", startTime: "08:45", endTime: "09:30" }),
+    ]);
+  });
+
+  it("updates an existing LESSON slot's time/label if it drifted from IServ, without touching manually-inserted Pausen", async () => {
+    const user = await registerUser();
+    const headers = { Authorization: `Bearer ${user.accessToken}` };
+
+    const lesson1 = await request(app)
+      .post("/api/time-grid")
+      .set(headers)
+      .send({ label: "Alte Bezeichnung", type: "LESSON", startTime: "07:30", endTime: "08:15" });
+    const pause = await request(app)
+      .post("/api/time-grid")
+      .set(headers)
+      .send({ label: "Pause", type: "BREAK", startTime: "08:15", endTime: "08:20" });
+
+    const byDate = new Map<string, IServPeriod[]>([
+      ["2026-09-21", [fakePeriod(1, "08:00", "08:45", "1. Stunde")]],
+    ]);
+    const lessonSlots = await syncTimeGridFromIserv(user.userId, byDate);
+    expect(lessonSlots).toEqual([{ id: lesson1.body.id }]);
+
+    const updatedLesson = await prisma.timeGridSlot.findUniqueOrThrow({ where: { id: lesson1.body.id } });
+    expect(updatedLesson).toMatchObject({ label: "1. Stunde", startTime: "08:00", endTime: "08:45" });
+
+    // The manually-placed Pause is untouched.
+    const untouchedPause = await prisma.timeGridSlot.findUniqueOrThrow({ where: { id: pause.body.id } });
+    expect(untouchedPause).toMatchObject({ label: "Pause", type: "BREAK", startTime: "08:15", endTime: "08:20" });
+  });
+
+  it("appends a new period after existing slots (including Pausen) without disturbing their order", async () => {
+    const user = await registerUser();
+    const headers = { Authorization: `Bearer ${user.accessToken}` };
+
+    const lesson1 = await request(app)
+      .post("/api/time-grid")
+      .set(headers)
+      .send({ label: "1. Stunde", type: "LESSON", startTime: "08:00", endTime: "08:45" });
+    const pause = await request(app)
+      .post("/api/time-grid")
+      .set(headers)
+      .send({ label: "Pause", type: "BREAK", startTime: "08:45", endTime: "09:00" });
+
+    const byDate = new Map<string, IServPeriod[]>([
+      [
+        "2026-09-21",
+        [fakePeriod(1, "08:00", "08:45", "1. Stunde"), fakePeriod(2, "09:00", "09:45", "2. Stunde")],
+      ],
+    ]);
+    await syncTimeGridFromIserv(user.userId, byDate);
+
+    const all = await prisma.timeGridSlot.findMany({
+      where: { userId: user.userId },
+      orderBy: { sortOrder: "asc" },
+    });
+    expect(all.map((s) => ({ label: s.label, type: s.type }))).toEqual([
+      { label: "1. Stunde", type: "LESSON" },
+      { label: "Pause", type: "BREAK" },
+      { label: "2. Stunde", type: "LESSON" },
+    ]);
+    void lesson1;
   });
 });
 

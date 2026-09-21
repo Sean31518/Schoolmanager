@@ -121,10 +121,11 @@ model Subject {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  noteSectionTypes NoteSectionType[]
-  timetableSlots   TimetableSlot[]
-  calendarEvents   CalendarEvent[]
-  homework         Homework[]
+  noteSectionTypes   NoteSectionType[]
+  timetableSlots     TimetableSlot[]
+  calendarEvents     CalendarEvent[]
+  homework           Homework[]
+  timetableOverrides TimetableOverride[]
 
   @@unique([userId, name])
   @@index([userId])
@@ -275,7 +276,20 @@ model TimetableOverride {
   // (unveränderte Stunde, nur relevant wenn iservActive den manuellen Plan
   // ersetzt statt nur Vertretungen darüberzulegen)
   type           String
+  // Freitext-Anzeigename, immer gesetzt (außer bei CANCELLED, wo es keinen
+  // "neuen" Namen gibt) - subjectId ist NUR gesetzt, wenn rawSubjectCode
+  // tatsächlich zu einem lokalen Fach aufgelöst werden konnte (exakter
+  // iservAlias-Treffer oder Präfix-Heuristik). Damit lässt sich die
+  // Fach-Farbe direkt vom verknüpften Fach holen statt vom zufällig an
+  // dieser Stelle manuell eingetragenen Fach, und die Detailansicht kann
+  // "kein lokales Fach verknüpft" erkennen (subjectId null, rawSubjectCode
+  // gesetzt) und einen "Fach anlegen"-Knopf anbieten.
   subjectName    String?
+  subjectId      String?
+  subject        Subject?     @relation(fields: [subjectId], references: [id], onDelete: SetNull)
+  // Der rohe IServ-Kürzel, aus dem subjectName/subjectId aufgelöst wurden -
+  // zum Vorbefüllen von Name/IServ-Kürzel beim "Fach anlegen"-Knopf.
+  rawSubjectCode String?
   room           String?
   // Lehrkraft/Kurs/Zeiten aus IServ - für die Detailansicht im Stundenplan;
   // stammen von der ursprünglich geplanten Stunde, nicht von einer eventuellen

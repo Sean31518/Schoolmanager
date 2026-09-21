@@ -36,6 +36,8 @@ function isNowWithin(startTime: string, endTime: string) {
 interface ResolvedCell {
   subjectName: string | null
   subjectColor: string | null
+  subjectId: string | null
+  rawSubjectCode: string | null
   room: string | null
   teacherAcronym: string | null
   teacherName: string | null
@@ -65,7 +67,12 @@ function resolveCell(
     const subjectName = overlay.subjectName ?? manual?.subject?.name ?? null
     return {
       subjectName,
-      subjectColor: manual?.subject?.color ?? null,
+      // The linked Subject's own color, never the manual cell's — showing a
+      // coincidentally-assigned manual subject's color here would be wrong
+      // as soon as the two diverge (that was the actual bug being fixed).
+      subjectColor: overlay.subjectColor,
+      subjectId: overlay.subjectId,
+      rawSubjectCode: overlay.rawSubjectCode,
       room: overlay.room ?? manual?.room ?? null,
       teacherAcronym: overlay.teacherAcronym,
       teacherName: overlay.teacherName,
@@ -80,6 +87,8 @@ function resolveCell(
   return {
     subjectName: manual?.subject?.name ?? null,
     subjectColor: manual?.subject?.color ?? null,
+    subjectId: manual?.subjectId ?? null,
+    rawSubjectCode: null,
     room: manual?.room ?? null,
     teacherAcronym: null,
     teacherName: null,
@@ -340,6 +349,8 @@ function toLessonDetail({
   return {
     subjectName: cell.subjectName ?? '',
     subjectColor: cell.subjectColor,
+    subjectId: cell.subjectId,
+    rawSubjectCode: cell.rawSubjectCode,
     dayLabel: WEEKDAY_LABELS[weekday] ?? weekday,
     startTime,
     endTime,

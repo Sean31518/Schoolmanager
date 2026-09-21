@@ -37,6 +37,9 @@ describe("Timetable IServ overlay (current week only)", () => {
         timeGridSlotId: lesson1.body.id,
         type: "CANCELLED",
         subjectName: null,
+        subjectId: null,
+        subjectColor: null,
+        rawSubjectCode: null,
         room: null,
         startTime: "08:00",
         endTime: "08:45",
@@ -44,6 +47,54 @@ describe("Timetable IServ overlay (current week only)", () => {
         teacherAcronym: "MUS",
         courseName: "Kurs-1",
       },
+    ]);
+  });
+
+  it("uses the linked Subject's own color/name over whatever's manually assigned in the same slot", async () => {
+    const user = await registerUser();
+    const headers = { Authorization: `Bearer ${user.accessToken}` };
+
+    const mathe = await request(app)
+      .post("/api/subjects")
+      .set(headers)
+      .send({ name: "Mathe", color: "#3B82F6" });
+    const englisch = await request(app)
+      .post("/api/subjects")
+      .set(headers)
+      .send({ name: "Englisch", color: "#22C55E" });
+    const lesson1 = await request(app)
+      .post("/api/time-grid")
+      .set(headers)
+      .send({ label: "1. Stunde", type: "LESSON", startTime: "08:00", endTime: "08:45" });
+
+    // The manual plan (coincidentally) has Mathe here - the override should
+    // still show Englisch's own color, not Mathe's.
+    const monday = new Date("2026-09-21T10:00:00Z");
+    await request(app)
+      .put(`/api/timetable/MONDAY/${lesson1.body.id}`)
+      .set(headers)
+      .send({ subjectId: mathe.body.id });
+    await prisma.timetableOverride.create({
+      data: {
+        userId: user.userId,
+        date: new Date("2026-09-21T00:00:00.000Z"),
+        timeGridSlotId: lesson1.body.id,
+        type: "CHANGED",
+        subjectName: "Englisch",
+        subjectId: englisch.body.id,
+        rawSubjectCode: "E1",
+        room: "R204",
+      },
+    });
+
+    const timetable = await getTimetable(user.userId, monday);
+    expect(timetable.iservOverlay).toEqual([
+      expect.objectContaining({
+        subjectName: "Englisch",
+        subjectId: englisch.body.id,
+        subjectColor: "#22C55E",
+        rawSubjectCode: "E1",
+      }),
     ]);
   });
 

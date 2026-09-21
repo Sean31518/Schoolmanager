@@ -15,6 +15,17 @@ export function isIservConfigured(settings: IservSettings): boolean {
   return Boolean(settings.iservHost && settings.iservUsername && settings.iservPasswordEncrypted);
 }
 
+interface ResolvableSubject {
+  id: string;
+  name: string;
+  iservAlias?: string | null;
+}
+
+interface ResolvedSubject {
+  id: string | null;
+  name: string;
+}
+
 /** Some of IServ's subject codes are a genuine prefix of the full name plus
  * a trailing course-level number ("E1" -> "Englisch", stripping the "1"
  * first since "englisch" doesn't start with "e1"). Others aren't a prefix
@@ -23,14 +34,16 @@ export function isIservConfigured(settings: IservSettings): boolean {
  * un-derivable from the name algorithmically. Rather than hardcode a
  * translation table (which would only ever fit one school), a user-supplied
  * per-Subject iservAlias is checked first as an exact match; the prefix
- * heuristic remains as a fallback for the cases it does handle for free. */
-function resolveSubjectName(
-  subjects: { name: string; iservAlias?: string | null }[],
-  rawSubject: string,
-): string {
+ * heuristic remains as a fallback for the cases it does handle for free.
+ *
+ * Returns the matched Subject's id (null if nothing matched, i.e. this
+ * IServ subject isn't linked to a local Subject yet) alongside the display
+ * name to use either way - the matched Subject's own name, or the raw
+ * IServ code as a last-resort fallback. */
+function resolveSubject(subjects: ResolvableSubject[], rawSubject: string): ResolvedSubject {
   const lower = rawSubject.toLowerCase();
   const aliasMatch = subjects.find((s) => s.iservAlias && s.iservAlias.toLowerCase() === lower);
-  if (aliasMatch) return aliasMatch.name;
+  if (aliasMatch) return { id: aliasMatch.id, name: aliasMatch.name };
 
   const strippedLower = lower.replace(/\d+$/, "");
   const match = subjects.find((s) => {
@@ -41,7 +54,7 @@ function resolveSubjectName(
       (strippedLower.length > 0 && subjectLower.startsWith(strippedLower))
     );
   });
-  return match?.name ?? rawSubject;
+  return match ? { id: match.id, name: match.name } : { id: null, name: rawSubject };
 }
 
 function datesToSync(from: Date, days: number): Date[] {
@@ -64,6 +77,8 @@ interface OverrideDraft {
   timeGridSlotId: string;
   type: "CANCELLED" | "CHANGED" | "NORMAL";
   subjectName: string | null;
+  subjectId: string | null;
+  rawSubjectCode: string | null;
   room: string | null;
   startTime: string | null;
   endTime: string | null;
@@ -89,7 +104,7 @@ export function mapPeriodsToOverrides(
   date: Date,
   periods: IServPeriod[],
   lessonSlotsInOrder: { id: string }[],
-  subjects: { name: string }[],
+  subjects: ResolvableSubject[],
   includeUnchanged = false,
 ): OverrideDraft[] {
   const drafts: OverrideDraft[] = [];
@@ -112,12 +127,15 @@ export function mapPeriodsToOverrides(
 
     if (!period.change) {
       if (!includeUnchanged) continue;
+      const resolved = resolveSubject(subjects, period.subject);
       drafts.push({
         userId,
         date,
         timeGridSlotId: slot.id,
         type: "NORMAL",
-        subjectName: resolveSubjectName(subjects, period.subject),
+        subjectName: resolved.name,
+        subjectId: resolved.id,
+        rawSubjectCode: period.subject,
         room: period.room || null,
         ...baseDetails,
       });
@@ -126,23 +144,37 @@ export function mapPeriodsToOverrides(
 
     const isCancelled = period.change.changeTypes.includes("0");
     if (isCancelled) {
+      // The cancelled lesson's own subject (what *would* have happened) is
+      // still worth resolving - the detail popup and the dashboard/grid's
+      // color both want the linked Subject's own color here, not whatever
+      // happens to be manually assigned in this same slot.
+      const resolved = resolveSubject(subjects, period.subject);
       drafts.push({
         userId,
         date,
         timeGridSlotId: slot.id,
         type: "CANCELLED",
-        subjectName: null,
+        // Unlike before, this is the resolved subject (not null) - a fresh
+        // account may have no manually-entered TimetableSlot at all to fall
+        // back on for this weekday+slot, so the cancelled lesson's own name
+        // has to be able to stand on its own.
+        subjectName: resolved.name,
+        subjectId: resolved.id,
+        rawSubjectCode: period.subject,
         room: null,
         ...baseDetails,
       });
     } else {
       const rawSubject = period.change.substitutionSubject || period.subject;
+      const resolved = resolveSubject(subjects, rawSubject);
       drafts.push({
         userId,
         date,
         timeGridSlotId: slot.id,
         type: "CHANGED",
-        subjectName: resolveSubjectName(subjects, rawSubject),
+        subjectName: resolved.name,
+        subjectId: resolved.id,
+        rawSubjectCode: rawSubject,
         room: period.change.substitutionRoom || period.room || null,
         ...baseDetails,
       });
@@ -157,6 +189,106 @@ async function applyDayOverrides(userId: string, date: Date, drafts: OverrideDra
     prisma.timetableOverride.deleteMany({ where: { userId, date } }),
     ...drafts.map((draft) => prisma.timetableOverride.create({ data: draft })),
   ]);
+}
+
+interface CanonicalPeriod {
+  startTime: string;
+  endTime: string;
+  label: string | null;
+}
+
+/** One "shape" per IServ period number, taken from the first occurrence
+ * seen across every synced date - period times are a fixed, school-wide
+ * time grid, so any single occurrence is as good as another. */
+function canonicalPeriodsFrom(byDate: Map<string, IServPeriod[]>): Map<number, CanonicalPeriod> {
+  const canonical = new Map<number, CanonicalPeriod>();
+  for (const periods of byDate.values()) {
+    for (const period of periods) {
+      if (canonical.has(period.period)) continue;
+      if (!period.startTime || !period.endTime) continue;
+      canonical.set(period.period, {
+        startTime: period.startTime,
+        endTime: period.endTime,
+        label: period.label,
+      });
+    }
+  }
+  return canonical;
+}
+
+/** Creates/updates LESSON-type TimeGridSlots so the Zeitraster matches
+ * IServ's own period times instead of requiring the user to manually
+ * recreate it - only Pausen stay purely manual, since IServ's response has
+ * no concept of breaks at all. Reuses the same positional convention
+ * mapPeriodsToOverrides relies on (the Nth LESSON slot, ordered by
+ * sortOrder, is period N): existing lesson slots are updated in place if
+ * their time/label drifted from IServ, and any period IServ reports beyond
+ * the current lesson count gets a newly-created slot appended after
+ * whatever's already in the grid (including any manually-placed Pausen),
+ * so a Pause a user inserted between two lessons is never disturbed.
+ * Returns the refreshed, sortOrder-ordered LESSON id list for the caller to
+ * use in mapPeriodsToOverrides. */
+export async function syncTimeGridFromIserv(
+  userId: string,
+  byDate: Map<string, IServPeriod[]>,
+): Promise<{ id: string }[]> {
+  const canonical = canonicalPeriodsFrom(byDate);
+  if (canonical.size === 0) {
+    return prisma.timeGridSlot.findMany({
+      where: { userId, type: "LESSON" },
+      orderBy: { sortOrder: "asc" },
+      select: { id: true },
+    });
+  }
+
+  const [existingLessons, totalSlotCount] = await Promise.all([
+    prisma.timeGridSlot.findMany({
+      where: { userId, type: "LESSON" },
+      orderBy: { sortOrder: "asc" },
+    }),
+    prisma.timeGridSlot.count({ where: { userId } }),
+  ]);
+
+  const maxPeriod = Math.max(...canonical.keys());
+  let nextSortOrder = totalSlotCount;
+  const creates: Parameters<typeof prisma.timeGridSlot.create>[0]["data"][] = [];
+  const updates: { id: string; data: Parameters<typeof prisma.timeGridSlot.update>[0]["data"] }[] = [];
+
+  for (let periodNumber = 1; periodNumber <= maxPeriod; periodNumber++) {
+    const shape = canonical.get(periodNumber);
+    if (!shape) continue;
+    const existing = existingLessons[periodNumber - 1];
+
+    if (!existing) {
+      creates.push({
+        userId,
+        type: "LESSON",
+        label: shape.label ?? `${periodNumber}. Stunde`,
+        startTime: shape.startTime,
+        endTime: shape.endTime,
+        sortOrder: nextSortOrder++,
+      });
+      continue;
+    }
+
+    const label = shape.label ?? existing.label;
+    if (existing.startTime !== shape.startTime || existing.endTime !== shape.endTime || existing.label !== label) {
+      updates.push({ id: existing.id, data: { startTime: shape.startTime, endTime: shape.endTime, label } });
+    }
+  }
+
+  if (creates.length > 0 || updates.length > 0) {
+    await prisma.$transaction([
+      ...creates.map((data) => prisma.timeGridSlot.create({ data })),
+      ...updates.map(({ id, data }) => prisma.timeGridSlot.update({ where: { id }, data })),
+    ]);
+  }
+
+  return prisma.timeGridSlot.findMany({
+    where: { userId, type: "LESSON" },
+    orderBy: { sortOrder: "asc" },
+    select: { id: true },
+  });
 }
 
 /** Syncs a single user's IServ Vertretungsplan into TimetableOverride rows
@@ -181,14 +313,10 @@ export async function syncUserIservTimetable(userId: string, now: Date = new Dat
   }
 
   try {
-    const [lessonSlots, subjects] = await Promise.all([
-      prisma.timeGridSlot.findMany({
-        where: { userId, type: "LESSON" },
-        orderBy: { sortOrder: "asc" },
-        select: { id: true },
-      }),
-      prisma.subject.findMany({ where: { userId }, select: { name: true, iservAlias: true } }),
-    ]);
+    const subjects = await prisma.subject.findMany({
+      where: { userId },
+      select: { id: true, name: true, iservAlias: true },
+    });
 
     const password = decryptSecret(settings.iservPasswordEncrypted!);
     const dates = datesToSync(now, SYNC_DAYS_AHEAD);
@@ -201,6 +329,13 @@ export async function syncUserIservTimetable(userId: string, now: Date = new Dat
       },
       dates,
     );
+
+    // Populate/update the Zeitraster's LESSON slots from IServ's own period
+    // times before mapping overrides, so a fresh account (no manually
+    // entered Zeitraster yet) still gets correctly positioned overrides
+    // instead of every period being silently skipped for lack of a
+    // matching TimeGridSlot.
+    const lessonSlots = await syncTimeGridFromIserv(userId, byDate);
 
     for (const [dateKey, periods] of byDate) {
       const date = dateKeyToDate(dateKey);

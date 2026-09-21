@@ -28,6 +28,11 @@ export interface IservOverlayEntryDto {
   timeGridSlotId: string
   type: IservVertretungType
   subjectName: string | null
+  /** Local Subject this IServ-sourced lesson resolved to, if any - null with
+   * rawSubjectCode set means IServ's subject isn't linked to a Subject yet. */
+  subjectId: string | null
+  subjectColor: string | null
+  rawSubjectCode: string | null
   room: string | null
   startTime: string | null
   endTime: string | null

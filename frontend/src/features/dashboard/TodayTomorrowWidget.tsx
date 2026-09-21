@@ -101,6 +101,10 @@ function SlotRow({ slot, isNow, onClick }: { slot: MergedSlot; isNow: boolean; o
   }
 
   const cancelled = slot.vertretung === 'CANCELLED'
+  // An IServ-sourced lesson not yet linked to a local Subject has no color
+  // of its own - falls back to neutral gray rather than rendering with no
+  // visible border at all (an unstyled "null" CSS value would do that).
+  const color = slot.subjectColor ?? '#71717a'
 
   return (
     <button
@@ -109,7 +113,7 @@ function SlotRow({ slot, isNow, onClick }: { slot: MergedSlot; isNow: boolean; o
       className={`flex w-full flex-col justify-center gap-1 rounded-[5px] bg-bg-3 px-2.5 py-1.5 text-left hover:bg-bg-hover ${
         isNow ? 'ml-1.5' : ''
       }`}
-      style={{ borderLeft: `4px solid ${slot.subjectColor}`, minHeight: `${slot.periodCount * 2.25}rem` }}
+      style={{ borderLeft: `4px solid ${color}`, minHeight: `${slot.periodCount * 2.25}rem` }}
     >
       <span className="flex items-center gap-2.5">
         <span className="w-9 shrink-0 font-mono text-[10px] text-text-tertiary">
@@ -195,6 +199,8 @@ function toLessonDetail(slot: MergedSlot, dayLabel: string): LessonDetailData {
   return {
     subjectName: slot.subjectName ?? '',
     subjectColor: slot.subjectColor,
+    subjectId: slot.subjectId,
+    rawSubjectCode: slot.rawSubjectCode,
     dayLabel,
     startTime: slot.startTime,
     endTime: slot.endTime,

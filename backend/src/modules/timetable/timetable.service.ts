@@ -47,6 +47,9 @@ export interface IservOverlayEntry {
   timeGridSlotId: string;
   type: "CANCELLED" | "CHANGED" | "NORMAL";
   subjectName: string | null;
+  subjectId: string | null;
+  subjectColor: string | null;
+  rawSubjectCode: string | null;
   room: string | null;
   startTime: string | null;
   endTime: string | null;
@@ -69,6 +72,7 @@ export async function getTimetable(userId: string, now: Date = new Date()) {
 
   const overrides = await prisma.timetableOverride.findMany({
     where: { userId, date: { in: Object.values(weekDates) } },
+    include: { subject: true },
   });
 
   const iservOverlay: IservOverlayEntry[] = overrides
@@ -78,6 +82,9 @@ export async function getTimetable(userId: string, now: Date = new Date()) {
       timeGridSlotId: o.timeGridSlotId,
       type: o.type as "CANCELLED" | "CHANGED" | "NORMAL",
       subjectName: o.subjectName,
+      subjectId: o.subjectId,
+      subjectColor: o.subject?.color ?? null,
+      rawSubjectCode: o.rawSubjectCode,
       room: o.room,
       startTime: o.startTime,
       endTime: o.endTime,

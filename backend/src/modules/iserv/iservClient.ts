@@ -64,6 +64,7 @@ export interface IServChangeInfo {
 
 export interface IServPeriod {
   period: number;
+  label: string | null;
   subject: string;
   room: string;
   startTime: string | null;
@@ -361,6 +362,7 @@ function convertEntry(raw: DieSchulAppEntry): IServPeriod {
   const teachers = raw.courseSubject?.teachers ?? [];
   return {
     period: raw.timeTableSlot?.number ?? 0,
+    label: raw.timeTableSlot?.name ?? null,
     subject: subject?.acronym || subject?.name || "",
     room: raw.room?.name ?? "",
     startTime: raw.timeTableSlot?.startTime ?? null,
