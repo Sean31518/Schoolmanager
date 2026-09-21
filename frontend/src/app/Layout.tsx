@@ -297,8 +297,8 @@ export function Layout() {
       {mobileNavOpen && (
         <div className="fixed inset-0 z-50 md:hidden">
           <div className="fixed inset-0 bg-black/40" onClick={() => setMobileNavOpen(false)} />
-          <aside className="relative flex h-full w-72 max-w-[85vw] flex-col gap-4 overflow-y-auto border-r border-border bg-bg-2 px-3 py-4">
-            <div className="flex items-center justify-between gap-2 px-1">
+          <aside className="relative flex h-full w-72 max-w-[85vw] flex-col border-r border-border bg-bg-2 px-3 py-4">
+            <div className="flex shrink-0 items-center justify-between gap-2 px-1">
               <NavLink
                 to="/"
                 onClick={() => setMobileNavOpen(false)}
@@ -329,14 +329,16 @@ export function Layout() {
                 </svg>
               </button>
             </div>
-            <SidebarNavList
-              subjects={subjects ?? []}
-              onNavigate={() => setMobileNavOpen(false)}
-              onOpenSearch={() => {
-                setMobileNavOpen(false)
-                setSearchOpen(true)
-              }}
-            />
+            <div className="mt-4 flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto">
+              <SidebarNavList
+                subjects={subjects ?? []}
+                onNavigate={() => setMobileNavOpen(false)}
+                onOpenSearch={() => {
+                  setMobileNavOpen(false)
+                  setSearchOpen(true)
+                }}
+              />
+            </div>
             <SidebarFooterRow
               userName={user?.displayName}
               theme={theme}
@@ -377,9 +379,9 @@ export function Layout() {
       ) : (
         <aside
           style={{ width }}
-          className="relative hidden shrink-0 flex-col gap-4 border-r border-border bg-bg-2 px-3 py-4 md:flex"
+          className="sticky top-0 hidden h-screen shrink-0 flex-col border-r border-border bg-bg-2 px-3 py-4 md:flex"
         >
-          <div className="flex items-center justify-between gap-2 px-1">
+          <div className="flex shrink-0 items-center justify-between gap-2 px-1">
             <NavLink to="/" className="flex min-w-0 items-center gap-2.5">
               <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-accent font-mono text-xs font-semibold text-accent-ink">
                 S
@@ -407,10 +409,15 @@ export function Layout() {
             </button>
           </div>
 
-          <SidebarNavList
-            subjects={subjects ?? []}
-            onOpenSearch={() => setSearchOpen(true)}
-          />
+          {/* Scrolls internally when the nav list (Fächer etc.) grows too
+              tall, so the account/settings row below always stays pinned to
+              the viewport bottom instead of being pushed past it. */}
+          <div className="mt-4 flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto">
+            <SidebarNavList
+              subjects={subjects ?? []}
+              onOpenSearch={() => setSearchOpen(true)}
+            />
+          </div>
           <SidebarFooterRow userName={user?.displayName} theme={theme} toggleTheme={toggleTheme} />
 
           <SidebarResizeHandle onMouseDown={startResize} />

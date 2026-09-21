@@ -21,12 +21,91 @@ import {
 
 const GRADE_LEVELS = Array.from({ length: 13 }, (_, i) => i + 1)
 
-function SettingsSection({ title, children }: { title: string; children: ReactNode }) {
+const CATEGORIES = [
+  { id: 'schuljahr', label: 'Schuljahr' },
+  { id: 'faecher', label: 'Fächer' },
+  { id: 'stundenplan', label: 'Stundenplan' },
+  { id: 'iserv', label: 'IServ' },
+  { id: 'kalender', label: 'Kalender' },
+  { id: 'erinnerungen', label: 'Erinnerungen' },
+  { id: 'daten', label: 'Daten' },
+  { id: 'konto', label: 'Konto' },
+]
+
+function ChevronIcon({ open }: { open: boolean }) {
   return (
-    <section className="rounded-lg border border-border bg-bg-1 p-4">
-      <h2 className="text-[13px] font-semibold text-text-primary">{title}</h2>
-      <div className="mt-3">{children}</div>
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={`h-3.5 w-3.5 shrink-0 text-text-tertiary transition-transform ${open ? 'rotate-90' : ''}`}
+    >
+      <path d="m9 18 6-6-6-6" />
+    </svg>
+  )
+}
+
+function SettingsSection({
+  id,
+  title,
+  open,
+  onToggle,
+  headerAction,
+  children,
+}: {
+  id: string
+  title: string
+  open: boolean
+  onToggle: () => void
+  headerAction?: ReactNode
+  children: ReactNode
+}) {
+  return (
+    <section id={id} className="scroll-mt-4 rounded-lg border border-border bg-bg-1">
+      <div className="flex items-center justify-between gap-3 px-4 py-3">
+        <button
+          type="button"
+          onClick={onToggle}
+          className="flex min-w-0 flex-1 items-center gap-2 text-left"
+          aria-expanded={open}
+        >
+          <ChevronIcon open={open} />
+          <h2 className="text-[13px] font-semibold text-text-primary">{title}</h2>
+        </button>
+        {headerAction}
+      </div>
+      {open && <div className="border-t border-border-subtle px-4 py-4">{children}</div>}
     </section>
+  )
+}
+
+function SettingsCategoryNav({
+  activeId,
+  onJump,
+}: {
+  activeId: string | null
+  onJump: (id: string) => void
+}) {
+  return (
+    <nav className="sticky top-4 hidden h-fit w-36 shrink-0 flex-col gap-0.5 md:flex">
+      {CATEGORIES.map((cat) => (
+        <button
+          key={cat.id}
+          type="button"
+          onClick={() => onJump(cat.id)}
+          className={`rounded-md px-2.5 py-1.5 text-left text-[13px] font-medium ${
+            activeId === cat.id
+              ? 'bg-bg-hover text-text-primary'
+              : 'text-text-secondary hover:bg-bg-hover/60 hover:text-text-primary'
+          }`}
+        >
+          {cat.label}
+        </button>
+      ))}
+    </nav>
   )
 }
 
@@ -40,6 +119,8 @@ export function SettingsPage() {
   const [schoolYearLabel, setSchoolYearLabel] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [saved, setSaved] = useState(false)
+  const [openIds, setOpenIds] = useState<Set<string>>(new Set())
+  const [activeId, setActiveId] = useState<string | null>(null)
 
   useEffect(() => {
     if (settings) {
@@ -48,6 +129,26 @@ export function SettingsPage() {
       setSchoolYearLabel(settings.currentSchoolYearLabel ?? '')
     }
   }, [settings])
+
+  function toggle(id: string) {
+    setOpenIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
+  function jumpTo(id: string) {
+    setOpenIds((prev) => new Set(prev).add(id))
+    setActiveId(id)
+    // Wait a tick so the section has actually expanded before scrolling to
+    // it — otherwise the target position is measured against the collapsed
+    // (shorter) layout and can land short.
+    requestAnimationFrame(() => {
+      document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    })
+  }
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
@@ -75,111 +176,157 @@ export function SettingsPage() {
     <div className="space-y-5">
       <h1 className="text-[15px] font-semibold text-text-primary">Einstellungen</h1>
 
-      <SettingsSection title="Schuljahr">
-        <form onSubmit={handleSubmit} className="flex flex-wrap items-end gap-3">
-          <label className="text-sm text-text-secondary">
-            Klassenstufe
-            <select
-              value={gradeLevel}
-              onChange={(e) => setGradeLevel(Number(e.target.value))}
-              className="dark:[color-scheme:dark] mt-1 block rounded-md border border-border bg-bg-muted px-3 py-2 text-sm text-text-primary"
-            >
-              {GRADE_LEVELS.map((level) => (
-                <option key={level} value={level}>
-                  Klasse {level}
-                </option>
-              ))}
-            </select>
-          </label>
+      <div className="flex items-start gap-6">
+        <SettingsCategoryNav activeId={activeId} onJump={jumpTo} />
 
-          <label className="text-sm text-text-secondary">
-            Bundesland
-            <select
-              value={federalState}
-              onChange={(e) => setFederalState(e.target.value)}
-              className="dark:[color-scheme:dark] mt-1 block rounded-md border border-border bg-bg-muted px-3 py-2 text-sm text-text-primary"
-            >
-              {FEDERAL_STATES.map((state) => (
-                <option key={state.value} value={state.value}>
-                  {state.label}
-                </option>
-              ))}
-            </select>
-          </label>
-
-          <label className="text-sm text-text-secondary">
-            Schuljahr (optional)
-            <input
-              value={schoolYearLabel}
-              onChange={(e) => setSchoolYearLabel(e.target.value)}
-              maxLength={20}
-              placeholder="z.B. 2026/2027"
-              className="mt-1 block rounded-md border border-border bg-bg-muted px-3 py-2 text-sm text-text-primary placeholder:text-text-muted"
-            />
-          </label>
-
-          <button
-            type="submit"
-            disabled={updateSettings.isPending}
-            className="rounded-md bg-accent px-4 py-2 text-sm font-semibold text-accent-ink disabled:opacity-50"
+        <div className="min-w-0 flex-1 space-y-3">
+          <SettingsSection
+            id="schuljahr"
+            title="Schuljahr"
+            open={openIds.has('schuljahr')}
+            onToggle={() => toggle('schuljahr')}
           >
-            Speichern
-          </button>
-          {saved && <p className="text-sm text-green-400">Gespeichert.</p>}
-          {error && <p className="text-sm text-red-400">{error}</p>}
-        </form>
-      </SettingsSection>
+            <form onSubmit={handleSubmit} className="flex flex-wrap items-end gap-3">
+              <label className="text-sm text-text-secondary">
+                Klassenstufe
+                <select
+                  value={gradeLevel}
+                  onChange={(e) => setGradeLevel(Number(e.target.value))}
+                  className="dark:[color-scheme:dark] mt-1 block rounded-md border border-border bg-bg-muted px-3 py-2 text-sm text-text-primary"
+                >
+                  {GRADE_LEVELS.map((level) => (
+                    <option key={level} value={level}>
+                      Klasse {level}
+                    </option>
+                  ))}
+                </select>
+              </label>
 
-      <SettingsSection title="Fächer">
-        <SubjectManager />
-      </SettingsSection>
+              <label className="text-sm text-text-secondary">
+                Bundesland
+                <select
+                  value={federalState}
+                  onChange={(e) => setFederalState(e.target.value)}
+                  className="dark:[color-scheme:dark] mt-1 block rounded-md border border-border bg-bg-muted px-3 py-2 text-sm text-text-primary"
+                >
+                  {FEDERAL_STATES.map((state) => (
+                    <option key={state.value} value={state.value}>
+                      {state.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
 
-      <SettingsSection title="Stundenplan">
-        <div className="space-y-5">
-          <div>
-            <h3 className="font-mono text-[10px] tracking-wider text-text-tertiary">
-              ZEITRASTER
-            </h3>
-            <div className="mt-2">
-              <TimeGridEditor />
+              <label className="text-sm text-text-secondary">
+                Schuljahr (optional)
+                <input
+                  value={schoolYearLabel}
+                  onChange={(e) => setSchoolYearLabel(e.target.value)}
+                  maxLength={20}
+                  placeholder="z.B. 2026/2027"
+                  className="mt-1 block rounded-md border border-border bg-bg-muted px-3 py-2 text-sm text-text-primary placeholder:text-text-muted"
+                />
+              </label>
+
+              <button
+                type="submit"
+                disabled={updateSettings.isPending}
+                className="rounded-md bg-accent px-4 py-2 text-sm font-semibold text-accent-ink disabled:opacity-50"
+              >
+                Speichern
+              </button>
+              {saved && <p className="text-sm text-green-400">Gespeichert.</p>}
+              {error && <p className="text-sm text-red-400">{error}</p>}
+            </form>
+          </SettingsSection>
+
+          <SettingsSection
+            id="faecher"
+            title="Fächer"
+            open={openIds.has('faecher')}
+            onToggle={() => toggle('faecher')}
+          >
+            <SubjectManager />
+          </SettingsSection>
+
+          <SettingsSection
+            id="stundenplan"
+            title="Stundenplan"
+            open={openIds.has('stundenplan')}
+            onToggle={() => toggle('stundenplan')}
+          >
+            <div className="space-y-5">
+              <div>
+                <h3 className="font-mono text-[10px] tracking-wider text-text-tertiary">
+                  ZEITRASTER
+                </h3>
+                <div className="mt-2">
+                  <TimeGridEditor />
+                </div>
+              </div>
+              <div className="border-t border-border-subtle pt-5">
+                <h3 className="font-mono text-[10px] tracking-wider text-text-tertiary">
+                  ZUORDNUNG
+                </h3>
+                <div className="mt-2">
+                  <TimetableGrid />
+                </div>
+              </div>
             </div>
-          </div>
-          <div className="border-t border-border-subtle pt-5">
-            <h3 className="font-mono text-[10px] tracking-wider text-text-tertiary">
-              ZUORDNUNG
-            </h3>
-            <div className="mt-2">
-              <TimetableGrid />
-            </div>
-          </div>
+          </SettingsSection>
+
+          <SettingsSection
+            id="iserv"
+            title="IServ"
+            open={openIds.has('iserv')}
+            onToggle={() => toggle('iserv')}
+          >
+            <IservSettings />
+          </SettingsSection>
+
+          <SettingsSection
+            id="kalender"
+            title="Kalender"
+            open={openIds.has('kalender')}
+            onToggle={() => toggle('kalender')}
+          >
+            <HolidayImportForm />
+          </SettingsSection>
+
+          <SettingsSection
+            id="erinnerungen"
+            title="Erinnerungen"
+            open={openIds.has('erinnerungen')}
+            onToggle={() => toggle('erinnerungen')}
+          >
+            <NotificationsSettings />
+          </SettingsSection>
+
+          <SettingsSection
+            id="daten"
+            title="Daten"
+            open={openIds.has('daten')}
+            onToggle={() => toggle('daten')}
+          >
+            <ExportDataButton />
+            <ImportDataButton />
+          </SettingsSection>
+
+          <SettingsSection
+            id="konto"
+            title="Konto"
+            open={openIds.has('konto')}
+            onToggle={() => toggle('konto')}
+          >
+            <button
+              onClick={() => void logout()}
+              className="rounded-md border border-border px-4 py-2 text-sm text-text-secondary hover:bg-bg-hover"
+            >
+              Abmelden
+            </button>
+          </SettingsSection>
         </div>
-      </SettingsSection>
-
-      <SettingsSection title="IServ">
-        <IservSettings />
-      </SettingsSection>
-
-      <SettingsSection title="Kalender">
-        <HolidayImportForm />
-      </SettingsSection>
-
-      <SettingsSection title="Erinnerungen">
-        <NotificationsSettings />
-      </SettingsSection>
-
-      <SettingsSection title="Daten">
-        <ExportDataButton />
-        <ImportDataButton />
-      </SettingsSection>
-
-      <SettingsSection title="Konto">
-        <button
-          onClick={() => void logout()}
-          className="rounded-md border border-border px-4 py-2 text-sm text-text-secondary hover:bg-bg-hover"
-        >
-          Abmelden
-        </button>
-      </SettingsSection>
+      </div>
     </div>
   )
 }

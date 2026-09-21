@@ -21,8 +21,32 @@ function PaletteSwatches({ onPick }: { onPick: (color: string) => void }) {
   )
 }
 
-export function SubjectManager() {
-  const { data: subjects, isLoading } = useSubjects()
+function AddButton({ onClick, label }: { onClick: () => void; label: string }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      title={label}
+      aria-label={label}
+      className="flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-md bg-accent text-accent-ink hover:bg-accent-hover"
+    >
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2.25"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        className="h-[15px] w-[15px]"
+      >
+        <path d="M5 12h14" />
+        <path d="M12 5v14" />
+      </svg>
+    </button>
+  )
+}
+
+function CreateSubjectModal({ onClose }: { onClose: () => void }) {
   const createSubject = useCreateSubject()
   const [name, setName] = useState('')
   const [color, setColor] = useState('#3B82F6')
@@ -34,8 +58,7 @@ export function SubjectManager() {
     setError(null)
     try {
       await createSubject.mutateAsync({ name, color, iservAlias: iservAlias.trim() || null })
-      setName('')
-      setIservAlias('')
+      onClose()
     } catch (err) {
       setError(
         err instanceof ApiRequestError ? err.message : 'Fach konnte nicht angelegt werden',
@@ -44,18 +67,29 @@ export function SubjectManager() {
   }
 
   return (
-    <div>
-      <form onSubmit={handleCreate} className="flex flex-wrap items-end gap-3">
-        <label className="text-sm text-text-secondary">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+      onClick={onClose}
+    >
+      <form
+        onSubmit={(e) => void handleCreate(e)}
+        onClick={(e) => e.stopPropagation()}
+        className="w-full max-w-md rounded-lg border border-border bg-bg-1 p-5 shadow-lg"
+      >
+        <h2 className="text-[15px] font-semibold text-text-primary">Neues Fach</h2>
+
+        <label className="mt-3 block text-sm text-text-secondary">
           Name
           <input
+            autoFocus
             required
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="mt-1 block rounded-md border border-border bg-bg-muted px-3 py-2 text-sm text-text-primary"
+            className="mt-1 block w-full rounded-md border border-border bg-bg-muted px-3 py-2 text-sm text-text-primary"
           />
         </label>
-        <label className="text-sm text-text-secondary">
+
+        <label className="mt-3 block text-sm text-text-secondary">
           Farbe
           <input
             type="color"
@@ -65,7 +99,8 @@ export function SubjectManager() {
           />
           <PaletteSwatches onPick={setColor} />
         </label>
-        <label className="text-sm text-text-secondary">
+
+        <label className="mt-3 block text-sm text-text-secondary">
           IServ-Kürzel (optional)
           <input
             value={iservAlias}
@@ -75,15 +110,44 @@ export function SubjectManager() {
             className="mt-1 block w-28 rounded-md border border-border bg-bg-muted px-3 py-2 text-sm text-text-primary placeholder:text-text-muted"
           />
         </label>
-        <button
-          type="submit"
-          disabled={createSubject.isPending}
-          className="rounded-md bg-accent px-4 py-2 text-sm font-semibold text-accent-ink disabled:opacity-50"
-        >
-          Fach anlegen
-        </button>
-        {error && <p className="w-full text-sm text-red-400">{error}</p>}
+
+        {error && <p className="mt-3 text-sm text-red-400">{error}</p>}
+
+        <div className="mt-5 flex items-center gap-3">
+          <button
+            type="submit"
+            disabled={createSubject.isPending}
+            className="rounded-md bg-accent px-4 py-2 text-sm font-semibold text-accent-ink disabled:opacity-50"
+          >
+            Anlegen
+          </button>
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-md border border-border px-4 py-2 text-sm text-text-secondary hover:bg-bg-hover"
+          >
+            Abbrechen
+          </button>
+        </div>
       </form>
+    </div>
+  )
+}
+
+export function SubjectManager() {
+  const { data: subjects, isLoading } = useSubjects()
+  const [showCreate, setShowCreate] = useState(false)
+
+  return (
+    <div>
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-sm text-text-secondary">
+          {subjects && subjects.length > 0
+            ? `${subjects.length} Fach${subjects.length === 1 ? '' : 'er'}`
+            : 'Noch keine Fächer angelegt.'}
+        </p>
+        <AddButton onClick={() => setShowCreate(true)} label="Fach anlegen" />
+      </div>
 
       {isLoading ? (
         <p className="mt-4 text-text-tertiary">Lädt...</p>
@@ -93,9 +157,9 @@ export function SubjectManager() {
             <SubjectManagerRow key={subject.id} subject={subject} />
           ))}
         </ul>
-      ) : (
-        <p className="mt-4 text-text-tertiary">Noch keine Fächer angelegt.</p>
-      )}
+      ) : null}
+
+      {showCreate && <CreateSubjectModal onClose={() => setShowCreate(false)} />}
     </div>
   )
 }
