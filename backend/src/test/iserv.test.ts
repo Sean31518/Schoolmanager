@@ -128,6 +128,41 @@ describe("IServ period-to-override mapping", () => {
     expect(overrides[0].subjectName).toBe("Englisch");
   });
 
+  it("resolves via a user-configured iservAlias when the code isn't a name prefix at all (e.g. 'bk3' for 'Kunst')", () => {
+    const subjectsWithAliases = [
+      ...subjects,
+      { name: "Kunst", iservAlias: "bk3" },
+      { name: "Gemeinschaftskunde", iservAlias: "gm" },
+    ];
+    const overrides = mapPeriodsToOverrides(
+      "user-1",
+      date,
+      [
+        period({ period: 1, subject: "M", room: "101", change: { changeTypes: ["1"], substitutionSubject: "bk3" } }),
+        period({ period: 2, subject: "M", room: "101", change: { changeTypes: ["1"], substitutionSubject: "gm" } }),
+      ],
+      lessonSlots,
+      subjectsWithAliases,
+    );
+    expect(overrides[0].subjectName).toBe("Kunst");
+    expect(overrides[1].subjectName).toBe("Gemeinschaftskunde");
+  });
+
+  it("prefers an exact iservAlias match over an ambiguous prefix match on a different subject", () => {
+    // Both "Erdkunde" and "Englisch" start with "e", so the plain prefix
+    // heuristic alone can't tell "e2" apart - the alias on "Englisch"
+    // should win regardless of which subject the array lists first.
+    const subjectsWithAliases = [{ name: "Erdkunde" }, { name: "Englisch", iservAlias: "e2" }];
+    const overrides = mapPeriodsToOverrides(
+      "user-1",
+      date,
+      [period({ period: 1, subject: "M", room: "101", change: { changeTypes: ["1"], substitutionSubject: "e2" } })],
+      lessonSlots,
+      subjectsWithAliases,
+    );
+    expect(overrides[0].subjectName).toBe("Englisch");
+  });
+
   it("falls back to the raw IServ code when no subject matches", () => {
     const overrides = mapPeriodsToOverrides(
       "user-1",

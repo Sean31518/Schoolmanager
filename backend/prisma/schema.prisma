@@ -112,6 +112,12 @@ model Subject {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   name      String
   color     String
+  // Optionaler Kürzel-Hinweis für den IServ-Sync - manche Schulkürzel
+  // (z.B. "bk3" für Bildende Kunst, "gm" für Gemeinschaftskunde) lassen sich
+  // nicht algorithmisch aus dem Fachnamen ableiten, da sie keine Abkürzung
+  // im Sinne eines Namens-Präfix sind. Wird vor der Präfix-Heuristik exakt
+  // (case-insensitive) gegen IServs Rohkürzel geprüft.
+  iservAlias String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

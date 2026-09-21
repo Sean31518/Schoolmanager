@@ -26,14 +26,16 @@ export function SubjectManager() {
   const createSubject = useCreateSubject()
   const [name, setName] = useState('')
   const [color, setColor] = useState('#3B82F6')
+  const [iservAlias, setIservAlias] = useState('')
   const [error, setError] = useState<string | null>(null)
 
   async function handleCreate(e: FormEvent) {
     e.preventDefault()
     setError(null)
     try {
-      await createSubject.mutateAsync({ name, color })
+      await createSubject.mutateAsync({ name, color, iservAlias: iservAlias.trim() || null })
       setName('')
+      setIservAlias('')
     } catch (err) {
       setError(
         err instanceof ApiRequestError ? err.message : 'Fach konnte nicht angelegt werden',
@@ -62,6 +64,16 @@ export function SubjectManager() {
             className="dark:[color-scheme:dark] mt-1 block h-9 w-14 rounded-md border border-border"
           />
           <PaletteSwatches onPick={setColor} />
+        </label>
+        <label className="text-sm text-text-secondary">
+          IServ-Kürzel (optional)
+          <input
+            value={iservAlias}
+            onChange={(e) => setIservAlias(e.target.value)}
+            placeholder="z.B. bk3"
+            title="Falls IServs Kürzel sich nicht vom Fachnamen ableiten lässt (z.B. bk3 für Kunst)"
+            className="mt-1 block w-28 rounded-md border border-border bg-bg-muted px-3 py-2 text-sm text-text-primary placeholder:text-text-muted"
+          />
         </label>
         <button
           type="submit"
@@ -94,11 +106,13 @@ function SubjectManagerRow({ subject }: { subject: SubjectDto }) {
   const [isEditing, setIsEditing] = useState(false)
   const [name, setName] = useState(subject.name)
   const [color, setColor] = useState(subject.color)
+  const [iservAlias, setIservAlias] = useState(subject.iservAlias ?? '')
   const [error, setError] = useState<string | null>(null)
 
   function startEditing() {
     setName(subject.name)
     setColor(subject.color)
+    setIservAlias(subject.iservAlias ?? '')
     setError(null)
     setIsEditing(true)
   }
@@ -107,7 +121,7 @@ function SubjectManagerRow({ subject }: { subject: SubjectDto }) {
     e.preventDefault()
     setError(null)
     try {
-      await updateSubject.mutateAsync({ name, color })
+      await updateSubject.mutateAsync({ name, color, iservAlias: iservAlias.trim() || null })
       setIsEditing(false)
     } catch (err) {
       setError(err instanceof ApiRequestError ? err.message : 'Fach konnte nicht gespeichert werden')
@@ -143,6 +157,16 @@ function SubjectManagerRow({ subject }: { subject: SubjectDto }) {
             />
             <PaletteSwatches onPick={setColor} />
           </label>
+          <label className="text-sm text-text-secondary">
+            IServ-Kürzel (optional)
+            <input
+              value={iservAlias}
+              onChange={(e) => setIservAlias(e.target.value)}
+              placeholder="z.B. bk3"
+              title="Falls IServs Kürzel sich nicht vom Fachnamen ableiten lässt (z.B. bk3 für Kunst)"
+              className="mt-1 block w-28 rounded-md border border-border bg-bg-muted px-3 py-2 text-sm text-text-primary placeholder:text-text-muted"
+            />
+          </label>
           <button
             type="submit"
             disabled={updateSubject.isPending}
@@ -170,6 +194,9 @@ function SubjectManagerRow({ subject }: { subject: SubjectDto }) {
         style={{ backgroundColor: subject.color }}
       />
       <span className="font-medium text-text-primary">{subject.name}</span>
+      {subject.iservAlias && (
+        <span className="font-mono text-[10px] text-text-tertiary">({subject.iservAlias})</span>
+      )}
       <span className="ml-auto flex items-center gap-3">
         <button onClick={startEditing} className="text-text-muted hover:text-accent-text">
           Bearbeiten

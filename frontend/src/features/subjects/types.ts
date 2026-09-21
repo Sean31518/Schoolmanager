@@ -10,5 +10,6 @@ export interface SubjectDto {
   userId: string
   name: string
   color: string
+  iservAlias: string | null
   noteSectionTypes: NoteSectionTypeDto[]
 }

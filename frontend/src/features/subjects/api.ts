@@ -5,7 +5,7 @@ export function listSubjects() {
   return apiFetch<SubjectDto[]>('/subjects')
 }
 
-export function createSubject(data: { name: string; color: string }) {
+export function createSubject(data: { name: string; color: string; iservAlias?: string | null }) {
   return apiFetch<SubjectDto>('/subjects', { method: 'POST', body: JSON.stringify(data) })
 }
 
@@ -15,7 +15,7 @@ export function getSubject(subjectId: string) {
 
 export function updateSubject(
   subjectId: string,
-  data: Partial<{ name: string; color: string }>,
+  data: Partial<{ name: string; color: string; iservAlias: string | null }>,
 ) {
   return apiFetch<SubjectDto>(`/subjects/${subjectId}`, {
     method: 'PATCH',

@@ -15,15 +15,23 @@ export function isIservConfigured(settings: IservSettings): boolean {
   return Boolean(settings.iservHost && settings.iservUsername && settings.iservPasswordEncrypted);
 }
 
-/** IServ's subject codes here are things like "E1", "nwt1", "Ph1" - a short
- * abbreviation plus a trailing course-level number (Leistungskurs/Basiskurs
- * numbering), not the plain abbreviation a user's own Subject name would
- * usually be a prefix match for. Stripping that trailing number before the
- * prefix check ("E1" -> "e") is what actually lets "E1" resolve to a
- * same-user Subject named "Englisch" - matching on the raw code alone
- * ("e1") never would, since "englisch" doesn't start with "e1". */
-function resolveSubjectName(subjects: { name: string }[], rawSubject: string): string {
+/** Some of IServ's subject codes are a genuine prefix of the full name plus
+ * a trailing course-level number ("E1" -> "Englisch", stripping the "1"
+ * first since "englisch" doesn't start with "e1"). Others aren't a prefix
+ * relationship at all - "bk3" for "Kunst"/"Bildende Kunst", "gm" for
+ * "Gemeinschaftskunde" - they're this school's own idiosyncratic shorthand,
+ * un-derivable from the name algorithmically. Rather than hardcode a
+ * translation table (which would only ever fit one school), a user-supplied
+ * per-Subject iservAlias is checked first as an exact match; the prefix
+ * heuristic remains as a fallback for the cases it does handle for free. */
+function resolveSubjectName(
+  subjects: { name: string; iservAlias?: string | null }[],
+  rawSubject: string,
+): string {
   const lower = rawSubject.toLowerCase();
+  const aliasMatch = subjects.find((s) => s.iservAlias && s.iservAlias.toLowerCase() === lower);
+  if (aliasMatch) return aliasMatch.name;
+
   const strippedLower = lower.replace(/\d+$/, "");
   const match = subjects.find((s) => {
     const subjectLower = s.name.toLowerCase();
@@ -179,7 +187,7 @@ export async function syncUserIservTimetable(userId: string, now: Date = new Dat
         orderBy: { sortOrder: "asc" },
         select: { id: true },
       }),
-      prisma.subject.findMany({ where: { userId }, select: { name: true } }),
+      prisma.subject.findMany({ where: { userId }, select: { name: true, iservAlias: true } }),
     ]);
 
     const password = decryptSecret(settings.iservPasswordEncrypted!);
