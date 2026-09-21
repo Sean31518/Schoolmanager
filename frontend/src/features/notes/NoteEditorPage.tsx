@@ -32,7 +32,7 @@ export function NoteEditorPage() {
   const showContent = isDesktop || !!noteId
 
   return (
-    <div className="-m-4 md:-m-8 flex h-[calc(100vh-3.5rem)] md:h-screen rounded-none md:rounded-lg border-0 md:border md:border-border">
+    <div className="-m-4 md:-m-8 flex h-[calc(100dvh-3.5rem)] md:h-dvh rounded-none md:rounded-lg border-0 md:border md:border-border">
       {showSidebar && (
         <NoteListSidebar subjectId={subjectId} sectionTypeId={sectionTypeId} activeNoteId={noteId} />
       )}

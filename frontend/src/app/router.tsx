@@ -20,7 +20,7 @@ function RequireAuth({ children }: { children: ReactNode }) {
 
   if (status === 'loading') {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-bg-0">
+      <div className="flex min-h-dvh items-center justify-center bg-bg-0">
         <div className="flex flex-col items-center gap-3">
           <span className="flex h-8 w-8 items-center justify-center rounded-md bg-accent font-mono text-sm font-semibold text-accent-ink">
             S

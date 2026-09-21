@@ -70,7 +70,7 @@ export function AdminSettings() {
       <div className="border-t border-border-subtle pt-4">
         <div className="flex items-center justify-between gap-3">
           <p className="text-sm text-text-secondary">
-            {users ? `${users.length} Konto${users.length === 1 ? '' : 'en'}` : 'Lädt...'}
+            {users ? `${users.length} ${users.length === 1 ? 'Konto' : 'Konten'}` : 'Lädt...'}
           </p>
           <AddButton onClick={() => setShowCreate(true)} label="Konto anlegen" />
         </div>

@@ -66,7 +66,19 @@
   --color-green-400: #4ade80;
 }
 
+/* iOS Safari's 100vh includes space the browser chrome (or, in a
+   standalone/home-screen PWA, the safe-area) can cover, so a plain
+   min-h-screen can fall short of the real visible viewport and leave a
+   gap at the bottom showing this default background instead of the app's.
+   Setting it on <html> too, and sizing both to the full height, closes
+   that gap even before React mounts. */
+html {
+  height: 100%;
+  background-color: var(--color-bg-0);
+}
+
 body {
+  height: 100%;
   background-color: var(--color-bg-0);
   color: var(--color-text-primary);
   font-family: var(--font-sans);
