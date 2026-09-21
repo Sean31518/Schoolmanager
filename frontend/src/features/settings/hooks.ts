@@ -14,6 +14,7 @@ export function useUpdateSettings() {
     onSuccess: async () => {
       queryClient.invalidateQueries({ queryKey: ['settings'] })
       queryClient.invalidateQueries({ queryKey: ['dashboard'] })
+      queryClient.invalidateQueries({ queryKey: ['timetable'] })
       await refreshMe()
     },
   })
@@ -26,6 +27,7 @@ export function useDisconnectIserv() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['settings'] })
       queryClient.invalidateQueries({ queryKey: ['dashboard'] })
+      queryClient.invalidateQueries({ queryKey: ['timetable'] })
     },
   })
 }
@@ -37,6 +39,7 @@ export function useSyncIservNow() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['settings'] })
       queryClient.invalidateQueries({ queryKey: ['dashboard'] })
+      queryClient.invalidateQueries({ queryKey: ['timetable'] })
     },
   })
 }

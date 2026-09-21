@@ -160,6 +160,9 @@ export async function getDashboard(userId: string, now: Date = new Date()) {
           endTime: slot.endTime,
           subjectName: cell?.subject?.name ?? null,
           subjectColor: cell?.subject?.color ?? null,
+          room: override.room,
+          teacherName: override.teacherName,
+          courseName: override.courseName,
           vertretung: "CANCELLED" as const,
         };
       }
@@ -172,6 +175,8 @@ export async function getDashboard(userId: string, now: Date = new Date()) {
           subjectName: override.subjectName ?? cell?.subject?.name ?? null,
           subjectColor: cell?.subject?.color ?? null,
           room: override.room,
+          teacherName: override.teacherName,
+          courseName: override.courseName,
           vertretung: "CHANGED" as const,
         };
       }
@@ -189,6 +194,8 @@ export async function getDashboard(userId: string, now: Date = new Date()) {
           subjectName: override.subjectName ?? cell?.subject?.name ?? null,
           subjectColor: cell?.subject?.color ?? null,
           room: override.room,
+          teacherName: override.teacherName,
+          courseName: override.courseName,
         };
       }
       return {

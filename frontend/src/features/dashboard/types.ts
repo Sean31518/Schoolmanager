@@ -20,6 +20,8 @@ export interface TimetableSlotSummaryDto {
   /** Set when an IServ-synced Vertretung applies to this exact date. */
   vertretung?: 'CANCELLED' | 'CHANGED'
   room?: string | null
+  teacherName?: string | null
+  courseName?: string | null
 }
 
 export interface RecentlyViewedNoteDto {

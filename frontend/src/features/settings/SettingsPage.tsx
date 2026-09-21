@@ -487,7 +487,15 @@ function IservSettings() {
     if (!settings) return
     setError(null)
     try {
-      await updateSettings.mutateAsync({ iservActive: !settings.iservActive })
+      const activating = !settings.iservActive
+      await updateSettings.mutateAsync({ iservActive: activating })
+      if (activating) {
+        // Turning it on should take effect right away rather than waiting
+        // for the next scheduled sync (up to 30 min) or a separate manual
+        // click - otherwise the Stundenplan still shows the old plan and
+        // looks like the toggle didn't do anything.
+        await syncNow.mutateAsync()
+      }
     } catch (err) {
       setError(err instanceof ApiRequestError ? err.message : 'Konnte nicht umgeschaltet werden.')
     }
@@ -575,7 +583,7 @@ function IservSettings() {
             role="switch"
             aria-checked={settings.iservActive}
             onClick={() => void handleToggleActive()}
-            disabled={updateSettings.isPending}
+            disabled={updateSettings.isPending || syncNow.isPending}
             className={`relative h-6 w-11 shrink-0 rounded-full transition-colors disabled:opacity-50 ${
               settings.iservActive ? 'bg-accent' : 'bg-bg-hover'
             }`}

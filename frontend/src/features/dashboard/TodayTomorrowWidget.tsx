@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { LessonDetailModal, type LessonDetailData } from '../timetable/LessonDetailModal'
 import type { TimetableSlotSummaryDto } from './types'
 
 function isNowWithin(startTime: string, endTime: string) {
@@ -69,7 +70,7 @@ const VertretungBadge = ({ cancelled }: { cancelled: boolean }) => (
   </span>
 )
 
-function SlotRow({ slot, isNow }: { slot: MergedSlot; isNow: boolean }) {
+function SlotRow({ slot, isNow, onClick }: { slot: MergedSlot; isNow: boolean; onClick?: () => void }) {
   if (slot.type === 'BREAK') {
     return (
       <div
@@ -102,8 +103,10 @@ function SlotRow({ slot, isNow }: { slot: MergedSlot; isNow: boolean }) {
   const cancelled = slot.vertretung === 'CANCELLED'
 
   return (
-    <div
-      className={`flex flex-col justify-center gap-1 rounded-[5px] bg-bg-3 px-2.5 py-1.5 ${
+    <button
+      type="button"
+      onClick={onClick}
+      className={`flex w-full flex-col justify-center gap-1 rounded-[5px] bg-bg-3 px-2.5 py-1.5 text-left hover:bg-bg-hover ${
         isNow ? 'ml-1.5' : ''
       }`}
       style={{ borderLeft: `4px solid ${slot.subjectColor}`, minHeight: `${slot.periodCount * 2.25}rem` }}
@@ -127,7 +130,7 @@ function SlotRow({ slot, isNow }: { slot: MergedSlot; isNow: boolean }) {
         {slot.vertretung && <VertretungBadge cancelled={cancelled} />}
         {isNow && <JetztBadge />}
       </span>
-    </div>
+    </button>
   )
 }
 
@@ -143,6 +146,7 @@ export function TodayTomorrowWidget({
   tomorrowLabel: string
 }) {
   const [view, setView] = useState<'today' | 'tomorrow'>('today')
+  const [selected, setSelected] = useState<MergedSlot | null>(null)
   const slots = trimTrailingFree(mergeDoppelstunden(view === 'today' ? today : tomorrow))
   const label = view === 'today' ? todayLabel : tomorrowLabel
   // JETZT only makes sense while actually looking at the real today (backend
@@ -175,10 +179,28 @@ export function TodayTomorrowWidget({
               key={i}
               slot={slot}
               isNow={isRealToday && isNowWithin(slot.startTime, slot.endTime)}
+              onClick={slot.subjectName ? () => setSelected(slot) : undefined}
             />
           ))}
         </div>
       )}
+      {selected && (
+        <LessonDetailModal lesson={toLessonDetail(selected, label)} onClose={() => setSelected(null)} />
+      )}
     </div>
   )
+}
+
+function toLessonDetail(slot: MergedSlot, dayLabel: string): LessonDetailData {
+  return {
+    subjectName: slot.subjectName ?? '',
+    subjectColor: slot.subjectColor,
+    dayLabel,
+    startTime: slot.startTime,
+    endTime: slot.endTime,
+    room: slot.room ?? null,
+    teacherName: slot.teacherName ?? null,
+    courseName: slot.courseName ?? null,
+    vertretung: slot.vertretung,
+  }
 }

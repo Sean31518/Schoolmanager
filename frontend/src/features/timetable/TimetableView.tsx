@@ -153,9 +153,12 @@ const WEEKDAY_LABELS: Record<string, string> = {
 export function TimetableView() {
   const { data, isLoading } = useTimetable()
   const todayWeekday = JS_DAY_TO_WEEKDAY[new Date().getDay()]
-  const [selected, setSelected] = useState<{ weekday: string; slot: TimeGridSlotDto; cell: ResolvedCell } | null>(
-    null,
-  )
+  const [selected, setSelected] = useState<{
+    weekday: string
+    cell: ResolvedCell
+    startTime: string
+    endTime: string
+  } | null>(null)
 
   if (isLoading || !data) {
     return <p className="text-text-tertiary">Lädt...</p>
@@ -262,8 +265,9 @@ export function TimetableView() {
                             cell &&
                             setSelected({
                               weekday: day.value,
-                              slot,
                               cell,
+                              startTime,
+                              endTime: rowTime(spanEnd).endTime,
                             })
                           }
                           className="absolute inset-0 flex w-full flex-col justify-center gap-1 overflow-hidden rounded-[5px] bg-bg-3 px-2.5 py-2 text-left text-xs font-semibold text-text-primary hover:bg-bg-hover"
@@ -320,19 +324,25 @@ export function TimetableView() {
 
 function toLessonDetail({
   weekday,
-  slot,
   cell,
+  startTime,
+  endTime,
 }: {
   weekday: string
-  slot: TimeGridSlotDto
   cell: ResolvedCell
+  startTime: string
+  endTime: string
 }): LessonDetailData {
+  // startTime/endTime are passed in already resolved for the full merged
+  // span (a Doppelstunde spans two TimeGridSlots) and with IServ's own time
+  // applied when active — cell.startTime/endTime alone would only reflect
+  // the first of the two periods.
   return {
     subjectName: cell.subjectName ?? '',
     subjectColor: cell.subjectColor,
     dayLabel: WEEKDAY_LABELS[weekday] ?? weekday,
-    startTime: cell.startTime ?? slot.startTime,
-    endTime: cell.endTime ?? slot.endTime,
+    startTime,
+    endTime,
     room: cell.room,
     teacherName: cell.teacherName,
     courseName: cell.courseName,
