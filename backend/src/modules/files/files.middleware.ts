@@ -20,7 +20,10 @@ export function fileAuthGuard(req: Request, _res: Response, next: NextFunction) 
 
   try {
     const payload = verifyAccessToken(token);
-    req.user = { id: payload.sub };
+    // Role is never checked on this route - just a placeholder to satisfy
+    // the shared req.user type (see authGuard for the real, role-carrying
+    // guard used everywhere authorization actually matters).
+    req.user = { id: payload.sub, role: "USER" };
     next();
   } catch {
     throw new UnauthorizedError("Zugriffstoken ungültig oder abgelaufen");

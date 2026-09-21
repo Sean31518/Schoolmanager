@@ -1,5 +1,6 @@
 import { createApp } from "./app.js";
 import { env } from "./config/env.js";
+import { ensureAdminExists } from "./modules/auth/auth.service.js";
 import { runIservSyncForAllUsers } from "./modules/iserv/iservSync.service.js";
 import { runReminderCheck } from "./modules/reminders/reminders.service.js";
 
@@ -8,6 +9,12 @@ const app = createApp();
 app.listen(env.PORT, () => {
   console.log(`Schulmanager backend listening on port ${env.PORT}`);
 });
+
+// Covers deployments upgrading into the admin-role feature, where the
+// first-ever account was created long before roles existed - new
+// deployments never need this, since register() already makes the first
+// signup an admin directly.
+ensureAdminExists().catch((err) => console.error("Admin-Bootstrap fehlgeschlagen", err));
 
 // Runs once at startup and then hourly - NotificationLog dedupes actual
 // sends, so more-frequent-than-daily checks are safe and mean a reminder

@@ -15,12 +15,19 @@ generator client {
 // TimeGridSlotType: LESSON BREAK
 // CalendarEventType: MANUAL EXAM HOLIDAY PUBLIC_HOLIDAY
 // FlashcardState: NEW LEARNING KNOWN
+// Role: ADMIN USER - the first account ever created becomes ADMIN
+// automatically (see auth.service.ts); everyone else is USER unless an
+// admin creates their account through the admin panel.
 
 model User {
   id           String   @id @default(cuid())
   email        String   @unique
   passwordHash String
   displayName  String
+  role         String   @default("USER")
+  // Bumped on every authenticated request (see authGuard) - the "zuletzt
+  // online" an admin sees for each account. Null until the first request.
+  lastSeenAt   DateTime?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
@@ -36,6 +43,14 @@ model User {
   pushSubscriptions PushSubscription[]
   notificationLogs  NotificationLog[]
   timetableOverrides TimetableOverride[]
+}
+
+// Single-row table (always id "singleton") for server-wide settings an
+// admin manages from inside the app, as opposed to env vars a self-hoster
+// sets at deploy time. Currently just the registration toggle.
+model AppSettings {
+  id                  String  @id @default("singleton")
+  registrationEnabled Boolean @default(true)
 }
 
 model PushSubscription {

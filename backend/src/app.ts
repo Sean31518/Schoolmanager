@@ -5,6 +5,7 @@ import cors from "cors";
 import express from "express";
 import { ensureUploadsDir } from "./lib/storage.js";
 import { errorHandler } from "./middleware/errorHandler.js";
+import { adminRouter } from "./modules/admin/admin.routes.js";
 import { authRouter } from "./modules/auth/auth.routes.js";
 import { calendarEventsRouter } from "./modules/calendarEvents/calendarEvents.routes.js";
 import { dashboardRouter } from "./modules/dashboard/dashboard.routes.js";
@@ -43,6 +44,7 @@ export function createApp() {
 
   app.use("/api/health", healthRouter);
   app.use("/api/auth", authRouter);
+  app.use("/api/admin", adminRouter);
   app.use("/api/settings", settingsRouter);
   app.use("/api/subjects", subjectsRouter);
   app.use("/api/section-types/:sectionTypeId/topics", topicsRouter);

@@ -6,8 +6,10 @@ import * as authController from "./auth.controller.js";
 
 export const authRouter = Router();
 
+authRouter.get("/registration-status", asyncHandler(authController.registrationStatus));
 authRouter.post("/register", authRateLimiter, asyncHandler(authController.register));
 authRouter.post("/login", authRateLimiter, asyncHandler(authController.login));
 authRouter.post("/refresh", authRateLimiter, asyncHandler(authController.refresh));
 authRouter.post("/logout", asyncHandler(authController.logout));
 authRouter.get("/me", authGuard, asyncHandler(authController.me));
+authRouter.delete("/me", authGuard, asyncHandler(authController.deleteMe));

@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react'
+import { AddButton } from '../../components/AddButton'
 import { ApiRequestError } from '../../lib/apiClient'
 import type { TimeGridSlotType } from './types'
 import {
@@ -7,31 +8,6 @@ import {
   useReorderTimeGrid,
   useTimeGrid,
 } from './hooks'
-
-function AddButton({ onClick }: { onClick: () => void }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      title="Zeitraster-Eintrag hinzufügen"
-      aria-label="Zeitraster-Eintrag hinzufügen"
-      className="flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-md bg-accent text-accent-ink hover:bg-accent-hover"
-    >
-      <svg
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2.25"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        className="h-[15px] w-[15px]"
-      >
-        <path d="M5 12h14" />
-        <path d="M12 5v14" />
-      </svg>
-    </button>
-  )
-}
 
 function CreateTimeGridSlotModal({ onClose }: { onClose: () => void }) {
   const createSlot = useCreateTimeGridSlot()
@@ -156,7 +132,7 @@ export function TimeGridEditor() {
         <p className="text-sm text-text-secondary">
           {slots && slots.length > 0 ? `${slots.length} Einträge` : 'Noch kein Zeitraster angelegt.'}
         </p>
-        <AddButton onClick={() => setShowCreate(true)} />
+        <AddButton onClick={() => setShowCreate(true)} label="Zeitraster-Eintrag hinzufügen" />
       </div>
 
       {!isLoading && slots && slots.length > 0 && (

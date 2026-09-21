@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState, type ChangeEvent, type FormEvent, type ReactNode } from 'react'
+import { AdminSettings } from '../admin/AdminSettings'
+import { ToggleSwitch } from '../../components/ToggleSwitch'
 import { apiFetch, ApiRequestError, getAccessToken } from '../../lib/apiClient'
 import { FEDERAL_STATES } from '../../lib/federalStates'
 import {
@@ -21,7 +23,7 @@ import {
 
 const GRADE_LEVELS = Array.from({ length: 13 }, (_, i) => i + 1)
 
-const CATEGORIES = [
+const BASE_CATEGORIES = [
   { id: 'schuljahr', label: 'Schuljahr' },
   { id: 'faecher', label: 'Fächer' },
   { id: 'stundenplan', label: 'Stundenplan' },
@@ -31,6 +33,7 @@ const CATEGORIES = [
   { id: 'daten', label: 'Daten' },
   { id: 'konto', label: 'Konto' },
 ]
+const ADMIN_CATEGORY = { id: 'admin', label: 'Admin' }
 
 function ChevronIcon({ open }: { open: boolean }) {
   return (
@@ -83,15 +86,17 @@ function SettingsSection({
 }
 
 function SettingsCategoryNav({
+  categories,
   activeId,
   onJump,
 }: {
+  categories: { id: string; label: string }[]
   activeId: string | null
   onJump: (id: string) => void
 }) {
   return (
     <nav className="sticky top-4 hidden h-fit w-36 shrink-0 flex-col gap-0.5 md:flex">
-      {CATEGORIES.map((cat) => (
+      {categories.map((cat) => (
         <button
           key={cat.id}
           type="button"
@@ -112,7 +117,7 @@ function SettingsCategoryNav({
 export function SettingsPage() {
   const { data: settings, isLoading } = useSettings()
   const updateSettings = useUpdateSettings()
-  const { logout } = useAuth()
+  const { user, logout, deleteAccount } = useAuth()
 
   const [gradeLevel, setGradeLevel] = useState(5)
   const [federalState, setFederalState] = useState('BW')
@@ -121,6 +126,27 @@ export function SettingsPage() {
   const [saved, setSaved] = useState(false)
   const [openIds, setOpenIds] = useState<Set<string>>(new Set())
   const [activeId, setActiveId] = useState<string | null>(null)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
+  const [deleting, setDeleting] = useState(false)
+  const categories = user?.role === 'ADMIN' ? [...BASE_CATEGORIES, ADMIN_CATEGORY] : BASE_CATEGORIES
+
+  async function handleDeleteAccount() {
+    if (
+      !confirm(
+        'Dein Konto und alle deine Daten (Fächer, Notizen, Hausaufgaben, Stundenplan, Termine) werden unwiderruflich gelöscht. Fortfahren?',
+      )
+    ) {
+      return
+    }
+    setDeleteError(null)
+    setDeleting(true)
+    try {
+      await deleteAccount()
+    } catch (err) {
+      setDeleteError(err instanceof ApiRequestError ? err.message : 'Konto konnte nicht gelöscht werden.')
+      setDeleting(false)
+    }
+  }
 
   useEffect(() => {
     if (settings) {
@@ -177,7 +203,7 @@ export function SettingsPage() {
       <h1 className="text-[15px] font-semibold text-text-primary">Einstellungen</h1>
 
       <div className="flex items-start gap-6">
-        <SettingsCategoryNav activeId={activeId} onJump={jumpTo} />
+        <SettingsCategoryNav categories={categories} activeId={activeId} onJump={jumpTo} />
 
         <div className="min-w-0 flex-1 space-y-3">
           <SettingsSection
@@ -324,7 +350,33 @@ export function SettingsPage() {
             >
               Abmelden
             </button>
+            <div className="mt-5 border-t border-border-subtle pt-5">
+              <p className="text-sm text-text-secondary">
+                Löscht dein Konto und alle deine Daten unwiderruflich - das kann nicht rückgängig
+                gemacht werden.
+              </p>
+              <button
+                type="button"
+                onClick={() => void handleDeleteAccount()}
+                disabled={deleting}
+                className="mt-3 rounded-md border border-red-400/40 px-4 py-2 text-sm text-red-400 hover:bg-red-400/10 disabled:opacity-50"
+              >
+                {deleting ? 'Wird gelöscht...' : 'Konto löschen'}
+              </button>
+              {deleteError && <p className="mt-2 text-sm text-red-400">{deleteError}</p>}
+            </div>
           </SettingsSection>
+
+          {user?.role === 'ADMIN' && (
+            <SettingsSection
+              id="admin"
+              title="Admin"
+              open={openIds.has('admin')}
+              onToggle={() => toggle('admin')}
+            >
+              <AdminSettings />
+            </SettingsSection>
+          )}
         </div>
       </div>
     </div>
@@ -725,22 +777,11 @@ function IservSettings() {
       {error && <p className="mt-2 text-sm text-red-400">{error}</p>}
       {settings.iservConfigured && (
         <div className="mt-4 flex items-center gap-3 border-t border-border pt-3">
-          <button
-            type="button"
-            role="switch"
-            aria-checked={settings.iservActive}
+          <ToggleSwitch
+            checked={settings.iservActive}
             onClick={() => void handleToggleActive()}
             disabled={updateSettings.isPending || syncNow.isPending}
-            className={`relative h-6 w-11 shrink-0 rounded-full transition-colors disabled:opacity-50 ${
-              settings.iservActive ? 'bg-accent' : 'bg-bg-hover'
-            }`}
-          >
-            <span
-              className={`absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white transition-transform ${
-                settings.iservActive ? 'translate-x-5' : 'translate-x-0'
-              }`}
-            />
-          </button>
+          />
           <div>
             <p className="text-sm text-text-primary">IServ-Stundenplan aktiv</p>
             <p className="text-xs text-text-secondary">

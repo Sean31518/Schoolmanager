@@ -18,6 +18,7 @@ interface AuthContextValue {
   login: (email: string, password: string) => Promise<void>
   register: (email: string, password: string, displayName: string) => Promise<void>
   logout: () => Promise<void>
+  deleteAccount: () => Promise<void>
   refreshMe: () => Promise<void>
 }
 
@@ -100,9 +101,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setStatus('unauthenticated')
   }, [])
 
+  const deleteAccount = useCallback(async () => {
+    await apiFetch('/auth/me', { method: 'DELETE' })
+    setAccessToken(null)
+    setUser(null)
+    setSettings(null)
+    setStatus('unauthenticated')
+  }, [])
+
   return (
     <AuthContext.Provider
-      value={{ user, settings, status, login, register, logout, refreshMe: loadMe }}
+      value={{ user, settings, status, login, register, logout, deleteAccount, refreshMe: loadMe }}
     >
       {children}
     </AuthContext.Provider>
