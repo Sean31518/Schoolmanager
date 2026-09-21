@@ -20,8 +20,23 @@ function RequireAuth({ children }: { children: ReactNode }) {
 
   if (status === 'loading') {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50 text-slate-400 dark:bg-slate-900 dark:text-slate-500">
-        Lädt...
+      <div className="flex min-h-screen items-center justify-center bg-bg-0">
+        <div className="flex flex-col items-center gap-3">
+          <span className="flex h-8 w-8 items-center justify-center rounded-md bg-accent font-mono text-sm font-semibold text-accent-ink">
+            S
+          </span>
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="h-4 w-4 animate-spin text-text-muted"
+          >
+            <path d="M21 12a9 9 0 1 1-2.64-6.36" />
+          </svg>
+        </div>
       </div>
     )
   }
