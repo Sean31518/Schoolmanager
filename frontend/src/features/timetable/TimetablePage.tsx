@@ -52,6 +52,11 @@ function IservSyncButton() {
 export function TimetablePage() {
   const { data } = useTimetable()
   const hasEntries = (data?.timetableSlots ?? []).some((slot) => slot.subjectId)
+  // The manual plan being empty only matters as a "you probably want to set
+  // this up" nudge when there's no IServ-driven plan filling the gap - once
+  // it's active and populated, an empty manual plan is completely expected,
+  // not something to point the user at Settings for.
+  const showEmptyHint = !hasEntries && !data?.iservActive
 
   return (
     <div className="space-y-6">
@@ -60,7 +65,7 @@ export function TimetablePage() {
         <IservSyncButton />
       </div>
       <TimetableView />
-      {!hasEntries && (
+      {showEmptyHint && (
         <p className="text-sm text-text-tertiary">
           Stundenplan bearbeiten?{' '}
           <Link to="/settings" className="text-accent-text hover:underline">
