@@ -63,6 +63,61 @@ describe("Auth", () => {
     expect(res.body.settings.federalState).toBe("BW");
   });
 
+  it("lets a user rename themselves without needing their password", async () => {
+    const { accessToken } = await registerUser();
+    const res = await request(app)
+      .patch("/api/auth/me")
+      .set("Authorization", `Bearer ${accessToken}`)
+      .send({ displayName: "Neuer Name" });
+
+    expect(res.status).toBe(200);
+    expect(res.body.user.displayName).toBe("Neuer Name");
+  });
+
+  it("requires the current password to change email or password, and rejects a wrong one", async () => {
+    const { accessToken, password } = await registerUser();
+    const headers = { Authorization: `Bearer ${accessToken}` };
+
+    const missing = await request(app)
+      .patch("/api/auth/me")
+      .set(headers)
+      .send({ newPassword: "brandnewpass123" });
+    expect(missing.status).toBe(400);
+
+    const wrong = await request(app)
+      .patch("/api/auth/me")
+      .set(headers)
+      .send({ newPassword: "brandnewpass123", currentPassword: "definitely-wrong" });
+    expect(wrong.status).toBe(401);
+
+    const ok = await request(app)
+      .patch("/api/auth/me")
+      .set(headers)
+      .send({ newPassword: "brandnewpass123", currentPassword: password });
+    expect(ok.status).toBe(200);
+
+    // Old password no longer works, new one does.
+    const oldLogin = await request(app)
+      .post("/api/auth/login")
+      .send({ email: ok.body.user.email, password });
+    expect(oldLogin.status).toBe(401);
+    const newLogin = await request(app)
+      .post("/api/auth/login")
+      .send({ email: ok.body.user.email, password: "brandnewpass123" });
+    expect(newLogin.status).toBe(200);
+  });
+
+  it("rejects changing to an email already used by another account", async () => {
+    const existing = await registerUser();
+    const { accessToken, password } = await registerUser();
+
+    const res = await request(app)
+      .patch("/api/auth/me")
+      .set("Authorization", `Bearer ${accessToken}`)
+      .send({ email: existing.email, currentPassword: password });
+    expect(res.status).toBe(409);
+  });
+
   it("rotates the refresh token and invalidates it after logout", async () => {
     const { email, password } = await registerUser();
     const loginRes = await request(app).post("/api/auth/login").send({ email, password });

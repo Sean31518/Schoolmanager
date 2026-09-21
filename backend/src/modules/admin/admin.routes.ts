@@ -9,6 +9,7 @@ adminRouter.use(authGuard, adminGuard);
 
 adminRouter.get("/users", asyncHandler(adminController.listUsers));
 adminRouter.post("/users", asyncHandler(adminController.createUser));
+adminRouter.patch("/users/:userId", asyncHandler(adminController.updateUser));
 adminRouter.delete("/users/:userId", asyncHandler(adminController.deleteUser));
 adminRouter.get("/settings", asyncHandler(adminController.getSettings));
 adminRouter.patch("/settings", asyncHandler(adminController.updateSettings));

@@ -1,5 +1,5 @@
 import { apiFetch } from '../../lib/apiClient'
-import type { AdminUserDto, AppSettingsDto } from './types'
+import type { AdminUserDto, AppSettingsDto, UpdateUserInput } from './types'
 
 export function listUsers() {
   return apiFetch<AdminUserDto[]>('/admin/users')
@@ -7,6 +7,13 @@ export function listUsers() {
 
 export function createUser(data: { email: string; password: string; displayName: string }) {
   return apiFetch<AdminUserDto>('/admin/users', { method: 'POST', body: JSON.stringify(data) })
+}
+
+export function updateUser({ userId, data }: { userId: string; data: UpdateUserInput }) {
+  return apiFetch<AdminUserDto>(`/admin/users/${userId}`, {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  })
 }
 
 export function deleteUser(userId: string) {

@@ -1,6 +1,6 @@
 import argon2 from "argon2";
 import { isRegistrationAllowed } from "../appSettings/appSettings.service.js";
-import { ConflictError, ForbiddenError, UnauthorizedError } from "../../lib/errors.js";
+import { ConflictError, ForbiddenError, UnauthorizedError, ValidationError } from "../../lib/errors.js";
 import { signAccessToken } from "../../lib/jwt.js";
 import { prisma } from "../../lib/prisma.js";
 import {
@@ -8,6 +8,8 @@ import {
   hashRefreshToken,
   refreshTokenExpiresAt,
 } from "../../lib/refreshToken.js";
+import type { z } from "zod";
+import type { updateMeSchema } from "./auth.schema.js";
 
 async function issueTokens(userId: string) {
   const accessToken = signAccessToken(userId);
@@ -69,6 +71,44 @@ export async function ensureAdminExists(): Promise<void> {
 
   await prisma.user.update({ where: { id: oldest.id }, data: { role: "ADMIN" } });
   console.log(`Kein Admin-Konto gefunden - "${oldest.email}" wurde automatisch zum Admin ernannt.`);
+}
+
+/** Self-service profile edit. Display name alone needs no confirmation;
+ * changing the email or password is a sensitive-enough action that it
+ * requires the current password, the same way most web apps gate it -
+ * unlike an admin's password reset for someone else, which trusts
+ * adminGuard instead. */
+export async function updateMe(userId: string, data: z.infer<typeof updateMeSchema>) {
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!user) {
+    throw new UnauthorizedError();
+  }
+
+  if (data.email !== undefined || data.newPassword !== undefined) {
+    if (!data.currentPassword) {
+      throw new ValidationError("Aktuelles Passwort erforderlich");
+    }
+    const valid = await argon2.verify(user.passwordHash, data.currentPassword);
+    if (!valid) {
+      throw new UnauthorizedError("Aktuelles Passwort ist falsch");
+    }
+  }
+
+  if (data.email && data.email !== user.email) {
+    const existing = await prisma.user.findUnique({ where: { email: data.email } });
+    if (existing) {
+      throw new ConflictError("Diese E-Mail-Adresse wird bereits verwendet");
+    }
+  }
+
+  return prisma.user.update({
+    where: { id: userId },
+    data: {
+      ...(data.displayName ? { displayName: data.displayName } : {}),
+      ...(data.email ? { email: data.email } : {}),
+      ...(data.newPassword ? { passwordHash: await argon2.hash(data.newPassword) } : {}),
+    },
+  });
 }
 
 /** Deletes the account and everything it owns (cascades through every

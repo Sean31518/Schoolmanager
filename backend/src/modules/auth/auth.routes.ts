@@ -12,4 +12,5 @@ authRouter.post("/login", authRateLimiter, asyncHandler(authController.login));
 authRouter.post("/refresh", authRateLimiter, asyncHandler(authController.refresh));
 authRouter.post("/logout", asyncHandler(authController.logout));
 authRouter.get("/me", authGuard, asyncHandler(authController.me));
+authRouter.patch("/me", authGuard, asyncHandler(authController.updateMe));
 authRouter.delete("/me", authGuard, asyncHandler(authController.deleteMe));

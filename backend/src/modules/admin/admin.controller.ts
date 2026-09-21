@@ -1,7 +1,7 @@
 import type { Request, Response } from "express";
 import { getAppSettings, setRegistrationEnabled } from "../appSettings/appSettings.service.js";
 import * as adminService from "./admin.service.js";
-import { createUserSchema, updateAppSettingsSchema } from "./admin.schema.js";
+import { createUserSchema, updateAppSettingsSchema, updateUserSchema } from "./admin.schema.js";
 
 export async function listUsers(_req: Request, res: Response) {
   const users = await adminService.listUsers();
@@ -12,6 +12,12 @@ export async function createUser(req: Request, res: Response) {
   const body = createUserSchema.parse(req.body);
   const user = await adminService.createUser(body);
   res.status(201).json(user);
+}
+
+export async function updateUser(req: Request, res: Response) {
+  const body = updateUserSchema.parse(req.body);
+  const user = await adminService.updateUser(req.params.userId, body);
+  res.json(user);
 }
 
 export async function deleteUser(req: Request, res: Response) {

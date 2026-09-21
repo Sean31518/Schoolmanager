@@ -200,6 +200,111 @@ describe("Admin: user management", () => {
   });
 });
 
+describe("Admin: user editing", () => {
+  it("reports each user's storage usage from their uploaded files", async () => {
+    await prisma.user.deleteMany();
+    const admin = await register("storage-admin@example.com");
+    const adminHeaders = { Authorization: `Bearer ${admin.body.accessToken}` };
+    const other = await register("storage-user@example.com");
+
+    await prisma.uploadedFile.createMany({
+      data: [
+        {
+          userId: other.body.user.id,
+          originalName: "a.pdf",
+          mimeType: "application/pdf",
+          size: 1000,
+          storagePath: "a.pdf",
+        },
+        {
+          userId: other.body.user.id,
+          originalName: "b.pdf",
+          mimeType: "application/pdf",
+          size: 2000,
+          storagePath: "b.pdf",
+        },
+      ],
+    });
+
+    const res = await request(app).get("/api/admin/users").set(adminHeaders);
+    expect(res.status).toBe(200);
+    const adminEntry = res.body.find((u: { email: string }) => u.email === "storage-admin@example.com");
+    const otherEntry = res.body.find((u: { email: string }) => u.email === "storage-user@example.com");
+    expect(adminEntry.storageBytes).toBe(0);
+    expect(otherEntry.storageBytes).toBe(3000);
+  });
+
+  it("lets an admin change a user's display name, email, and reset their password", async () => {
+    await prisma.user.deleteMany();
+    const admin = await register("editor-admin@example.com");
+    const adminHeaders = { Authorization: `Bearer ${admin.body.accessToken}` };
+    const target = await register("editee@example.com");
+
+    const res = await request(app)
+      .patch(`/api/admin/users/${target.body.user.id}`)
+      .set(adminHeaders)
+      .send({ displayName: "Neuer Name", email: "edited@example.com", password: "brandnewpass123" });
+    expect(res.status).toBe(200);
+    expect(res.body.displayName).toBe("Neuer Name");
+    expect(res.body.email).toBe("edited@example.com");
+
+    // The reset password actually works, without needing the old one.
+    const login = await request(app)
+      .post("/api/auth/login")
+      .send({ email: "edited@example.com", password: "brandnewpass123" });
+    expect(login.status).toBe(200);
+  });
+
+  it("lets an admin promote a user to ADMIN and demote another admin back to USER", async () => {
+    await prisma.user.deleteMany();
+    const admin = await register("promoter-admin@example.com");
+    const adminHeaders = { Authorization: `Bearer ${admin.body.accessToken}` };
+    const target = await register("promotee@example.com");
+
+    const promote = await request(app)
+      .patch(`/api/admin/users/${target.body.user.id}`)
+      .set(adminHeaders)
+      .send({ role: "ADMIN" });
+    expect(promote.status).toBe(200);
+    expect(promote.body.role).toBe("ADMIN");
+
+    const demote = await request(app)
+      .patch(`/api/admin/users/${admin.body.user.id}`)
+      .set(adminHeaders)
+      .send({ role: "USER" });
+    expect(demote.status).toBe(200);
+    expect(demote.body.role).toBe("USER");
+  });
+
+  it("refuses to demote the very last remaining admin", async () => {
+    await prisma.user.deleteMany();
+    const admin = await register("lonely-admin@example.com");
+    const adminHeaders = { Authorization: `Bearer ${admin.body.accessToken}` };
+
+    const res = await request(app)
+      .patch(`/api/admin/users/${admin.body.user.id}`)
+      .set(adminHeaders)
+      .send({ role: "USER" });
+    expect(res.status).toBe(400);
+
+    const stillAdmin = await prisma.user.findUnique({ where: { id: admin.body.user.id } });
+    expect(stillAdmin?.role).toBe("ADMIN");
+  });
+
+  it("rejects setting an email that's already taken by another account", async () => {
+    await prisma.user.deleteMany();
+    const admin = await register("conflict-admin@example.com");
+    const adminHeaders = { Authorization: `Bearer ${admin.body.accessToken}` };
+    const target = await register("conflict-target@example.com");
+
+    const res = await request(app)
+      .patch(`/api/admin/users/${target.body.user.id}`)
+      .set(adminHeaders)
+      .send({ email: "conflict-admin@example.com" });
+    expect(res.status).toBe(409);
+  });
+});
+
 describe("Self-service account deletion", () => {
   it("lets any user delete their own account and everything it owns", async () => {
     await prisma.user.deleteMany();

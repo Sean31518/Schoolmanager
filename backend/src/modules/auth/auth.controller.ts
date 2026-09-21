@@ -4,7 +4,7 @@ import { env } from "../../config/env.js";
 import { parseDurationMs } from "../../lib/duration.js";
 import { UnauthorizedError } from "../../lib/errors.js";
 import * as authService from "./auth.service.js";
-import { loginSchema, registerSchema } from "./auth.schema.js";
+import { loginSchema, registerSchema, updateMeSchema } from "./auth.schema.js";
 
 const REFRESH_COOKIE_NAME = "refreshToken";
 const REFRESH_COOKIE_PATH = "/api/auth";
@@ -82,6 +82,12 @@ export async function logout(req: Request, res: Response) {
 export async function me(req: Request, res: Response) {
   const user = await authService.getMe(req.user!.id);
   res.json({ user: toUserDto(user), settings: user.settings });
+}
+
+export async function updateMe(req: Request, res: Response) {
+  const body = updateMeSchema.parse(req.body);
+  const user = await authService.updateMe(req.user!.id, body);
+  res.json({ user: toUserDto(user) });
 }
 
 export async function deleteMe(req: Request, res: Response) {

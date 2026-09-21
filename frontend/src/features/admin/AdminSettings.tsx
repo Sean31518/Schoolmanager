@@ -1,14 +1,24 @@
 import { useState } from 'react'
 import { AddButton } from '../../components/AddButton'
 import { CreateUserModal } from '../../components/CreateUserModal'
+import { EditUserModal } from '../../components/EditUserModal'
 import { ToggleSwitch } from '../../components/ToggleSwitch'
 import { ApiRequestError } from '../../lib/apiClient'
 import { useAuth } from '../auth/AuthContext'
+import type { AdminUserDto } from './types'
 import { useAdminUsers, useAppSettings, useDeleteUser, useUpdateAppSettings } from './hooks'
 
 function formatLastSeen(lastSeenAt: string | null) {
   if (!lastSeenAt) return 'noch nie'
   return new Date(lastSeenAt).toLocaleString('de-DE')
+}
+
+function formatBytes(bytes: number) {
+  if (bytes === 0) return '0 B'
+  const units = ['B', 'KB', 'MB', 'GB']
+  const exponent = Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), units.length - 1)
+  const value = bytes / 1024 ** exponent
+  return `${exponent === 0 ? value : value.toFixed(1)} ${units[exponent]}`
 }
 
 export function AdminSettings() {
@@ -18,6 +28,7 @@ export function AdminSettings() {
   const updateAppSettings = useUpdateAppSettings()
   const deleteUser = useDeleteUser()
   const [showCreate, setShowCreate] = useState(false)
+  const [editingUser, setEditingUser] = useState<AdminUserDto | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   async function handleToggleRegistration() {
@@ -81,16 +92,24 @@ export function AdminSettings() {
                     )}
                   </p>
                   <p className="text-xs text-text-tertiary">
-                    Zuletzt online: {formatLastSeen(u.lastSeenAt)}
+                    Zuletzt online: {formatLastSeen(u.lastSeenAt)} · {formatBytes(u.storageBytes)}
                   </p>
                 </div>
                 {u.id !== currentUser?.id && (
-                  <button
-                    onClick={() => handleDelete(u.id, u.email)}
-                    className="shrink-0 text-text-muted hover:text-red-400"
-                  >
-                    Löschen
-                  </button>
+                  <div className="flex shrink-0 items-center gap-3">
+                    <button
+                      onClick={() => setEditingUser(u)}
+                      className="text-text-muted hover:text-text-primary"
+                    >
+                      Bearbeiten
+                    </button>
+                    <button
+                      onClick={() => handleDelete(u.id, u.email)}
+                      className="text-text-muted hover:text-red-400"
+                    >
+                      Löschen
+                    </button>
+                  </div>
                 )}
               </li>
             ))}
@@ -101,6 +120,9 @@ export function AdminSettings() {
       {error && <p className="text-sm text-red-400">{error}</p>}
 
       {showCreate && <CreateUserModal onClose={() => setShowCreate(false)} />}
+      {editingUser && (
+        <EditUserModal user={editingUser} onClose={() => setEditingUser(null)} />
+      )}
     </div>
   )
 }

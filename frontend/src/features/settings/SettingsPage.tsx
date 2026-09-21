@@ -344,12 +344,16 @@ export function SettingsPage() {
             open={openIds.has('konto')}
             onToggle={() => toggle('konto')}
           >
-            <button
-              onClick={() => void logout()}
-              className="rounded-md border border-border px-4 py-2 text-sm text-text-secondary hover:bg-bg-hover"
-            >
-              Abmelden
-            </button>
+            <AccountSettings />
+
+            <div className="mt-5 border-t border-border-subtle pt-5">
+              <button
+                onClick={() => void logout()}
+                className="rounded-md border border-border px-4 py-2 text-sm text-text-secondary hover:bg-bg-hover"
+              >
+                Abmelden
+              </button>
+            </div>
             <div className="mt-5 border-t border-border-subtle pt-5">
               <p className="text-sm text-text-secondary">
                 Löscht dein Konto und alle deine Daten unwiderruflich - das kann nicht rückgängig
@@ -379,6 +383,165 @@ export function SettingsPage() {
           )}
         </div>
       </div>
+    </div>
+  )
+}
+
+function AccountSettings() {
+  const { user, refreshMe } = useAuth()
+  const [isRenaming, setIsRenaming] = useState(false)
+  const [nameDraft, setNameDraft] = useState(user?.displayName ?? '')
+  const [renameError, setRenameError] = useState<string | null>(null)
+
+  const [email, setEmail] = useState(user?.email ?? '')
+  const [newPassword, setNewPassword] = useState('')
+  const [currentPassword, setCurrentPassword] = useState('')
+  const [credError, setCredError] = useState<string | null>(null)
+  const [credSaved, setCredSaved] = useState(false)
+  const [credSaving, setCredSaving] = useState(false)
+
+  function startRenaming() {
+    setNameDraft(user?.displayName ?? '')
+    setIsRenaming(true)
+  }
+
+  async function commitRename() {
+    setIsRenaming(false)
+    const trimmed = nameDraft.trim()
+    if (!user || !trimmed || trimmed === user.displayName) {
+      setNameDraft(user?.displayName ?? '')
+      return
+    }
+    setRenameError(null)
+    try {
+      await apiFetch('/auth/me', {
+        method: 'PATCH',
+        body: JSON.stringify({ displayName: trimmed }),
+      })
+      await refreshMe()
+    } catch (err) {
+      setRenameError(
+        err instanceof ApiRequestError ? err.message : 'Name konnte nicht geändert werden.',
+      )
+      setNameDraft(user.displayName)
+    }
+  }
+
+  async function handleCredSubmit(e: FormEvent) {
+    e.preventDefault()
+    setCredError(null)
+    setCredSaved(false)
+    const emailChanged = user ? email.trim() !== user.email : false
+    const wantsPasswordChange = newPassword.trim().length > 0
+    if (!emailChanged && !wantsPasswordChange) return
+    if (!currentPassword.trim()) {
+      setCredError('Aktuelles Passwort erforderlich.')
+      return
+    }
+    setCredSaving(true)
+    try {
+      await apiFetch('/auth/me', {
+        method: 'PATCH',
+        body: JSON.stringify({
+          ...(emailChanged ? { email: email.trim() } : {}),
+          ...(wantsPasswordChange ? { newPassword: newPassword.trim() } : {}),
+          currentPassword: currentPassword.trim(),
+        }),
+      })
+      await refreshMe()
+      setNewPassword('')
+      setCurrentPassword('')
+      setCredSaved(true)
+    } catch (err) {
+      setCredError(err instanceof ApiRequestError ? err.message : 'Änderung fehlgeschlagen.')
+    } finally {
+      setCredSaving(false)
+    }
+  }
+
+  if (!user) return null
+
+  return (
+    <div>
+      <div>
+        <p className="font-mono text-[10px] tracking-wider text-text-tertiary">ANZEIGENAME</p>
+        {isRenaming ? (
+          <input
+            autoFocus
+            value={nameDraft}
+            onChange={(e) => setNameDraft(e.target.value)}
+            onBlur={() => void commitRename()}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') void commitRename()
+              if (e.key === 'Escape') {
+                setNameDraft(user.displayName)
+                setIsRenaming(false)
+              }
+            }}
+            className="mt-1.5 block rounded-md border border-border bg-bg-muted px-2 py-1 text-sm font-medium text-text-primary"
+          />
+        ) : (
+          <button
+            type="button"
+            onClick={startRenaming}
+            className="mt-1.5 block text-sm font-medium text-text-primary hover:text-accent-text"
+          >
+            {user.displayName}
+          </button>
+        )}
+        {renameError && <p className="mt-1 text-sm text-red-400">{renameError}</p>}
+      </div>
+
+      <form
+        onSubmit={(e) => void handleCredSubmit(e)}
+        className="mt-5 border-t border-border-subtle pt-5"
+      >
+        <h3 className="font-mono text-[10px] tracking-wider text-text-tertiary">
+          E-MAIL &amp; PASSWORT
+        </h3>
+        <div className="mt-2 flex flex-wrap items-end gap-3">
+          <label className="text-sm text-text-secondary">
+            E-Mail
+            <input
+              type="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="mt-1 block rounded-md border border-border bg-bg-muted px-3 py-2 text-sm text-text-primary"
+            />
+          </label>
+          <label className="text-sm text-text-secondary">
+            Neues Passwort (optional)
+            <input
+              type="password"
+              minLength={8}
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              placeholder="leer lassen, um es nicht zu ändern"
+              className="mt-1 block rounded-md border border-border bg-bg-muted px-3 py-2 text-sm text-text-primary placeholder:text-text-muted"
+            />
+          </label>
+          <label className="text-sm text-text-secondary">
+            Aktuelles Passwort
+            <input
+              type="password"
+              value={currentPassword}
+              onChange={(e) => setCurrentPassword(e.target.value)}
+              placeholder="zur Bestätigung"
+              className="mt-1 block rounded-md border border-border bg-bg-muted px-3 py-2 text-sm text-text-primary placeholder:text-text-muted"
+            />
+          </label>
+          <button
+            type="submit"
+            disabled={credSaving}
+            className="rounded-md bg-accent px-4 py-2 text-sm font-semibold text-accent-ink disabled:opacity-50"
+          >
+            Speichern
+          </button>
+        </div>
+        {credSaved && <p className="mt-2 text-sm text-green-400">Gespeichert.</p>}
+        {credError && <p className="mt-2 text-sm text-red-400">{credError}</p>}
+      </form>
     </div>
   )
 }
