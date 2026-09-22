@@ -265,7 +265,7 @@ export function Layout() {
   const [searchOpen, setSearchOpen] = useState(false)
 
   return (
-    <div className="flex min-h-dvh flex-col bg-bg-0 font-sans text-text-primary md:flex-row">
+    <div className="flex min-h-[var(--app-100vh)] flex-col bg-bg-0 font-sans text-text-primary md:flex-row">
       <header className="flex h-14 shrink-0 items-center gap-3 border-b border-border bg-bg-2 px-4 md:hidden">
         <button
           type="button"
@@ -379,7 +379,7 @@ export function Layout() {
       ) : (
         <aside
           style={{ width }}
-          className="sticky top-0 hidden h-dvh shrink-0 flex-col border-r border-border bg-bg-2 px-3 py-4 md:flex"
+          className="sticky top-0 hidden h-[var(--app-100vh)] shrink-0 flex-col border-r border-border bg-bg-2 px-3 py-4 md:flex"
         >
           <div className="flex shrink-0 items-center justify-between gap-2 px-1">
             <NavLink to="/" className="flex min-w-0 items-center gap-2.5">

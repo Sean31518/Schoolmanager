@@ -2,6 +2,13 @@
 @plugin "@tailwindcss/typography";
 @custom-variant dark (&:where(.dark, .dark *));
 
+/* Static fallback for browsers/moments before viewportHeight.ts's JS runs
+   (or without window.visualViewport support at all) - see that file for
+   why dvh alone isn't reliable enough on iPad Safari in portrait. */
+:root {
+  --app-100vh: 100dvh;
+}
+
 @theme {
   --font-sans: 'Figtree', ui-sans-serif, system-ui, sans-serif;
   --font-mono: 'Azeret Mono', ui-monospace, monospace;
