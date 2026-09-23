@@ -60,6 +60,8 @@ export interface IServChangeInfo {
   changeTypes: string[];
   substitutionSubject?: string;
   substitutionRoom?: string;
+  substitutionTeacherName?: string;
+  substitutionTeacherAcronym?: string;
 }
 
 export interface IServPeriod {
@@ -322,10 +324,20 @@ async function fetchWeekTimetable(
   return entries as DieSchulAppEntry[];
 }
 
+/** Joins multiple teachers (team teaching) with a comma; null if there are
+ * none rather than an empty string, so the UI can cleanly omit the field. */
+function joinTeachers(teachers: DieSchulAppTeacher[], pick: (t: DieSchulAppTeacher) => string | undefined) {
+  const names = teachers.map(pick).filter((n): n is string => Boolean(n));
+  return names.length ? names.join(", ") : null;
+}
+
 /** Best-effort substitution detection - see the module docblock's caveat.
  * Only fires on the presence of specific fields, so a wrong guess about
- * their names just means no override is created, never a false positive on
- * a normal lesson. */
+ * their names just means no override is created (or a substitute
+ * room/teacher silently missing), never a false positive on a normal
+ * lesson. The substitute-teacher guess mirrors the base entry's own
+ * courseSubject.teachers shape, since a substitution swapping the teacher
+ * is the most plausible place IServ would reuse that same shape. */
 function detectChange(raw: DieSchulAppEntry): IServChangeInfo | null {
   if (raw.cancelled === true || raw.courseSubject === null) {
     return { changeTypes: ["0"] };
@@ -337,6 +349,7 @@ function detectChange(raw: DieSchulAppEntry): IServChangeInfo | null {
     }
     const subSubject = sub.subject as Record<string, unknown> | undefined;
     const subRoom = sub.room as Record<string, unknown> | undefined;
+    const subTeachers = sub.teachers as DieSchulAppTeacher[] | undefined;
     return {
       changeTypes: ["1"],
       substitutionSubject:
@@ -345,16 +358,16 @@ function detectChange(raw: DieSchulAppEntry): IServChangeInfo | null {
         (sub.subjectName as string) ||
         undefined,
       substitutionRoom: (subRoom?.name as string) || (sub.roomName as string) || undefined,
+      substitutionTeacherName: Array.isArray(subTeachers)
+        ? (joinTeachers(subTeachers, (t) => t.displayname || [t.forename, t.surname].filter(Boolean).join(" ")) ??
+          undefined)
+        : undefined,
+      substitutionTeacherAcronym: Array.isArray(subTeachers)
+        ? (joinTeachers(subTeachers, (t) => t.externalId) ?? undefined)
+        : undefined,
     };
   }
   return null;
-}
-
-/** Joins multiple teachers (team teaching) with a comma; null if there are
- * none rather than an empty string, so the UI can cleanly omit the field. */
-function joinTeachers(teachers: DieSchulAppTeacher[], pick: (t: DieSchulAppTeacher) => string | undefined) {
-  const names = teachers.map(pick).filter((n): n is string => Boolean(n));
-  return names.length ? names.join(", ") : null;
 }
 
 function convertEntry(raw: DieSchulAppEntry): IServPeriod {

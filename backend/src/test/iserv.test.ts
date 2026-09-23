@@ -12,6 +12,8 @@ const BASE_DETAILS = {
   teacherName: "Erika Musterfrau",
   teacherAcronym: "MUS",
   courseName: "Kurs-1",
+  substituteTeacherName: null,
+  substituteTeacherAcronym: null,
 };
 
 function period(p: {
@@ -84,12 +86,13 @@ describe("IServ period-to-override mapping", () => {
         subjectId: "subj-mathe",
         rawSubjectCode: "Mathe",
         room: null,
+        substituteRoom: null,
         ...BASE_DETAILS,
       },
     ]);
   });
 
-  it("maps a substituted period to the changed subject/room, resolving against the user's own subjects", () => {
+  it("maps a substituted period to the changed subject, keeping the original room and adding the substitute room separately", () => {
     const overrides = mapPeriodsToOverrides(
       "user-1",
       date,
@@ -113,10 +116,63 @@ describe("IServ period-to-override mapping", () => {
         subjectName: "Deutsch",
         subjectId: "subj-deutsch",
         rawSubjectCode: "Deu",
-        room: "204",
+        room: "101",
+        substituteRoom: "204",
         ...BASE_DETAILS,
       },
     ]);
+  });
+
+  it("does not report a substitute room/teacher when the substitution repeats the same value as the original", () => {
+    const overrides = mapPeriodsToOverrides(
+      "user-1",
+      date,
+      [
+        period({
+          period: 1,
+          subject: "M",
+          room: "101",
+          change: {
+            changeTypes: ["1"],
+            substitutionSubject: "Deu",
+            substitutionRoom: "101",
+            substitutionTeacherName: "Erika Musterfrau",
+            substitutionTeacherAcronym: "MUS",
+          },
+        }),
+      ],
+      lessonSlots,
+      subjects,
+    );
+    expect(overrides[0].room).toBe("101");
+    expect(overrides[0].substituteRoom).toBeNull();
+    expect(overrides[0].substituteTeacherName).toBeNull();
+    expect(overrides[0].substituteTeacherAcronym).toBeNull();
+  });
+
+  it("reports a substitute teacher separately from the original when they actually differ", () => {
+    const overrides = mapPeriodsToOverrides(
+      "user-1",
+      date,
+      [
+        period({
+          period: 1,
+          subject: "M",
+          room: "101",
+          change: {
+            changeTypes: ["1"],
+            substitutionTeacherName: "Herr Vertreter",
+            substitutionTeacherAcronym: "VER",
+          },
+        }),
+      ],
+      lessonSlots,
+      subjects,
+    );
+    expect(overrides[0].teacherName).toBe("Erika Musterfrau");
+    expect(overrides[0].substituteTeacherName).toBe("Herr Vertreter");
+    expect(overrides[0].teacherAcronym).toBe("MUS");
+    expect(overrides[0].substituteTeacherAcronym).toBe("VER");
   });
 
   it("resolves a code with a trailing course-level number (e.g. IServ's 'E1') against a same-prefix Subject", () => {
@@ -224,6 +280,7 @@ describe("IServ period-to-override mapping", () => {
         subjectId: "subj-englisch",
         rawSubjectCode: "Eng",
         room: "12",
+        substituteRoom: null,
         ...BASE_DETAILS,
       },
     ]);
@@ -248,6 +305,7 @@ describe("IServ period-to-override mapping", () => {
         subjectId: "subj-mathe",
         rawSubjectCode: "Mathe",
         room: null,
+        substituteRoom: null,
         ...BASE_DETAILS,
       },
     ]);

@@ -41,10 +41,13 @@ describe("Timetable IServ overlay (current week only)", () => {
         subjectColor: null,
         rawSubjectCode: null,
         room: null,
+        substituteRoom: null,
         startTime: "08:00",
         endTime: "08:45",
         teacherName: "Erika Musterfrau",
         teacherAcronym: "MUS",
+        substituteTeacherName: null,
+        substituteTeacherAcronym: null,
         courseName: "Kurs-1",
       },
     ]);
@@ -94,6 +97,45 @@ describe("Timetable IServ overlay (current week only)", () => {
         subjectId: englisch.body.id,
         subjectColor: "#22C55E",
         rawSubjectCode: "E1",
+      }),
+    ]);
+  });
+
+  it("exposes both the original and substitute room/teacher separately for a CHANGED override", async () => {
+    const user = await registerUser();
+    const headers = { Authorization: `Bearer ${user.accessToken}` };
+
+    const lesson1 = await request(app)
+      .post("/api/time-grid")
+      .set(headers)
+      .send({ label: "1. Stunde", type: "LESSON", startTime: "08:00", endTime: "08:45" });
+
+    const monday = new Date("2026-09-21T10:00:00Z");
+    await prisma.timetableOverride.create({
+      data: {
+        userId: user.userId,
+        date: new Date("2026-09-21T00:00:00.000Z"),
+        timeGridSlotId: lesson1.body.id,
+        type: "CHANGED",
+        subjectName: "Mathe",
+        room: "101",
+        substituteRoom: "204",
+        teacherName: "Erika Musterfrau",
+        teacherAcronym: "MUS",
+        substituteTeacherName: "Herr Vertreter",
+        substituteTeacherAcronym: "VER",
+      },
+    });
+
+    const timetable = await getTimetable(user.userId, monday);
+    expect(timetable.iservOverlay).toEqual([
+      expect.objectContaining({
+        room: "101",
+        substituteRoom: "204",
+        teacherName: "Erika Musterfrau",
+        substituteTeacherName: "Herr Vertreter",
+        teacherAcronym: "MUS",
+        substituteTeacherAcronym: "VER",
       }),
     ]);
   });

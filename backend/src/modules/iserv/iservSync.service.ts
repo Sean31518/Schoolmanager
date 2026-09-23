@@ -80,11 +80,22 @@ interface OverrideDraft {
   subjectId: string | null;
   rawSubjectCode: string | null;
   room: string | null;
+  substituteRoom: string | null;
   startTime: string | null;
   endTime: string | null;
   teacherName: string | null;
   teacherAcronym: string | null;
+  substituteTeacherName: string | null;
+  substituteTeacherAcronym: string | null;
   courseName: string | null;
+}
+
+/** Only worth showing as a substitution if it's actually reported AND
+ * differs from the original - IServ (or our own best-effort parsing of it)
+ * sometimes repeats the unchanged value in the substitution's own fields
+ * rather than omitting them. */
+function differingOrNull(substitute: string | undefined, original: string | null): string | null {
+  return substitute && substitute !== original ? substitute : null;
 }
 
 /** Maps one day's IServ periods to override rows. Period numbers are
@@ -123,6 +134,10 @@ export function mapPeriodsToOverrides(
       teacherName: period.teacherName,
       teacherAcronym: period.teacherAcronym,
       courseName: period.courseName,
+      // No substitution concept applies outside the CHANGED branch below,
+      // which overrides these with the actually-differing values (if any).
+      substituteTeacherName: null,
+      substituteTeacherAcronym: null,
     };
 
     if (!period.change) {
@@ -137,6 +152,7 @@ export function mapPeriodsToOverrides(
         subjectId: resolved.id,
         rawSubjectCode: period.subject,
         room: period.room || null,
+        substituteRoom: null,
         ...baseDetails,
       });
       continue;
@@ -162,11 +178,13 @@ export function mapPeriodsToOverrides(
         subjectId: resolved.id,
         rawSubjectCode: period.subject,
         room: null,
+        substituteRoom: null,
         ...baseDetails,
       });
     } else {
       const rawSubject = period.change.substitutionSubject || period.subject;
       const resolved = resolveSubject(subjects, rawSubject);
+      const originalRoom = period.room || null;
       drafts.push({
         userId,
         date,
@@ -175,8 +193,18 @@ export function mapPeriodsToOverrides(
         subjectName: resolved.name,
         subjectId: resolved.id,
         rawSubjectCode: rawSubject,
-        room: period.change.substitutionRoom || period.room || null,
+        // room stays the original/standard room (never overwritten) so the
+        // frontend can show it struck through next to the substitute room -
+        // Raumwechsel/Lehrerwechsel are only recognizable as such when both
+        // values survive independently.
+        room: originalRoom,
+        substituteRoom: differingOrNull(period.change.substitutionRoom, originalRoom),
         ...baseDetails,
+        substituteTeacherName: differingOrNull(period.change.substitutionTeacherName, period.teacherName),
+        substituteTeacherAcronym: differingOrNull(
+          period.change.substitutionTeacherAcronym,
+          period.teacherAcronym,
+        ),
       });
     }
   }

@@ -51,10 +51,13 @@ export interface IservOverlayEntry {
   subjectColor: string | null;
   rawSubjectCode: string | null;
   room: string | null;
+  substituteRoom: string | null;
   startTime: string | null;
   endTime: string | null;
   teacherName: string | null;
   teacherAcronym: string | null;
+  substituteTeacherName: string | null;
+  substituteTeacherAcronym: string | null;
   courseName: string | null;
 }
 
@@ -86,10 +89,13 @@ export async function getTimetable(userId: string, now: Date = new Date()) {
       subjectColor: o.subject?.color ?? null,
       rawSubjectCode: o.rawSubjectCode,
       room: o.room,
+      substituteRoom: o.substituteRoom,
       startTime: o.startTime,
       endTime: o.endTime,
       teacherName: o.teacherName,
       teacherAcronym: o.teacherAcronym,
+      substituteTeacherName: o.substituteTeacherName,
+      substituteTeacherAcronym: o.substituteTeacherAcronym,
       courseName: o.courseName,
     }));
 

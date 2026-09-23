@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { vertretungLabel } from '../../lib/vertretungLabel'
 import { LessonDetailModal, type LessonDetailData } from '../timetable/LessonDetailModal'
 import type { TimetableSlotSummaryDto } from './types'
 
@@ -31,7 +32,9 @@ function mergeDoppelstunden(slots: TimetableSlotSummaryDto[]): MergedSlot[] {
       slot.type === 'LESSON' &&
       prev.subjectName &&
       prev.subjectName === slot.subjectName &&
-      prev.vertretung === slot.vertretung
+      prev.vertretung === slot.vertretung &&
+      prev.substituteRoom === slot.substituteRoom &&
+      prev.substituteTeacherName === slot.substituteTeacherName
     const bothFree =
       prev && prev.type === 'LESSON' && slot.type === 'LESSON' && !prev.subjectName && !slot.subjectName
     if (sameLesson || bothFree) {
@@ -60,13 +63,21 @@ const JetztBadge = () => (
   </span>
 )
 
-const VertretungBadge = ({ cancelled }: { cancelled: boolean }) => (
+const VertretungBadge = ({
+  cancelled,
+  roomChanged,
+  teacherChanged,
+}: {
+  cancelled: boolean
+  roomChanged: boolean
+  teacherChanged: boolean
+}) => (
   <span
     className={`shrink-0 rounded-[3px] px-[5px] py-px font-mono text-[9px] font-semibold tracking-wider ${
       cancelled ? 'bg-red-400/20 text-red-400' : 'bg-accent/20 text-accent-text'
     }`}
   >
-    {cancelled ? 'ENTFÄLLT' : 'VERTRETUNG'}
+    {vertretungLabel(cancelled, roomChanged, teacherChanged)}
   </span>
 )
 
@@ -101,18 +112,20 @@ function SlotRow({ slot, isNow, onClick }: { slot: MergedSlot; isNow: boolean; o
   }
 
   const cancelled = slot.vertretung === 'CANCELLED'
+  const roomChanged = Boolean(slot.substituteRoom)
+  const teacherChanged = Boolean(slot.substituteTeacherName)
   // An IServ-sourced lesson not yet linked to a local Subject has no color
   // of its own - falls back to neutral gray rather than rendering with no
   // visible border at all (an unstyled "null" CSS value would do that).
-  const color = slot.subjectColor ?? '#71717a'
+  const color = cancelled ? '#ef4444' : (slot.subjectColor ?? '#71717a')
 
   return (
     <button
       type="button"
       onClick={onClick}
-      className={`flex w-full flex-col justify-center gap-1 rounded-[5px] bg-bg-3 px-2.5 py-1.5 text-left hover:bg-bg-hover ${
-        isNow ? 'ml-1.5' : ''
-      }`}
+      className={`flex w-full flex-col justify-center gap-1 rounded-[5px] px-2.5 py-1.5 text-left ${
+        cancelled ? 'bg-red-500/30' : 'bg-bg-3 hover:bg-bg-hover'
+      } ${isNow ? 'ml-1.5' : ''}`}
       style={{ borderLeft: `4px solid ${color}`, minHeight: `${slot.periodCount * 2.25}rem` }}
     >
       <span className="flex items-center gap-2.5">
@@ -125,13 +138,20 @@ function SlotRow({ slot, isNow, onClick }: { slot: MergedSlot; isNow: boolean; o
           }`}
         >
           {slot.subjectName}
-          {slot.vertretung === 'CHANGED' && slot.room && (
+          {roomChanged && (
             <span className="ml-1.5 font-mono text-[10px] font-normal text-text-tertiary">
-              Raum {slot.room}
+              <span className="line-through opacity-60">{slot.room}</span> {slot.substituteRoom}
+            </span>
+          )}
+          {teacherChanged && (
+            <span className="ml-1.5 font-mono text-[10px] font-normal text-text-tertiary">
+              <span className="line-through opacity-60">{slot.teacherName}</span> {slot.substituteTeacherName}
             </span>
           )}
         </span>
-        {slot.vertretung && <VertretungBadge cancelled={cancelled} />}
+        {slot.vertretung && (
+          <VertretungBadge cancelled={cancelled} roomChanged={roomChanged} teacherChanged={teacherChanged} />
+        )}
         {isNow && <JetztBadge />}
       </span>
     </button>
@@ -205,7 +225,9 @@ function toLessonDetail(slot: MergedSlot, dayLabel: string): LessonDetailData {
     startTime: slot.startTime,
     endTime: slot.endTime,
     room: slot.room ?? null,
+    substituteRoom: slot.substituteRoom ?? null,
     teacherName: slot.teacherName ?? null,
+    substituteTeacherName: slot.substituteTeacherName ?? null,
     courseName: slot.courseName ?? null,
     vertretung: slot.vertretung,
   }

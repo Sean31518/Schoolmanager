@@ -33,11 +33,19 @@ export interface IservOverlayEntryDto {
   subjectId: string | null
   subjectColor: string | null
   rawSubjectCode: string | null
+  /** room/teacherName/teacherAcronym are the original/standard values; the
+   * substitute* fields are only set when a substitution actually reports a
+   * *different* room/teacher, so Raumwechsel/Lehrerwechsel can be shown as
+   * "original durchgestrichen, Vertretung daneben" rather than one value
+   * silently replacing the other. */
   room: string | null
+  substituteRoom: string | null
   startTime: string | null
   endTime: string | null
   teacherName: string | null
   teacherAcronym: string | null
+  substituteTeacherName: string | null
+  substituteTeacherAcronym: string | null
   courseName: string | null
 }
 

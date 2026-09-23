@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { CreateSubjectModal } from '../../components/CreateSubjectModal'
+import { vertretungLabel } from '../../lib/vertretungLabel'
 import { useSyncIservNow } from '../settings/hooks'
 import type { IservVertretungType } from './types'
 
@@ -10,7 +11,9 @@ export interface LessonDetailData {
   startTime: string | null
   endTime: string | null
   room: string | null
+  substituteRoom?: string | null
   teacherName: string | null
+  substituteTeacherName?: string | null
   courseName: string | null
   vertretung?: IservVertretungType
   /** Set (with subjectId null) when this lesson came from IServ but isn't
@@ -32,6 +35,9 @@ export function LessonDetailModal({
   const isCancelled = lesson.vertretung === 'CANCELLED'
   const isChanged = lesson.vertretung === 'CHANGED'
   const isUnlinked = !lesson.subjectId && Boolean(lesson.rawSubjectCode)
+  const roomChanged = Boolean(lesson.substituteRoom)
+  const teacherChanged = Boolean(lesson.substituteTeacherName)
+  const label = vertretungLabel(isCancelled, roomChanged, teacherChanged)
   const [showCreate, setShowCreate] = useState(false)
   const syncNow = useSyncIservNow()
 
@@ -67,7 +73,13 @@ export function LessonDetailModal({
                 isCancelled ? 'bg-red-400/15 text-red-400' : 'bg-accent/15 text-accent-text'
               }`}
             >
-              {isCancelled ? 'Diese Stunde entfällt.' : 'Vertretung für diese Stunde.'}
+              {isCancelled
+                ? 'Diese Stunde entfällt.'
+                : label === 'RAUMWECHSEL'
+                  ? 'Raumwechsel für diese Stunde.'
+                  : label === 'LEHRERWECHSEL'
+                    ? 'Lehrerwechsel für diese Stunde.'
+                    : 'Vertretung für diese Stunde.'}
             </div>
           )}
 
@@ -83,7 +95,16 @@ export function LessonDetailModal({
             {lesson.teacherName && (
               <div className="flex justify-between gap-3">
                 <dt className="text-text-secondary">Lehrkraft</dt>
-                <dd className="text-right text-text-primary">{lesson.teacherName}</dd>
+                <dd className="text-right text-text-primary">
+                  {teacherChanged ? (
+                    <>
+                      <span className="text-text-tertiary line-through">{lesson.teacherName}</span>{' '}
+                      {lesson.substituteTeacherName}
+                    </>
+                  ) : (
+                    lesson.teacherName
+                  )}
+                </dd>
               </div>
             )}
             {lesson.courseName && (
@@ -95,7 +116,16 @@ export function LessonDetailModal({
             {lesson.room && (
               <div className="flex justify-between gap-3">
                 <dt className="text-text-secondary">Raum</dt>
-                <dd className="text-text-primary">{lesson.room}</dd>
+                <dd className="text-text-primary">
+                  {roomChanged ? (
+                    <>
+                      <span className="text-text-tertiary line-through">{lesson.room}</span>{' '}
+                      {lesson.substituteRoom}
+                    </>
+                  ) : (
+                    lesson.room
+                  )}
+                </dd>
               </div>
             )}
           </dl>

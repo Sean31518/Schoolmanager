@@ -20,28 +20,28 @@ generator client {
 // admin creates their account through the admin panel.
 
 model User {
-  id           String   @id @default(cuid())
-  email        String   @unique
+  id           String    @id @default(cuid())
+  email        String    @unique
   passwordHash String
   displayName  String
-  role         String   @default("USER")
+  role         String    @default("USER")
   // Bumped on every authenticated request (see authGuard) - the "zuletzt
   // online" an admin sees for each account. Null until the first request.
   lastSeenAt   DateTime?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 
-  settings       Settings?
-  subjects       Subject[]
-  timeGridSlots  TimeGridSlot[]
-  timetableSlots TimetableSlot[]
-  calendarEvents CalendarEvent[]
-  homework       Homework[]
-  generalNotes   GeneralNote[]
-  refreshTokens  RefreshToken[]
-  uploadedFiles  UploadedFile[]
-  pushSubscriptions PushSubscription[]
-  notificationLogs  NotificationLog[]
+  settings           Settings?
+  subjects           Subject[]
+  timeGridSlots      TimeGridSlot[]
+  timetableSlots     TimetableSlot[]
+  calendarEvents     CalendarEvent[]
+  homework           Homework[]
+  generalNotes       GeneralNote[]
+  refreshTokens      RefreshToken[]
+  uploadedFiles      UploadedFile[]
+  pushSubscriptions  PushSubscription[]
+  notificationLogs   NotificationLog[]
   timetableOverrides TimetableOverride[]
 }
 
@@ -69,11 +69,11 @@ model PushSubscription {
 // or "homework:<homeworkId>:1d" - checked before sending so a reminder is
 // never pushed twice for the same thing.
 model NotificationLog {
-  id        String   @id @default(cuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  key       String
-  sentAt    DateTime @default(now())
+  id     String   @id @default(cuid())
+  userId String
+  user   User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  key    String
+  sentAt DateTime @default(now())
 
   @@unique([userId, key])
   @@index([userId])
@@ -92,14 +92,14 @@ model RefreshToken {
 }
 
 model Settings {
-  id                     String       @id @default(cuid())
-  userId                 String       @unique
-  user                   User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                     String   @id @default(cuid())
+  userId                 String   @unique
+  user                   User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   currentGradeLevel      Int      @default(5)
   currentSchoolYearLabel String?
   federalState           String   @default("BW")
   createdAt              DateTime @default(now())
-  updatedAt              DateTime     @updatedAt
+  updatedAt              DateTime @updatedAt
 
   // IServ-Anbindung (Vertretungsplan-Sync) - pro Nutzer, da jeder eigene
   // IServ-Zugangsdaten und ggf. eigene Kurse hat (Kursstufe). Passwort liegt
@@ -116,25 +116,25 @@ model Settings {
   // aktiv, ersetzt IServs Stundenplan (inkl. normaler, nicht vertretener
   // Stunden) den manuell gepflegten Plan für die synchronisierten Tage,
   // statt nur Vertretungen darüberzulegen.
-  iservActive            Boolean      @default(false)
+  iservActive            Boolean   @default(false)
   iservLastSyncAt        DateTime?
   iservLastSyncError     String?
 }
 
 model Subject {
-  id        String   @id @default(cuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  name      String
-  color     String
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name       String
+  color      String
   // Optionaler Kürzel-Hinweis für den IServ-Sync - manche Schulkürzel
   // (z.B. "bk3" für Bildende Kunst, "gm" für Gemeinschaftskunde) lassen sich
   // nicht algorithmisch aus dem Fachnamen ableiten, da sie keine Abkürzung
   // im Sinne eines Namens-Präfix sind. Wird vor der Präfix-Heuristik exakt
   // (case-insensitive) gegen IServs Rohkürzel geprüft.
   iservAlias String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
   noteSectionTypes   NoteSectionType[]
   timetableSlots     TimetableSlot[]
@@ -258,18 +258,18 @@ model UploadedFile {
 }
 
 model TimeGridSlot {
-  id        String           @id @default(cuid())
+  id        String   @id @default(cuid())
   userId    String
-  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   label     String
   type      String
   startTime String
   endTime   String
   sortOrder Int
-  createdAt DateTime         @default(now())
-  updatedAt DateTime         @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  timetableSlots TimetableSlot[]
+  timetableSlots     TimetableSlot[]
   timetableOverrides TimetableOverride[]
 
   @@index([userId])
@@ -281,16 +281,16 @@ model TimeGridSlot {
 // A sync replaces every row for a given (userId, date) wholesale rather
 // than merging, so a reverted substitution doesn't linger as a stale row.
 model TimetableOverride {
-  id             String       @id @default(cuid())
-  userId         String
-  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  date           DateTime
-  timeGridSlotId String
-  timeGridSlot   TimeGridSlot @relation(fields: [timeGridSlotId], references: [id], onDelete: Cascade)
+  id                       String       @id @default(cuid())
+  userId                   String
+  user                     User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date                     DateTime
+  timeGridSlotId           String
+  timeGridSlot             TimeGridSlot @relation(fields: [timeGridSlotId], references: [id], onDelete: Cascade)
   // CANCELLED (entfällt) | CHANGED (Vertretung: anderes Fach/Raum) | NORMAL
   // (unveränderte Stunde, nur relevant wenn iservActive den manuellen Plan
   // ersetzt statt nur Vertretungen darüberzulegen)
-  type           String
+  type                     String
   // Freitext-Anzeigename, immer gesetzt (außer bei CANCELLED, wo es keinen
   // "neuen" Namen gibt) - subjectId ist NUR gesetzt, wenn rawSubjectCode
   // tatsächlich zu einem lokalen Fach aufgelöst werden konnte (exakter
@@ -299,24 +299,31 @@ model TimetableOverride {
   // dieser Stelle manuell eingetragenen Fach, und die Detailansicht kann
   // "kein lokales Fach verknüpft" erkennen (subjectId null, rawSubjectCode
   // gesetzt) und einen "Fach anlegen"-Knopf anbieten.
-  subjectName    String?
-  subjectId      String?
-  subject        Subject?     @relation(fields: [subjectId], references: [id], onDelete: SetNull)
+  subjectName              String?
+  subjectId                String?
+  subject                  Subject?     @relation(fields: [subjectId], references: [id], onDelete: SetNull)
   // Der rohe IServ-Kürzel, aus dem subjectName/subjectId aufgelöst wurden -
   // zum Vorbefüllen von Name/IServ-Kürzel beim "Fach anlegen"-Knopf.
-  rawSubjectCode String?
-  room           String?
-  // Lehrkraft/Kurs/Zeiten aus IServ - für die Detailansicht im Stundenplan;
-  // stammen von der ursprünglich geplanten Stunde, nicht von einer eventuellen
-  // Vertretung (deren genaue Feldnamen bei IServ noch nicht bestätigt sind).
-  startTime      String?
-  endTime        String?
-  teacherName    String?
-  teacherAcronym String?
-  courseName     String?
-  note           String?
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
+  rawSubjectCode           String?
+  // room/teacherName/teacherAcronym are always the ORIGINAL/standard values
+  // (from the base, non-substituted IServ entry) - never overwritten by a
+  // substitution. The substitute* fields below are only set when a
+  // substitution actually reports a *different* room/teacher, so the
+  // frontend can show "original durchgestrichen, Vertretung daneben"
+  // instead of silently swapping one value for the other.
+  room                     String?
+  substituteRoom           String?
+  // Lehrkraft/Kurs/Zeiten aus IServ - für die Detailansicht im Stundenplan.
+  startTime                String?
+  endTime                  String?
+  teacherName              String?
+  teacherAcronym           String?
+  substituteTeacherName    String?
+  substituteTeacherAcronym String?
+  courseName               String?
+  note                     String?
+  createdAt                DateTime     @default(now())
+  updatedAt                DateTime     @updatedAt
 
   @@unique([userId, date, timeGridSlotId])
   @@index([userId, date])
@@ -341,21 +348,21 @@ model TimetableSlot {
 }
 
 model CalendarEvent {
-  id          String            @id @default(cuid())
+  id          String    @id @default(cuid())
   userId      String
   user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   title       String
   type        String    @default("MANUAL")
   startDate   DateTime
   endDate     DateTime?
-  allDay      Boolean           @default(true)
+  allDay      Boolean   @default(true)
   subjectId   String?
-  subject     Subject?          @relation(fields: [subjectId], references: [id], onDelete: SetNull)
+  subject     Subject?  @relation(fields: [subjectId], references: [id], onDelete: SetNull)
   color       String?
   note        String?
   externalRef String?
-  createdAt   DateTime          @default(now())
-  updatedAt   DateTime          @updatedAt
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
   examPrepItems ExamPrepItem[]
 

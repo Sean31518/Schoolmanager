@@ -184,7 +184,10 @@ export async function getDashboard(userId: string, now: Date = new Date()) {
           subjectId: override.subjectId,
           rawSubjectCode: override.rawSubjectCode,
           room: override.room,
+          substituteRoom: override.substituteRoom,
           teacherName: override.teacherName,
+          substituteTeacherName: override.substituteTeacherName,
+          substituteTeacherAcronym: override.substituteTeacherAcronym,
           courseName: override.courseName,
           vertretung: "CHANGED" as const,
         };

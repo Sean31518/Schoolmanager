@@ -20,7 +20,10 @@ export interface TimetableSlotSummaryDto {
   /** Set when an IServ-synced Vertretung applies to this exact date. */
   vertretung?: 'CANCELLED' | 'CHANGED'
   room?: string | null
+  substituteRoom?: string | null
   teacherName?: string | null
+  substituteTeacherName?: string | null
+  substituteTeacherAcronym?: string | null
   courseName?: string | null
   /** Local Subject this IServ-sourced lesson resolved to, if any - null with
    * rawSubjectCode set means IServ's subject isn't linked to a Subject yet. */

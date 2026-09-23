@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { vertretungLabel } from '../../lib/vertretungLabel'
 import { useTimetable } from './hooks'
 import { LessonDetailModal, type LessonDetailData } from './LessonDetailModal'
 import type { IservOverlayEntryDto, TimeGridSlotDto, TimetableSlotDto } from './types'
@@ -39,8 +40,11 @@ interface ResolvedCell {
   subjectId: string | null
   rawSubjectCode: string | null
   room: string | null
+  substituteRoom: string | null
   teacherAcronym: string | null
+  substituteTeacherAcronym: string | null
   teacherName: string | null
+  substituteTeacherName: string | null
   courseName: string | null
   startTime: string | null
   endTime: string | null
@@ -74,13 +78,21 @@ function resolveCell(
       subjectId: overlay.subjectId,
       rawSubjectCode: overlay.rawSubjectCode,
       room: overlay.room ?? manual?.room ?? null,
+      substituteRoom: overlay.substituteRoom,
       teacherAcronym: overlay.teacherAcronym,
+      substituteTeacherAcronym: overlay.substituteTeacherAcronym,
       teacherName: overlay.teacherName,
+      substituteTeacherName: overlay.substituteTeacherName,
       courseName: overlay.courseName,
       startTime: overlay.startTime,
       endTime: overlay.endTime,
       vertretung,
-      mergeKey: subjectName ? `iserv:${subjectName}:${vertretung ?? ''}` : null,
+      // Room/teacher substitutions are part of the merge key too - two
+      // consecutive periods of the same subject with different Raum-/
+      // Lehrerwechsel details are not the same Doppelstunde block.
+      mergeKey: subjectName
+        ? `iserv:${subjectName}:${vertretung ?? ''}:${overlay.substituteRoom ?? ''}:${overlay.substituteTeacherAcronym ?? ''}`
+        : null,
     }
   }
 
@@ -90,8 +102,11 @@ function resolveCell(
     subjectId: manual?.subjectId ?? null,
     rawSubjectCode: null,
     room: manual?.room ?? null,
+    substituteRoom: null,
     teacherAcronym: null,
+    substituteTeacherAcronym: null,
     teacherName: null,
+    substituteTeacherName: null,
     courseName: null,
     startTime: null,
     endTime: null,
@@ -265,6 +280,8 @@ export function TimetableView() {
                   const spanEnd = timeGridSlots[i + (span?.rowSpan ?? 1) - 1]
                   const isNow = isToday && isNowWithin(startTime, rowTime(spanEnd).endTime)
                   const cancelled = cell?.vertretung === 'CANCELLED'
+                  const roomChanged = Boolean(cell?.substituteRoom)
+                  const teacherChanged = Boolean(cell?.substituteTeacherAcronym)
                   return (
                     <td key={day.value} rowSpan={span?.rowSpan ?? 1} className="relative">
                       {cellColor ? (
@@ -279,8 +296,10 @@ export function TimetableView() {
                               endTime: rowTime(spanEnd).endTime,
                             })
                           }
-                          className="absolute inset-0 flex w-full flex-col justify-center gap-1 overflow-hidden rounded-[5px] bg-bg-3 px-2.5 py-2 text-left text-xs font-semibold text-text-primary hover:bg-bg-hover"
-                          style={{ borderLeft: `4px solid ${cellColor}` }}
+                          className={`absolute inset-0 flex w-full flex-col justify-center gap-1 overflow-hidden rounded-[5px] px-2.5 py-2 text-left text-xs font-semibold text-text-primary ${
+                            cancelled ? 'bg-red-500/30' : 'bg-bg-3 hover:bg-bg-hover'
+                          }`}
+                          style={{ borderLeft: `4px solid ${cancelled ? '#ef4444' : cellColor}` }}
                         >
                           <span className="flex items-center justify-between gap-1.5">
                             <span className={`truncate ${cancelled ? 'line-through opacity-60' : ''}`} title={cell?.subjectName ?? undefined}>
@@ -293,8 +312,30 @@ export function TimetableView() {
                             )}
                           </span>
                           <span className="flex items-center gap-1.5 font-mono text-[9px] font-normal text-text-tertiary">
-                            {cell?.room && <span className="truncate">{cell.room}</span>}
-                            {cell?.teacherAcronym && <span className="shrink-0">{cell.teacherAcronym}</span>}
+                            {cell?.room && (
+                              <span className="truncate">
+                                {roomChanged ? (
+                                  <>
+                                    <span className="line-through opacity-60">{cell.room}</span>{' '}
+                                    {cell.substituteRoom}
+                                  </>
+                                ) : (
+                                  cell.room
+                                )}
+                              </span>
+                            )}
+                            {cell?.teacherAcronym && (
+                              <span className="shrink-0">
+                                {teacherChanged ? (
+                                  <>
+                                    <span className="line-through opacity-60">{cell.teacherAcronym}</span>{' '}
+                                    {cell.substituteTeacherAcronym}
+                                  </>
+                                ) : (
+                                  cell.teacherAcronym
+                                )}
+                              </span>
+                            )}
                           </span>
                           {cell?.vertretung && (
                             <span
@@ -302,7 +343,7 @@ export function TimetableView() {
                                 cancelled ? 'bg-red-400/20 text-red-400' : 'bg-accent/20 text-accent-text'
                               }`}
                             >
-                              {cancelled ? 'ENTFÄLLT' : 'VERTRETUNG'}
+                              {vertretungLabel(cancelled, roomChanged, teacherChanged)}
                             </span>
                           )}
                         </button>
@@ -355,7 +396,9 @@ function toLessonDetail({
     startTime,
     endTime,
     room: cell.room,
+    substituteRoom: cell.substituteRoom,
     teacherName: cell.teacherName,
+    substituteTeacherName: cell.substituteTeacherName,
     courseName: cell.courseName,
     vertretung: cell.vertretung,
   }
