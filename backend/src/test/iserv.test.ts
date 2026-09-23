@@ -2,7 +2,11 @@ import request from "supertest";
 import { describe, expect, it } from "vitest";
 import { decryptSecret, encryptSecret } from "../lib/credentialsCrypto.js";
 import type { IServChangeInfo, IServPeriod } from "../modules/iserv/iservClient.js";
-import { mapPeriodsToOverrides, syncTimeGridFromIserv } from "../modules/iserv/iservSync.service.js";
+import {
+  currentWeekdaysUTC,
+  mapPeriodsToOverrides,
+  syncTimeGridFromIserv,
+} from "../modules/iserv/iservSync.service.js";
 import { prisma } from "../lib/prisma.js";
 import { app, registerUser } from "./helpers.js";
 
@@ -45,6 +49,26 @@ describe("Credentials encryption", () => {
     const [iv, authTag, ciphertext] = encrypted.split(":");
     const tampered = `${iv}:${authTag}:${ciphertext.slice(0, -2)}00`;
     expect(() => decryptSecret(tampered)).toThrow();
+  });
+});
+
+describe("currentWeekdaysUTC (full-week sync coverage)", () => {
+  it("returns Monday-Friday of the same week when 'now' is mid-week", () => {
+    const thursday = new Date("2026-09-24T10:00:00.000Z"); // a Thursday
+    const days = currentWeekdaysUTC(thursday).map((d) => d.toISOString().slice(0, 10));
+    expect(days).toEqual(["2026-09-21", "2026-09-22", "2026-09-23", "2026-09-24", "2026-09-25"]);
+  });
+
+  it("returns the same week's Monday-Friday when 'now' is Monday itself", () => {
+    const monday = new Date("2026-09-21T06:00:00.000Z");
+    const days = currentWeekdaysUTC(monday).map((d) => d.toISOString().slice(0, 10));
+    expect(days).toEqual(["2026-09-21", "2026-09-22", "2026-09-23", "2026-09-24", "2026-09-25"]);
+  });
+
+  it("looks back to the preceding Monday when 'now' is a Sunday", () => {
+    const sunday = new Date("2026-09-27T06:00:00.000Z");
+    const days = currentWeekdaysUTC(sunday).map((d) => d.toISOString().slice(0, 10));
+    expect(days).toEqual(["2026-09-21", "2026-09-22", "2026-09-23", "2026-09-24", "2026-09-25"]);
   });
 });
 

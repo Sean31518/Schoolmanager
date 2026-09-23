@@ -67,6 +67,34 @@ function datesToSync(from: Date, days: number): Date[] {
   return result;
 }
 
+/** Monday-Friday of the calendar week containing `now`, in the same UTC-day
+ * terms timetable.service.ts's currentWeekWeekdayDates uses for reading the
+ * read-only Stundenplan grid. A sync only covering "today forward N days"
+ * (datesToSync above) never touches earlier days of the CURRENT week once
+ * it's past Monday - harmless for a single person (those days already
+ * happened), but a real problem when two people take turns on one shared
+ * account, each with their own IServ login: swapping credentials mid-week
+ * and syncing would leave Monday/Tuesday still showing the previous
+ * person's overrides, genuinely mixing both people's schedules in the same
+ * displayed week. Always including the full current week in the sync range
+ * closes that gap - every sync fully refreshes the week the grid actually
+ * shows, regardless of which day it runs on or whose credentials are
+ * currently saved. */
+export function currentWeekdaysUTC(now: Date): Date[] {
+  const jsDay = now.getUTCDay(); // 0=Sun..6=Sat
+  const mondayOffset = jsDay === 0 ? -6 : 1 - jsDay;
+  const monday = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+  monday.setUTCDate(monday.getUTCDate() + mondayOffset);
+
+  const result: Date[] = [];
+  for (let i = 0; i < 5; i++) {
+    const d = new Date(monday);
+    d.setUTCDate(d.getUTCDate() + i);
+    result.push(d);
+  }
+  return result;
+}
+
 function dateKeyToDate(dateKey: string): Date {
   return new Date(`${dateKey}T00:00:00.000Z`);
 }
@@ -347,7 +375,10 @@ export async function syncUserIservTimetable(userId: string, now: Date = new Dat
     });
 
     const password = decryptSecret(settings.iservPasswordEncrypted!);
-    const dates = datesToSync(now, SYNC_DAYS_AHEAD);
+    // Union, not just "today forward" - see currentWeekdaysUTC's docblock.
+    // fetchIServTimetable dedups internally (by ISO week and by date key),
+    // so the overlap on a normal Monday-run sync costs nothing extra.
+    const dates = [...currentWeekdaysUTC(now), ...datesToSync(now, SYNC_DAYS_AHEAD)];
     const byDate = await fetchIServTimetable(
       {
         host: settings.iservHost!,
