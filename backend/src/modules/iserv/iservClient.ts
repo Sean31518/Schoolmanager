@@ -33,19 +33,26 @@
  * The endpoint takes `week=true`, returning an entire week's schedule
  * (Monday-Friday, `weekday` 0-4) per request rather than one day at a time.
  *
- * Substitution/cancellation detection (detectChange below) is a best-effort
- * guess at plausible field names - no live example of an actual Vertretung
- * in this API's response has been seen yet, only a week with none active.
- * A wrong guess here just means no override gets created (never a false
- * "cancelled" on a normal lesson), since detectChange only fires on the
- * presence of specific fields that are very unlikely to appear on a normal
- * entry. Needs a real example to confirm/fix.
+ * Substitution/cancellation detection (detectChange below) is confirmed
+ * live, 2026-09-23, for a cancellation - a real API response for one showed
+ * a completely different top-level entry shape: no plain courseSubject/
+ * room fields to inspect for "did something change", but a `substitution`
+ * object (its mere presence marks the entry as a change of some kind), a
+ * `substitutionType` string ("canceled", confirmed - single L), and an
+ * `originalTimeTableEntry` holding the standard/planned lesson's own
+ * subject/room/teachers, separate from the entry's own top-level ones
+ * (which are the CURRENT/effective values - identical to
+ * originalTimeTableEntry's for a plain cancellation). See the
+ * DieSchulAppEntry interface docblock for the full shape and what's still
+ * unconfirmed (an actual room/teacher/subject substitution, as opposed to a
+ * cancellation).
  *
- * convertEntry() also reads teacher name/acronym, course name, and the
- * period's own start/end time from the base (non-substituted) entry, for
- * the Stundenplan detail view - these are NOT re-derived from a
- * substitution's own data even when one exists, since that shape is
- * unconfirmed (see detectChange).
+ * convertEntry() reads teacher name/acronym, course name, room, and the
+ * subject from `originalTimeTableEntry` when present (the standard lesson),
+ * falling back to the entry itself for a plain, unmodified lesson - the
+ * period's own start/end time and label always come from the entry's own
+ * top-level `timeTableSlot`, since that reflects the actual slot being
+ * looked at either way.
  */
 
 export interface IServCredentials {
@@ -256,16 +263,43 @@ interface DieSchulAppTeacher {
   externalId?: string;
 }
 
-interface DieSchulAppEntry {
+interface DieSchulAppCourseSubject {
+  subject?: { name?: string; acronym?: string };
+  course?: { name?: string };
+  teachers?: DieSchulAppTeacher[];
+  type?: string;
+}
+
+/** Shape shared by a plain entry and (nested as `originalTimeTableEntry`) a
+ * substitution's own "what would normally happen" record - confirmed live,
+ * 2026-09-23. */
+interface DieSchulAppBaseEntry {
   weekday: number;
   timeTableSlot?: { number?: number; startTime?: string; endTime?: string; name?: string };
-  courseSubject?: {
-    subject?: { name?: string; acronym?: string };
-    course?: { name?: string };
-    teachers?: DieSchulAppTeacher[];
-    type?: string;
-  } | null;
+  courseSubject?: DieSchulAppCourseSubject | null;
   room?: { name?: string } | null;
+}
+
+/** A plain, unmodified lesson has none of the substitution-specific fields
+ * below at all. A substitution/cancellation record instead carries a
+ * `substitution` object (its presence alone is the signal that this entry
+ * is *some* kind of change) plus `substitutionType` and
+ * `originalTimeTableEntry` - confirmed live, 2026-09-23, for a cancellation
+ * (`substitutionType: "canceled"`, single L). Its OWN top-level
+ * courseSubject/room/teachers are the CURRENT/effective values (for a plain
+ * cancellation these mirror originalTimeTableEntry exactly, since nothing
+ * is being substituted in); `originalTimeTableEntry` is always the
+ * standard/planned lesson. Other `substitutionType` values (an actual room/
+ * teacher/subject swap, not just a cancellation) are NOT yet confirmed
+ * against a live example - detectChange below infers what changed by
+ * diffing the top-level fields against originalTimeTableEntry rather than
+ * relying on a specific substitutionType string, so it should still work
+ * once one occurs, but isn't verified yet. */
+export interface DieSchulAppEntry extends DieSchulAppBaseEntry {
+  substitution?: { id?: number; sourceOfCreation?: string };
+  substitutionType?: string;
+  originalTimeTableEntry?: DieSchulAppBaseEntry;
+  message?: string;
   [key: string]: unknown;
 }
 
@@ -331,58 +365,52 @@ function joinTeachers(teachers: DieSchulAppTeacher[], pick: (t: DieSchulAppTeach
   return names.length ? names.join(", ") : null;
 }
 
-/** Best-effort substitution detection - see the module docblock's caveat.
- * Only fires on the presence of specific fields, so a wrong guess about
- * their names just means no override is created (or a substitute
- * room/teacher silently missing), never a false positive on a normal
- * lesson. The substitute-teacher guess mirrors the base entry's own
- * courseSubject.teachers shape, since a substitution swapping the teacher
- * is the most plausible place IServ would reuse that same shape. */
+/** Substitution/cancellation detection - confirmed live, 2026-09-23, for a
+ * cancellation. `substitution` being present at all is the signal that this
+ * entry is some kind of change (a plain lesson has no such key);
+ * `substitutionType: "canceled"` (single L) is the confirmed cancellation
+ * marker. Any other substitutionType is treated as a genuine substitution
+ * and reported by diffing the entry's own top-level (current/effective)
+ * subject/room/teachers against `originalTimeTableEntry`'s (the standard
+ * lesson) - this doesn't depend on knowing that other substitutionType
+ * string, only on the API's confirmed pattern of mirroring the same
+ * courseSubject/room/teachers shape at both levels, so it should hold even
+ * though only the "canceled" case has actually been observed so far. */
 function detectChange(raw: DieSchulAppEntry): IServChangeInfo | null {
-  if (raw.cancelled === true || raw.courseSubject === null) {
+  if (!raw.substitution) return null;
+  if (raw.substitutionType === "canceled") {
     return { changeTypes: ["0"] };
   }
-  const sub = (raw.substitution ?? raw.change) as Record<string, unknown> | undefined;
-  if (sub && typeof sub === "object") {
-    if (sub.type === "cancelled" || sub.cancelled === true) {
-      return { changeTypes: ["0"] };
-    }
-    const subSubject = sub.subject as Record<string, unknown> | undefined;
-    const subRoom = sub.room as Record<string, unknown> | undefined;
-    const subTeachers = sub.teachers as DieSchulAppTeacher[] | undefined;
-    return {
-      changeTypes: ["1"],
-      substitutionSubject:
-        (subSubject?.acronym as string) ||
-        (subSubject?.name as string) ||
-        (sub.subjectName as string) ||
-        undefined,
-      substitutionRoom: (subRoom?.name as string) || (sub.roomName as string) || undefined,
-      substitutionTeacherName: Array.isArray(subTeachers)
-        ? (joinTeachers(subTeachers, (t) => t.displayname || [t.forename, t.surname].filter(Boolean).join(" ")) ??
-          undefined)
-        : undefined,
-      substitutionTeacherAcronym: Array.isArray(subTeachers)
-        ? (joinTeachers(subTeachers, (t) => t.externalId) ?? undefined)
-        : undefined,
-    };
-  }
-  return null;
-}
 
-function convertEntry(raw: DieSchulAppEntry): IServPeriod {
   const subject = raw.courseSubject?.subject;
   const teachers = raw.courseSubject?.teachers ?? [];
+  return {
+    changeTypes: ["1"],
+    substitutionSubject: subject?.acronym || subject?.name || undefined,
+    substitutionRoom: raw.room?.name || undefined,
+    substitutionTeacherName:
+      joinTeachers(teachers, (t) => t.displayname || [t.forename, t.surname].filter(Boolean).join(" ")) ?? undefined,
+    substitutionTeacherAcronym: joinTeachers(teachers, (t) => t.externalId) ?? undefined,
+  };
+}
+
+export function convertEntry(raw: DieSchulAppEntry): IServPeriod {
+  // The standard/planned lesson's own details - originalTimeTableEntry when
+  // this is a substitution/cancellation record (see the interface
+  // docblock), otherwise the entry itself (a plain, unmodified lesson).
+  const base = raw.originalTimeTableEntry ?? raw;
+  const subject = base.courseSubject?.subject;
+  const teachers = base.courseSubject?.teachers ?? [];
   return {
     period: raw.timeTableSlot?.number ?? 0,
     label: raw.timeTableSlot?.name ?? null,
     subject: subject?.acronym || subject?.name || "",
-    room: raw.room?.name ?? "",
+    room: base.room?.name ?? "",
     startTime: raw.timeTableSlot?.startTime ?? null,
     endTime: raw.timeTableSlot?.endTime ?? null,
     teacherName: joinTeachers(teachers, (t) => t.displayname || [t.forename, t.surname].filter(Boolean).join(" ")),
     teacherAcronym: joinTeachers(teachers, (t) => t.externalId),
-    courseName: raw.courseSubject?.course?.name ?? null,
+    courseName: base.courseSubject?.course?.name ?? null,
     change: detectChange(raw),
   };
 }

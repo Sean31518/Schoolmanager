@@ -2,6 +2,7 @@ import request from "supertest";
 import { describe, expect, it } from "vitest";
 import { decryptSecret, encryptSecret } from "../lib/credentialsCrypto.js";
 import type { IServChangeInfo, IServPeriod } from "../modules/iserv/iservClient.js";
+import { convertEntry, type DieSchulAppEntry } from "../modules/iserv/iservClient.js";
 import {
   currentWeekdaysUTC,
   mapPeriodsToOverrides,
@@ -49,6 +50,74 @@ describe("Credentials encryption", () => {
     const [iv, authTag, ciphertext] = encrypted.split(":");
     const tampered = `${iv}:${authTag}:${ciphertext.slice(0, -2)}00`;
     expect(() => decryptSecret(tampered)).toThrow();
+  });
+});
+
+describe("convertEntry (real dieschulapp API shapes, captured 2026-09-23)", () => {
+  it("converts a plain, unmodified lesson", () => {
+    const raw: DieSchulAppEntry = {
+      weekday: 0,
+      timeTableSlot: { number: 1, startTime: "07:45", endTime: "08:30", name: "1. Stunde" },
+      courseSubject: {
+        subject: { name: "e2", acronym: "e2" },
+        course: { name: "KS2-Lk-E2" },
+        teachers: [{ forename: "Ulrike", surname: "Schönit", displayname: "Schönit Ulrike", externalId: "SÖU" }],
+        type: "lesson",
+      },
+      room: { name: "KR7" },
+    };
+    expect(convertEntry(raw)).toEqual({
+      period: 1,
+      label: "1. Stunde",
+      subject: "e2",
+      room: "KR7",
+      startTime: "07:45",
+      endTime: "08:30",
+      teacherName: "Schönit Ulrike",
+      teacherAcronym: "SÖU",
+      courseName: "KS2-Lk-E2",
+      change: null,
+    });
+  });
+
+  it("converts a real cancellation - substitutionType 'canceled', reading the standard lesson from originalTimeTableEntry", () => {
+    const raw: DieSchulAppEntry = {
+      substitution: { id: 7805769, sourceOfCreation: "Untis" },
+      originalTimeTableEntry: {
+        weekday: 3,
+        timeTableSlot: { number: 1, startTime: "07:45", endTime: "08:30", name: "1. Stunde" },
+        courseSubject: {
+          course: { name: "KS2-Bk-bk2" },
+          subject: { name: "bk2", acronym: "bk2" },
+          teachers: [{ displayname: "Eitler Eleonora", surname: "Eitler", forename: "Eleonora", externalId: "EIT" }],
+          type: "lesson",
+        },
+        room: { name: "KU2" },
+      },
+      timeTableSlot: { number: 1, startTime: "07:45", endTime: "08:30", name: "1. Stunde" },
+      courseSubject: {
+        course: { name: "KS2-Bk-bk2" },
+        subject: { name: "bk2", acronym: "bk2" },
+        teachers: [{ displayname: "Eitler Eleonora", surname: "Eitler", forename: "Eleonora", externalId: "EIT" }],
+        type: "lesson",
+      },
+      weekday: 3,
+      room: { name: "KU2" },
+      substitutionType: "canceled",
+      message: "",
+    };
+    expect(convertEntry(raw)).toEqual({
+      period: 1,
+      label: "1. Stunde",
+      subject: "bk2",
+      room: "KU2",
+      startTime: "07:45",
+      endTime: "08:30",
+      teacherName: "Eitler Eleonora",
+      teacherAcronym: "EIT",
+      courseName: "KS2-Bk-bk2",
+      change: { changeTypes: ["0"] },
+    });
   });
 });
 
