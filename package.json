@@ -27,6 +27,10 @@
     "typescript": "^5.7.2",
     "typescript-eslint": "^8.18.0"
   },
+  "overrides": {
+    "react": "19.3.0",
+    "react-dom": "19.3.0"
+  },
   "allowScripts": {
     "@prisma/client@5.22.0": true,
     "@prisma/engines@5.22.0": true,

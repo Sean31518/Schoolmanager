@@ -66,6 +66,13 @@ export default defineConfig({
       },
     }),
   ],
+  // Two React copies in one bundle crash every hook call at startup (blank
+  // page). Some Excalidraw sub-dependency once got npm to hoist React 18
+  // into the root node_modules next to the frontend's React 19 - the root
+  // package.json "overrides" prevent that, this guards the bundle itself.
+  resolve: {
+    dedupe: ['react', 'react-dom'],
+  },
   server: {
     proxy: {
       '/api': {
