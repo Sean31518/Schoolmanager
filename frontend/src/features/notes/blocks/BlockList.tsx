@@ -187,8 +187,15 @@ export function BlockList({ noteId, blocks }: { noteId: string; blocks: NoteBloc
       <InsertBlockMenu actions={blockActionsAt(0)} />
       {blocks.map((block, index) => (
         <div key={block.id}>
-          <div className="group relative rounded-lg border border-transparent p-1 hover:border-border">
-            <div className="absolute right-1 top-1 hidden items-center gap-1 rounded-md border border-border bg-bg-2 p-0.5 shadow-lg group-hover:flex">
+          <div
+            className={`group relative rounded-lg border border-transparent p-1 hover:border-border ${
+              // Excalidraw fills its block edge to edge and has its own
+              // controls in the top-right corner - leave a strip above the
+              // canvas so this toolbar sits there instead of on top of them.
+              block.type === 'EXCALIDRAW' ? 'pt-9' : ''
+            }`}
+          >
+            <div className="absolute right-1 top-1 z-20 hidden items-center gap-1 rounded-md border border-border bg-bg-2 p-0.5 shadow-lg group-hover:flex">
               <button
                 type="button"
                 onClick={() => moveBlock(index, -1)}

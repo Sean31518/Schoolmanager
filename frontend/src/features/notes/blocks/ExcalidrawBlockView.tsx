@@ -36,7 +36,9 @@ export function ExcalidrawBlockView({
   }
 
   return (
-    <div className="h-[480px] w-full overflow-hidden rounded-lg border border-border">
+    // isolate: Excalidraw's own internal z-indexes stay inside this box
+    // instead of competing with the block toolbar above it.
+    <div className="isolate h-[480px] w-full overflow-hidden rounded-lg border border-border">
       <Excalidraw
         theme={theme}
         initialData={{
