@@ -15,6 +15,9 @@ export function createCalendarEvent(data: {
   type: Extract<CalendarEventType, 'MANUAL' | 'EXAM'>
   startDate: string
   endDate?: string | null
+  allDay?: boolean
+  startTime?: string | null
+  endTime?: string | null
   subjectId?: string | null
   color?: string | null
   note?: string | null
@@ -32,6 +35,9 @@ export function updateCalendarEvent(
     type: Extract<CalendarEventType, 'MANUAL' | 'EXAM'>
     startDate: string
     endDate: string | null
+    allDay: boolean
+    startTime: string | null
+    endTime: string | null
     subjectId: string | null
     color: string | null
   }>,

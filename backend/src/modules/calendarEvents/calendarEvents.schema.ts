@@ -5,6 +5,7 @@ const manualEventTypeSchema = calendarEventTypeSchema.exclude(["HOLIDAY", "PUBLI
 const colorSchema = z
   .string()
   .regex(/^#[0-9a-fA-F]{6}$/, "Farbe muss ein Hex-Code sein, z.B. #3B82F6");
+const timeSchema = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Uhrzeit muss im Format HH:mm sein");
 
 export const createCalendarEventSchema = z.object({
   title: z.string().min(1).max(200),
@@ -12,6 +13,8 @@ export const createCalendarEventSchema = z.object({
   startDate: z.coerce.date(),
   endDate: z.coerce.date().nullable().optional(),
   allDay: z.boolean().optional(),
+  startTime: timeSchema.nullable().optional(),
+  endTime: timeSchema.nullable().optional(),
   subjectId: z.string().nullable().optional(),
   color: colorSchema.nullable().optional(),
   note: z.string().max(2000).nullable().optional(),
@@ -23,6 +26,8 @@ export const updateCalendarEventSchema = z.object({
   startDate: z.coerce.date().optional(),
   endDate: z.coerce.date().nullable().optional(),
   allDay: z.boolean().optional(),
+  startTime: timeSchema.nullable().optional(),
+  endTime: timeSchema.nullable().optional(),
   subjectId: z.string().nullable().optional(),
   color: colorSchema.nullable().optional(),
   note: z.string().max(2000).nullable().optional(),

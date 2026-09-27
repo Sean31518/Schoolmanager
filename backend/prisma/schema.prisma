@@ -356,6 +356,15 @@ model CalendarEvent {
   startDate   DateTime
   endDate     DateTime?
   allDay      Boolean   @default(true)
+  // Plain "HH:mm" wall-clock strings, deliberately not folded into
+  // startDate/endDate - this app (and its family) has exactly one
+  // timezone, and storing time-of-day as an opaque string (same convention
+  // as TimeGridSlot.startTime/endTime) sidesteps any UTC-vs-local
+  // conversion entirely, which a real datetime value here would require
+  // getting right on both server and client. Only meaningful when
+  // allDay is false.
+  startTime   String?
+  endTime     String?
   subjectId   String?
   subject     Subject?  @relation(fields: [subjectId], references: [id], onDelete: SetNull)
   color       String?

@@ -37,6 +37,44 @@ describe("Calendar event CRUD", () => {
     expect(updateRes.body.endDate).not.toBeNull();
   });
 
+  it("creates a timed (non-all-day) event with start/end time and can update them", async () => {
+    const user = await registerUser();
+    const headers = { Authorization: `Bearer ${user.accessToken}` };
+
+    const createRes = await request(app)
+      .post("/api/calendar-events")
+      .set(headers)
+      .send({
+        title: "Zahnarzttermin",
+        type: "MANUAL",
+        startDate: "2026-09-28",
+        allDay: false,
+        startTime: "14:30",
+        endTime: "15:15",
+      });
+    expect(createRes.status).toBe(201);
+    expect(createRes.body).toMatchObject({ allDay: false, startTime: "14:30", endTime: "15:15" });
+    const eventId = createRes.body.id as string;
+
+    const updateRes = await request(app)
+      .patch(`/api/calendar-events/${eventId}`)
+      .set(headers)
+      .send({ startTime: "15:00", endTime: "15:45" });
+    expect(updateRes.status).toBe(200);
+    expect(updateRes.body).toMatchObject({ startTime: "15:00", endTime: "15:45" });
+  });
+
+  it("rejects a malformed time string", async () => {
+    const user = await registerUser();
+    const headers = { Authorization: `Bearer ${user.accessToken}` };
+
+    const res = await request(app)
+      .post("/api/calendar-events")
+      .set(headers)
+      .send({ title: "Termin", type: "MANUAL", startDate: "2026-09-20", startTime: "25:99" });
+    expect(res.status).toBe(400);
+  });
+
   it("rejects a non-hex color", async () => {
     const user = await registerUser();
     const headers = { Authorization: `Bearer ${user.accessToken}` };

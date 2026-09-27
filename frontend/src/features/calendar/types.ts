@@ -7,6 +7,8 @@ export interface CalendarEventDto {
   startDate: string
   endDate: string | null
   allDay: boolean
+  startTime: string | null
+  endTime: string | null
   subjectId: string | null
   subject: { id: string; name: string; color: string } | null
   color: string | null

@@ -76,6 +76,11 @@ export function WeekRow({
             borderLeftColor: getEffectiveColor(seg.event),
           }}
         >
+          {!seg.event.allDay && seg.event.startTime && (
+            <span className="mr-1 shrink-0 font-mono text-[9px] text-text-tertiary">
+              {seg.event.startTime}
+            </span>
+          )}
           {seg.event.title}
         </button>
       ))}

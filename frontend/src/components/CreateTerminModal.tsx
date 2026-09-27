@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { ApiRequestError } from '../lib/apiClient'
 import { useCreateCalendarEvent } from '../features/calendar/hooks'
 import { useSubjects } from '../features/subjects/hooks'
+import { ToggleSwitch } from './ToggleSwitch'
 
 export function CreateTerminModal({
   onClose,
@@ -16,14 +17,30 @@ export function CreateTerminModal({
   const [title, setTitle] = useState('')
   const [type, setType] = useState<'MANUAL' | 'EXAM'>(defaultType)
   const [startDate, setStartDate] = useState('')
+  const [endDate, setEndDate] = useState('')
+  const [allDay, setAllDay] = useState(true)
+  const [startTime, setStartTime] = useState('')
+  const [endTime, setEndTime] = useState('')
   const [subjectId, setSubjectId] = useState('')
+  const [color, setColor] = useState('#3B82F6')
+  const [useColor, setUseColor] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   async function handleCreate(e: FormEvent) {
     e.preventDefault()
     setError(null)
     try {
-      await createEvent.mutateAsync({ title, type, startDate, subjectId: subjectId || null })
+      await createEvent.mutateAsync({
+        title,
+        type,
+        startDate,
+        endDate: endDate || null,
+        allDay,
+        startTime: allDay ? null : startTime || null,
+        endTime: allDay ? null : endTime || null,
+        subjectId: subjectId || null,
+        color: useColor ? color : null,
+      })
       onClose()
     } catch (err) {
       setError(
@@ -69,16 +86,56 @@ export function CreateTerminModal({
           </select>
         </label>
 
-        <label className="mt-3 block text-sm text-text-secondary">
-          Datum
-          <input
-            type="date"
-            required
-            value={startDate}
-            onChange={(e) => setStartDate(e.target.value)}
-            className="mt-1 block w-full rounded-md border border-border bg-bg-muted px-3 py-2 text-sm text-text-primary"
-          />
-        </label>
+        <div className="mt-3 flex gap-3">
+          <label className="flex-1 text-sm text-text-secondary">
+            Von
+            <input
+              type="date"
+              required
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              className="mt-1 block w-full rounded-md border border-border bg-bg-muted px-3 py-2 text-sm text-text-primary"
+            />
+          </label>
+          <label className="flex-1 text-sm text-text-secondary">
+            Bis (optional, für mehrtägig)
+            <input
+              type="date"
+              value={endDate}
+              min={startDate}
+              onChange={(e) => setEndDate(e.target.value)}
+              className="mt-1 block w-full rounded-md border border-border bg-bg-muted px-3 py-2 text-sm text-text-primary"
+            />
+          </label>
+        </div>
+
+        <div className="mt-3 flex items-center gap-3">
+          <ToggleSwitch checked={!allDay} onClick={() => setAllDay((v) => !v)} />
+          <p className="text-sm text-text-primary">Uhrzeit festlegen</p>
+        </div>
+
+        {!allDay && (
+          <div className="mt-3 flex gap-3">
+            <label className="flex-1 text-sm text-text-secondary">
+              Startzeit
+              <input
+                type="time"
+                value={startTime}
+                onChange={(e) => setStartTime(e.target.value)}
+                className="mt-1 block w-full rounded-md border border-border bg-bg-muted px-3 py-2 text-sm text-text-primary"
+              />
+            </label>
+            <label className="flex-1 text-sm text-text-secondary">
+              Endzeit (optional)
+              <input
+                type="time"
+                value={endTime}
+                onChange={(e) => setEndTime(e.target.value)}
+                className="mt-1 block w-full rounded-md border border-border bg-bg-muted px-3 py-2 text-sm text-text-primary"
+              />
+            </label>
+          </div>
+        )}
 
         <label className="mt-3 block text-sm text-text-secondary">
           Fach (optional)
@@ -95,6 +152,26 @@ export function CreateTerminModal({
             ))}
           </select>
         </label>
+
+        <div className="mt-3 flex items-end gap-3">
+          <label className="text-sm text-text-secondary">
+            Farbe
+            <input
+              type="color"
+              value={color}
+              disabled={!useColor}
+              onChange={(e) => setColor(e.target.value)}
+              className="mt-1 block h-9 w-14 rounded-md border border-border disabled:opacity-40"
+            />
+          </label>
+          <button
+            type="button"
+            onClick={() => setUseColor((v) => !v)}
+            className="text-sm text-text-muted hover:text-accent-text"
+          >
+            {useColor ? 'Automatische Farbe verwenden' : 'Eigene Farbe festlegen'}
+          </button>
+        </div>
 
         {error && <p className="mt-3 text-sm text-red-400">{error}</p>}
 

@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
+import { ToggleSwitch } from '../../components/ToggleSwitch'
 import { ApiRequestError } from '../../lib/apiClient'
 import { useSubjects } from '../subjects/hooks'
 import { getEffectiveColor } from './eventColors'
@@ -25,6 +26,9 @@ export function EventEditModal({
   )
   const [startDate, setStartDate] = useState(event.startDate.slice(0, 10))
   const [endDate, setEndDate] = useState(event.endDate ? event.endDate.slice(0, 10) : '')
+  const [allDay, setAllDay] = useState(event.allDay)
+  const [startTime, setStartTime] = useState(event.startTime ?? '')
+  const [endTime, setEndTime] = useState(event.endTime ?? '')
   const [subjectId, setSubjectId] = useState(event.subjectId ?? '')
   const [color, setColor] = useState(event.color)
   const [error, setError] = useState<string | null>(null)
@@ -42,6 +46,9 @@ export function EventEditModal({
           ...(canRetype ? { type } : {}),
           startDate,
           endDate: endDate || null,
+          allDay,
+          startTime: allDay ? null : startTime || null,
+          endTime: allDay ? null : endTime || null,
           subjectId: subjectId || null,
           color,
         },
@@ -119,6 +126,34 @@ export function EventEditModal({
             />
           </label>
         </div>
+
+        <div className="mt-3 flex items-center gap-3">
+          <ToggleSwitch checked={!allDay} onClick={() => setAllDay((v) => !v)} />
+          <p className="text-sm text-text-primary">Uhrzeit festlegen</p>
+        </div>
+
+        {!allDay && (
+          <div className="mt-3 flex gap-3">
+            <label className="flex-1 text-sm text-text-secondary">
+              Startzeit
+              <input
+                type="time"
+                value={startTime}
+                onChange={(e) => setStartTime(e.target.value)}
+                className="mt-1 block w-full rounded-md border border-border bg-bg-muted px-3 py-2 text-sm text-text-primary"
+              />
+            </label>
+            <label className="flex-1 text-sm text-text-secondary">
+              Endzeit (optional)
+              <input
+                type="time"
+                value={endTime}
+                onChange={(e) => setEndTime(e.target.value)}
+                className="mt-1 block w-full rounded-md border border-border bg-bg-muted px-3 py-2 text-sm text-text-primary"
+              />
+            </label>
+          </div>
+        )}
 
         <label className="mt-3 block text-sm text-text-secondary">
           Fach (optional)
