@@ -277,6 +277,8 @@ export async function importUserData(
         startDate: event.startDate,
         endDate: event.endDate ?? null,
         allDay: event.allDay,
+        startTime: event.startTime ?? null,
+        endTime: event.endTime ?? null,
         subjectId,
         color: event.color ?? null,
         note: event.note ?? null,

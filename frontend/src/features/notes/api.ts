@@ -77,6 +77,13 @@ export function createTextBlock(noteId: string, data: { contentJson?: unknown })
   })
 }
 
+export function createExcalidrawBlock(noteId: string, data: { contentJson?: unknown } = {}) {
+  return apiFetch<NoteBlockDto>(`/notes/${noteId}/blocks/excalidraw`, {
+    method: 'POST',
+    body: JSON.stringify(data),
+  })
+}
+
 export function createLinkBlock(noteId: string, data: { url: string }) {
   return apiFetch<NoteBlockDto>(`/notes/${noteId}/blocks/link`, {
     method: 'POST',

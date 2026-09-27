@@ -4,6 +4,10 @@ export const createTextBlockSchema = z.object({
   contentJson: z.unknown().optional(),
 });
 
+export const createExcalidrawBlockSchema = z.object({
+  contentJson: z.unknown().optional(),
+});
+
 export const createLinkBlockSchema = z.object({
   url: z.string().url().max(2000),
 });

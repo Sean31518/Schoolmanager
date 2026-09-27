@@ -101,6 +101,28 @@ describe("Note blocks", () => {
     expect(finalList.body).toHaveLength(2);
   });
 
+  it("creates and updates an Excalidraw drawing block's scene content", async () => {
+    const user = await registerUser();
+    const headers = { Authorization: `Bearer ${user.accessToken}` };
+    const { noteId } = await setupNote(headers);
+
+    const createRes = await request(app)
+      .post(`/api/notes/${noteId}/blocks/excalidraw`)
+      .set(headers)
+      .send({});
+    expect(createRes.status).toBe(201);
+    expect(createRes.body.type).toBe("EXCALIDRAW");
+    expect(createRes.body.contentJson).toEqual({ elements: [] });
+
+    const scene = { elements: [{ id: "el1", type: "rectangle" }], appState: { viewBackgroundColor: "#fff" } };
+    const updateRes = await request(app)
+      .patch(`/api/blocks/${createRes.body.id}`)
+      .set(headers)
+      .send({ contentJson: scene });
+    expect(updateRes.status).toBe(200);
+    expect(updateRes.body.contentJson).toEqual(scene);
+  });
+
   it("uploads a PDF, creates one block per page, and serves the file back", async () => {
     const user = await registerUser();
     const headers = { Authorization: `Bearer ${user.accessToken}` };

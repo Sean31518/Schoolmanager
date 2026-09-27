@@ -3,6 +3,7 @@ import { ValidationError } from "../../lib/errors.js";
 import { requireOwnedFile, requireOwnedNote, requireOwnedNoteBlock } from "../../lib/ownership.js";
 import { prisma } from "../../lib/prisma.js";
 import type {
+  createExcalidrawBlockSchema,
   createImageBlockSchema,
   createLinkBlockSchema,
   createPdfBlockSchema,
@@ -48,6 +49,25 @@ export async function createTextBlock(
       type: "TEXT",
       sortOrder,
       contentJson: JSON.stringify(data.contentJson ?? { type: "doc", content: [] }),
+    },
+    include: { file: { select: fileSelect } },
+  });
+  return mapBlock(block);
+}
+
+export async function createExcalidrawBlock(
+  userId: string,
+  noteId: string,
+  data: z.infer<typeof createExcalidrawBlockSchema>,
+) {
+  await requireOwnedNote(userId, noteId);
+  const sortOrder = await nextSortOrder(noteId);
+  const block = await prisma.noteBlock.create({
+    data: {
+      noteId,
+      type: "EXCALIDRAW",
+      sortOrder,
+      contentJson: JSON.stringify(data.contentJson ?? { elements: [] }),
     },
     include: { file: { select: fileSelect } },
   });
@@ -145,8 +165,8 @@ export async function updateBlock(
 ) {
   const existing = await requireOwnedNoteBlock(userId, blockId);
 
-  if (data.contentJson !== undefined && existing.type !== "TEXT") {
-    throw new ValidationError("Nur Textblöcke haben Inhalt");
+  if (data.contentJson !== undefined && existing.type !== "TEXT" && existing.type !== "EXCALIDRAW") {
+    throw new ValidationError("Nur Text- und Zeichnungsblöcke haben Inhalt");
   }
   if (data.url !== undefined && existing.type !== "LINK") {
     throw new ValidationError("Nur Link-Blöcke haben eine URL");

@@ -77,6 +77,8 @@ const calendarEventImportSchema = z.object({
   startDate: z.coerce.date(),
   endDate: z.coerce.date().nullable().optional(),
   allDay: z.boolean().default(true),
+  startTime: z.string().nullable().optional(),
+  endTime: z.string().nullable().optional(),
   subjectId: z.string().nullable().optional(),
   color: z.string().nullable().optional(),
   note: z.string().nullable().optional(),

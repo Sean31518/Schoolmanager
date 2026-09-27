@@ -1,7 +1,8 @@
 import type { JSONContent } from '@tiptap/react'
-import { useRef, useState, type ReactNode } from 'react'
+import { lazy, Suspense, useRef, useState, type ReactNode } from 'react'
 import type { BlockActions } from '../SlashCommand'
 import {
+  useCreateExcalidrawBlock,
   useCreateImageBlock,
   useCreateLinkBlock,
   useCreatePdfBlocks,
@@ -22,11 +23,20 @@ import { VideoBlockView } from './VideoBlockView'
 
 const EMPTY_DOC: JSONContent = { type: 'doc', content: [] }
 
+// Excalidraw drags in mermaid-to-excalidraw's optional dependency (mermaid +
+// cytoscape + dozens of locale files, ~1.5MB) - lazy so that huge weight only
+// ever loads for someone who actually opens a note with a drawing block in
+// it, not on every page load.
+const ExcalidrawBlockView = lazy(() =>
+  import('./ExcalidrawBlockView').then((m) => ({ default: m.ExcalidrawBlockView })),
+)
+
 export function BlockList({ noteId, blocks }: { noteId: string; blocks: NoteBlockDto[] }) {
   const createText = useCreateTextBlock(noteId)
   const createLink = useCreateLinkBlock(noteId)
   const createVideo = useCreateVideoBlock(noteId)
   const createImage = useCreateImageBlock(noteId)
+  const createExcalidraw = useCreateExcalidrawBlock(noteId)
   const createPdf = useCreatePdfBlocks(noteId)
   const updateBlock = useUpdateBlock(noteId)
   const deleteBlock = useDeleteBlock(noteId)
@@ -44,6 +54,13 @@ export function BlockList({ noteId, blocks }: { noteId: string; blocks: NoteBloc
 
   async function insertTextAt(position: number) {
     const created = await createText.mutateAsync({ contentJson: EMPTY_DOC })
+    const ids = blocks.map((b) => b.id)
+    ids.splice(position, 0, created.id)
+    await reorderBlocks.mutateAsync(ids)
+  }
+
+  async function insertExcalidrawAt(position: number) {
+    const created = await createExcalidraw.mutateAsync()
     const ids = blocks.map((b) => b.id)
     ids.splice(position, 0, created.id)
     await reorderBlocks.mutateAsync(ids)
@@ -76,6 +93,7 @@ export function BlockList({ noteId, blocks }: { noteId: string; blocks: NoteBloc
       onRequestVideo: () => requestVideoAt(position),
       onRequestLink: () => requestLinkAt(position),
       onRequestImage: () => requestImageAt(position),
+      onRequestExcalidraw: () => void insertExcalidrawAt(position),
     }
   }
 
@@ -390,6 +408,19 @@ function InsertBlockMenu({ actions }: { actions: BlockActions }) {
                 </MenuIcon>
                 Link
               </button>
+              <button
+                type="button"
+                onClick={() => pick(actions.onRequestExcalidraw)}
+                className="flex w-full items-center gap-2.5 rounded px-2 py-1.5 text-left text-[12.5px] font-medium text-text-secondary hover:bg-bg-hover hover:text-text-primary"
+              >
+                <MenuIcon>
+                  <path d="M12 19l7-7 3 3-7 7-3-3z" />
+                  <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z" />
+                  <path d="M2 2l7.586 7.586" />
+                  <circle cx="11" cy="11" r="2" />
+                </MenuIcon>
+                Zeichnung
+              </button>
             </div>
           </div>
         </>
@@ -404,7 +435,7 @@ function BlockContent({
   blockActions,
 }: {
   block: NoteBlockDto
-  onSaveText: (content: JSONContent) => void
+  onSaveText: (content: unknown) => void
   blockActions: BlockActions
 }) {
   switch (block.type) {
@@ -425,6 +456,18 @@ function BlockContent({
       return block.file ? <VideoBlockView file={block.file} /> : null
     case 'IMAGE':
       return block.file ? <ImageBlockView file={block.file} /> : null
+    case 'EXCALIDRAW':
+      return (
+        <Suspense
+          fallback={
+            <div className="flex h-[480px] w-full items-center justify-center rounded-lg border border-border text-sm text-text-tertiary">
+              Zeichenfläche wird geladen...
+            </div>
+          }
+        >
+          <ExcalidrawBlockView contentJson={block.contentJson} onSave={onSaveText} />
+        </Suspense>
+      )
     case 'LINK':
       return block.url ? <LinkBlockView url={block.url} /> : null
     default:

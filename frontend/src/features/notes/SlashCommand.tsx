@@ -17,6 +17,7 @@ export interface BlockActions {
   onRequestVideo: () => void
   onRequestLink: () => void
   onRequestImage: () => void
+  onRequestExcalidraw: () => void
 }
 
 type BlockActionsRef = { current?: BlockActions }
@@ -63,6 +64,14 @@ function buildBlockCommands(blockActionsRef: BlockActionsRef): CommandItem[] {
         blockActionsRef.current?.onRequestLink()
       },
     },
+    {
+      title: 'Zeichnung',
+      keywords: ['zeichnung', 'excalidraw', 'handschrift', 'skizze', 'drawing'],
+      command: ({ editor, range }) => {
+        editor.chain().focus().deleteRange(range).run()
+        blockActionsRef.current?.onRequestExcalidraw()
+      },
+    },
   ]
 }
 
@@ -106,6 +115,28 @@ const COMMANDS: CommandItem[] = [
         .focus()
         .deleteRange(range)
         .insertTable({ rows: 3, cols: 2, withHeaderRow: true })
+        .run(),
+  },
+  {
+    title: 'Mathe (inline)',
+    keywords: ['mathe', 'math', 'latex', 'formel', 'inline'],
+    command: ({ editor, range }) =>
+      editor
+        .chain()
+        .focus()
+        .deleteRange(range)
+        .insertContent({ type: 'inlineMath', attrs: { latex: '' } })
+        .run(),
+  },
+  {
+    title: 'Mathe (Block)',
+    keywords: ['mathe', 'math', 'latex', 'formel', 'block'],
+    command: ({ editor, range }) =>
+      editor
+        .chain()
+        .focus()
+        .deleteRange(range)
+        .insertContent({ type: 'mathBlock', attrs: { latex: '' } })
         .run(),
   },
 ]

@@ -8,8 +8,11 @@ import TaskItem from '@tiptap/extension-task-item'
 import TaskList from '@tiptap/extension-task-list'
 import { EditorContent, useEditor, type Editor, type JSONContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
+import 'katex/dist/katex.min.css'
 import { useMemo, useRef, useState, type FormEvent } from 'react'
 import 'tippy.js/dist/tippy.css'
+import { InlineMath } from './math/InlineMath'
+import { MathBlock } from './math/MathBlock'
 import { SlashCommand, type BlockActions } from './SlashCommand'
 
 interface RichTextEditorProps {
@@ -31,6 +34,8 @@ export const EXTENSIONS = [
   TableCell,
   TaskList,
   TaskItem.configure({ nested: true }),
+  MathBlock,
+  InlineMath,
 ]
 
 export function RichTextEditor({ content, onChange, blockActions }: RichTextEditorProps) {

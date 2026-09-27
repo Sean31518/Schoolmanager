@@ -9,6 +9,7 @@ noteBlocksRouter.use(authGuard);
 
 noteBlocksRouter.get("/", asyncHandler(noteBlocksController.list));
 noteBlocksRouter.post("/text", asyncHandler(noteBlocksController.createText));
+noteBlocksRouter.post("/excalidraw", asyncHandler(noteBlocksController.createExcalidraw));
 noteBlocksRouter.post("/link", asyncHandler(noteBlocksController.createLink));
 noteBlocksRouter.post("/video", asyncHandler(noteBlocksController.createVideo));
 noteBlocksRouter.post("/image", asyncHandler(noteBlocksController.createImage));

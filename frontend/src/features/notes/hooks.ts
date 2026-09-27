@@ -136,6 +136,14 @@ export function useCreateTextBlock(noteId: string) {
   })
 }
 
+export function useCreateExcalidrawBlock(noteId: string) {
+  const invalidate = useInvalidateNote(noteId)
+  return useMutation({
+    mutationFn: (data?: { contentJson?: unknown }) => api.createExcalidrawBlock(noteId, data),
+    onSuccess: invalidate,
+  })
+}
+
 export function useCreateLinkBlock(noteId: string) {
   const invalidate = useInvalidateNote(noteId)
   return useMutation({
