@@ -9,68 +9,10 @@ export async function requireOwnedSubject(userId: string, subjectId: string) {
   return subject;
 }
 
-export async function requireOwnedSectionType(userId: string, sectionTypeId: string) {
-  const sectionType = await prisma.noteSectionType.findFirst({
-    where: { id: sectionTypeId, subject: { userId } },
-  });
-  if (!sectionType) {
-    throw new NotFoundError("Notizbereich nicht gefunden");
-  }
-  return sectionType;
-}
-
 export async function requireOwnedCalendarEvent(userId: string, eventId: string) {
   const event = await prisma.calendarEvent.findFirst({ where: { id: eventId, userId } });
   if (!event) {
     throw new NotFoundError("Termin nicht gefunden");
   }
   return event;
-}
-
-export async function requireOwnedTopic(userId: string, topicId: string) {
-  const topic = await prisma.topic.findFirst({
-    where: { id: topicId, noteSectionType: { subject: { userId } } },
-  });
-  if (!topic) {
-    throw new NotFoundError("Thema nicht gefunden");
-  }
-  return topic;
-}
-
-export async function requireOwnedNote(userId: string, noteId: string) {
-  const note = await prisma.note.findFirst({
-    where: { id: noteId, topic: { noteSectionType: { subject: { userId } } } },
-  });
-  if (!note) {
-    throw new NotFoundError("Notiz nicht gefunden");
-  }
-  return note;
-}
-
-export async function requireOwnedNoteBlock(userId: string, blockId: string) {
-  const block = await prisma.noteBlock.findFirst({
-    where: { id: blockId, note: { topic: { noteSectionType: { subject: { userId } } } } },
-  });
-  if (!block) {
-    throw new NotFoundError("Block nicht gefunden");
-  }
-  return block;
-}
-
-export async function requireOwnedFlashcard(userId: string, flashcardId: string) {
-  const flashcard = await prisma.flashcard.findFirst({
-    where: { id: flashcardId, topic: { noteSectionType: { subject: { userId } } } },
-  });
-  if (!flashcard) {
-    throw new NotFoundError("Karteikarte nicht gefunden");
-  }
-  return flashcard;
-}
-
-export async function requireOwnedFile(userId: string, fileId: string) {
-  const file = await prisma.uploadedFile.findFirst({ where: { id: fileId, userId } });
-  if (!file) {
-    throw new NotFoundError("Datei nicht gefunden");
-  }
-  return file;
 }

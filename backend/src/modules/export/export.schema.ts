@@ -2,20 +2,6 @@ import { z } from "zod";
 
 const jsonValue = z.unknown();
 
-const noteBlockImportSchema = z.object({
-  type: z.enum(["TEXT", "LINK", "VIDEO", "IMAGE", "PDF_PAGE"]),
-  sortOrder: z.number().default(0),
-  contentJson: jsonValue.nullable().optional(),
-  url: z.string().nullable().optional(),
-});
-
-const noteImportSchema = z.object({
-  id: z.string(),
-  title: z.string().min(1),
-  sortOrder: z.number().default(0),
-  blocks: z.array(noteBlockImportSchema).default([]),
-});
-
 const flashcardImportSchema = z.object({
   question: z.string().min(1),
   answer: z.string().min(1),
@@ -23,29 +9,19 @@ const flashcardImportSchema = z.object({
   sortOrder: z.number().default(0),
 });
 
-const gradeLevelImportSchema = z.object({
-  gradeLevel: z.number(),
-});
-
-const topicImportSchema = z.object({
+const flashcardDeckImportSchema = z.object({
   name: z.string().min(1),
   sortOrder: z.number().default(0),
-  notes: z.array(noteImportSchema).default([]),
-  gradeLevels: z.array(gradeLevelImportSchema).default([]),
   flashcards: z.array(flashcardImportSchema).default([]),
-});
-
-const sectionTypeImportSchema = z.object({
-  name: z.string().min(1),
-  sortOrder: z.number().default(0),
-  topics: z.array(topicImportSchema).default([]),
 });
 
 const subjectImportSchema = z.object({
   id: z.string(),
   name: z.string().min(1),
   color: z.string(),
-  noteSectionTypes: z.array(sectionTypeImportSchema).default([]),
+  // Version-1 exports carried the old note tree here (noteSectionTypes);
+  // zod drops that unknown key, so old files still import everything else.
+  flashcardDecks: z.array(flashcardDeckImportSchema).default([]),
 });
 
 const timeGridSlotImportSchema = z.object({
@@ -65,12 +41,6 @@ const timetableSlotImportSchema = z.object({
   note: z.string().nullable().optional(),
 });
 
-const examPrepItemImportSchema = z.object({
-  noteId: z.string(),
-  sectionIndex: z.number(),
-  sectionLabel: z.string(),
-});
-
 const calendarEventImportSchema = z.object({
   title: z.string().min(1),
   type: z.string().default("MANUAL"),
@@ -83,7 +53,6 @@ const calendarEventImportSchema = z.object({
   color: z.string().nullable().optional(),
   note: z.string().nullable().optional(),
   externalRef: z.string().nullable().optional(),
-  examPrepItems: z.array(examPrepItemImportSchema).default([]),
 });
 
 const homeworkSubtaskImportSchema = z.object({
@@ -98,7 +67,6 @@ const homeworkImportSchema = z.object({
   dueDate: z.coerce.date().nullable().optional(),
   done: z.boolean().default(false),
   note: z.string().nullable().optional(),
-  linkedNoteId: z.string().nullable().optional(),
   subtasks: z.array(homeworkSubtaskImportSchema).default([]),
 });
 

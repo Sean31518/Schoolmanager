@@ -1,6 +1,5 @@
 import type { z } from "zod";
 import { NotFoundError } from "../../lib/errors.js";
-import { requireOwnedNote } from "../../lib/ownership.js";
 import { prisma } from "../../lib/prisma.js";
 import type {
   createHomeworkSchema,
@@ -17,52 +16,12 @@ interface ListFilters {
 export const withSubtasks = {
   subject: true,
   subtasks: { orderBy: { sortOrder: "asc" as const } },
-  linkedNote: {
-    include: { topic: { include: { noteSectionType: { include: { subject: true } } } } },
-  },
 };
 
-async function requireOwnedNoteIfProvided(userId: string, noteId: string | null | undefined) {
-  if (!noteId) return;
-  await requireOwnedNote(userId, noteId);
-}
-
-export function mapHomework<
-  T extends {
-    linkedNote:
-      | null
-      | {
-          id: string;
-          title: string;
-          topic: {
-            id: string;
-            name: string;
-            noteSectionType: {
-              id: string;
-              name: string;
-              subject: { id: string; name: string; color: string };
-            };
-          };
-        };
-  },
->(homework: T) {
-  const { linkedNote, ...rest } = homework;
-  return {
-    ...rest,
-    linkedNote: linkedNote
-      ? {
-          id: linkedNote.id,
-          title: linkedNote.title,
-          topicId: linkedNote.topic.id,
-          topicName: linkedNote.topic.name,
-          sectionTypeId: linkedNote.topic.noteSectionType.id,
-          sectionTypeName: linkedNote.topic.noteSectionType.name,
-          subjectId: linkedNote.topic.noteSectionType.subject.id,
-          subjectName: linkedNote.topic.noteSectionType.subject.name,
-          subjectColor: linkedNote.topic.noteSectionType.subject.color,
-        }
-      : null,
-  };
+// Kept as the single place homework rows are shaped for the API (the
+// document links get attached here in the Goodnotes phase).
+export function mapHomework<T>(homework: T) {
+  return homework;
 }
 
 export async function listHomework(userId: string, filters: ListFilters) {
@@ -94,7 +53,6 @@ export async function createHomework(
   data: z.infer<typeof createHomeworkSchema>,
 ) {
   await requireOwnedSubjectIfProvided(userId, data.subjectId);
-  await requireOwnedNoteIfProvided(userId, data.linkedNoteId);
   const homework = await prisma.homework.create({
     data: {
       userId,
@@ -102,7 +60,6 @@ export async function createHomework(
       subjectId: data.subjectId ?? null,
       dueDate: data.dueDate ?? null,
       note: data.note ?? null,
-      linkedNoteId: data.linkedNoteId ?? null,
     },
     include: withSubtasks,
   });
@@ -125,9 +82,6 @@ export async function updateHomework(
   await requireOwnedHomework(userId, id);
   if (data.subjectId !== undefined) {
     await requireOwnedSubjectIfProvided(userId, data.subjectId);
-  }
-  if (data.linkedNoteId !== undefined) {
-    await requireOwnedNoteIfProvided(userId, data.linkedNoteId);
   }
   const homework = await prisma.homework.update({ where: { id }, data, include: withSubtasks });
   return mapHomework(homework);

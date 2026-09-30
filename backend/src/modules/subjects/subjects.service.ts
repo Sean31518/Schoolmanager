@@ -7,7 +7,6 @@ export async function listSubjects(userId: string) {
   return prisma.subject.findMany({
     where: { userId },
     orderBy: { name: "asc" },
-    include: { noteSectionTypes: { orderBy: { sortOrder: "asc" } } },
   });
 }
 
@@ -28,7 +27,6 @@ export async function createSubject(
 export async function getSubject(userId: string, subjectId: string) {
   const subject = await prisma.subject.findFirst({
     where: { id: subjectId, userId },
-    include: { noteSectionTypes: { orderBy: { sortOrder: "asc" } } },
   });
   if (!subject) {
     throw new NotFoundError("Fach nicht gefunden");
@@ -56,41 +54,6 @@ export async function updateSubject(
   }
 
   return prisma.subject.update({ where: { id: subjectId }, data });
-}
-
-export async function listNotesForSubject(userId: string, subjectId: string) {
-  const subject = await prisma.subject.findFirst({ where: { id: subjectId, userId } });
-  if (!subject) {
-    throw new NotFoundError("Fach nicht gefunden");
-  }
-
-  const sectionTypes = await prisma.noteSectionType.findMany({
-    where: { subjectId },
-    include: {
-      topics: {
-        include: {
-          notes: { orderBy: { updatedAt: "desc" } },
-        },
-      },
-    },
-  });
-
-  const notes = sectionTypes.flatMap((sectionType) =>
-    sectionType.topics.flatMap((topic) =>
-      topic.notes.map((note) => ({
-        id: note.id,
-        title: note.title,
-        updatedAt: note.updatedAt,
-        topicId: topic.id,
-        topicName: topic.name,
-        sectionTypeId: sectionType.id,
-        sectionTypeName: sectionType.name,
-      })),
-    ),
-  );
-
-  notes.sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
-  return notes;
 }
 
 export async function deleteSubject(userId: string, subjectId: string) {

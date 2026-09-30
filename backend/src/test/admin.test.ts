@@ -201,28 +201,25 @@ describe("Admin: user management", () => {
 });
 
 describe("Admin: user editing", () => {
-  it("reports each user's storage usage from their uploaded files", async () => {
+  it("reports each user's storage usage from their stored Goodnotes PDF versions", async () => {
     await prisma.user.deleteMany();
     const admin = await register("storage-admin@example.com");
     const adminHeaders = { Authorization: `Bearer ${admin.body.accessToken}` };
     const other = await register("storage-user@example.com");
 
-    await prisma.uploadedFile.createMany({
+    const file = await prisma.davFile.create({
+      data: {
+        userId: other.body.user.id,
+        path: "/GoodNotes/Mathe.pdf",
+        kind: "PDF",
+        size: 2000,
+        modifiedAt: new Date(),
+      },
+    });
+    await prisma.davFileVersion.createMany({
       data: [
-        {
-          userId: other.body.user.id,
-          originalName: "a.pdf",
-          mimeType: "application/pdf",
-          size: 1000,
-          storagePath: "a.pdf",
-        },
-        {
-          userId: other.body.user.id,
-          originalName: "b.pdf",
-          mimeType: "application/pdf",
-          size: 2000,
-          storagePath: "b.pdf",
-        },
+        { fileId: file.id, storagePath: "a.pdf", size: 1000, sha256: "a", pageCount: 1, pageFingerprints: "[]" },
+        { fileId: file.id, storagePath: "b.pdf", size: 2000, sha256: "b", pageCount: 1, pageFingerprints: "[]" },
       ],
     });
 

@@ -3,7 +3,7 @@ import { prisma } from "../../lib/prisma.js";
 const RESULTS_PER_CATEGORY = 8;
 const MIN_QUERY_LENGTH = 2;
 
-export type SearchResultType = "subject" | "note" | "homework" | "calendarEvent" | "generalNote";
+export type SearchResultType = "subject" | "homework" | "calendarEvent" | "generalNote";
 
 export interface SearchResult {
   type: SearchResultType;
@@ -17,17 +17,9 @@ export async function search(userId: string, query: string): Promise<SearchResul
   const q = query.trim();
   if (q.length < MIN_QUERY_LENGTH) return [];
 
-  const [subjects, notes, homework, events, generalNotes] = await Promise.all([
+  const [subjects, homework, events, generalNotes] = await Promise.all([
     prisma.subject.findMany({
       where: { userId, name: { contains: q } },
-      take: RESULTS_PER_CATEGORY,
-    }),
-    prisma.note.findMany({
-      where: {
-        topic: { noteSectionType: { subject: { userId } } },
-        OR: [{ title: { contains: q } }, { blocks: { some: { contentJson: { contains: q } } } }],
-      },
-      include: { topic: { include: { noteSectionType: { include: { subject: true } } } } },
       take: RESULTS_PER_CATEGORY,
     }),
     prisma.homework.findMany({
@@ -54,17 +46,6 @@ export async function search(userId: string, query: string): Promise<SearchResul
       id: subject.id,
       title: subject.name,
       url: `/subjects/${subject.id}`,
-    });
-  }
-
-  for (const note of notes) {
-    const subject = note.topic.noteSectionType.subject;
-    results.push({
-      type: "note",
-      id: note.id,
-      title: note.title,
-      subtitle: subject.name,
-      url: `/subjects/${subject.id}/sections/${note.topic.noteSectionTypeId}/notes/${note.id}`,
     });
   }
 

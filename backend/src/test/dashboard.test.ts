@@ -110,57 +110,6 @@ describe("Dashboard", () => {
     ]);
     void unassignedLessonRes;
   });
-
-  it("tracks recently viewed notes, most recent first, capped at 5", async () => {
-    const user = await registerUser();
-    const headers = { Authorization: `Bearer ${user.accessToken}` };
-
-    const subjectRes = await request(app)
-      .post("/api/subjects")
-      .set(headers)
-      .send({ name: "Bio", color: "#22C55E" });
-    const sectionRes = await request(app)
-      .post(`/api/subjects/${subjectRes.body.id}/section-types`)
-      .set(headers)
-      .send({ name: "Regelheft" });
-    const topicRes = await request(app)
-      .post(`/api/section-types/${sectionRes.body.id}/topics`)
-      .set(headers)
-      .send({ name: "Zellen" });
-
-    const noteAId = (
-      await request(app)
-        .post(`/api/topics/${topicRes.body.id}/notes`)
-        .set(headers)
-        .send({ title: "Notiz A" })
-    ).body.id as string;
-    const noteBId = (
-      await request(app)
-        .post(`/api/topics/${topicRes.body.id}/notes`)
-        .set(headers)
-        .send({ title: "Notiz B" })
-    ).body.id as string;
-
-    // A note that's never opened shouldn't show up as "recently viewed".
-    const before = await request(app).get("/api/dashboard").set(headers);
-    expect(before.body.recentlyViewedNotes).toHaveLength(0);
-
-    await request(app).get(`/api/notes/${noteAId}`).set(headers);
-    await request(app).get(`/api/notes/${noteBId}`).set(headers);
-    await request(app).get(`/api/notes/${noteAId}`).set(headers); // re-open A, should move to the front
-
-    const after = await request(app).get("/api/dashboard").set(headers);
-    expect(after.body.recentlyViewedNotes.map((n: { id: string }) => n.id)).toEqual([
-      noteAId,
-      noteBId,
-    ]);
-    expect(after.body.recentlyViewedNotes[0]).toMatchObject({
-      title: "Notiz A",
-      subjectName: "Bio",
-      sectionTypeName: "Regelheft",
-      topicName: "Zellen",
-    });
-  });
 });
 
 describe("Dashboard today/tomorrow weekend rollover", () => {

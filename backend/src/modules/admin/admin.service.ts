@@ -14,11 +14,17 @@ const userListSelect = {
 } as const;
 
 export async function listUsers() {
-  const [users, storageByUser] = await Promise.all([
+  // Storage = every kept Goodnotes PDF version on disk. Versions carry no
+  // userId of their own, so they're summed per owning file's user here -
+  // fine at family scale.
+  const [users, versions] = await Promise.all([
     prisma.user.findMany({ orderBy: { createdAt: "asc" }, select: userListSelect }),
-    prisma.uploadedFile.groupBy({ by: ["userId"], _sum: { size: true } }),
+    prisma.davFileVersion.findMany({ select: { size: true, file: { select: { userId: true } } } }),
   ]);
-  const storageMap = new Map(storageByUser.map((row) => [row.userId, row._sum.size ?? 0]));
+  const storageMap = new Map<string, number>();
+  for (const version of versions) {
+    storageMap.set(version.file.userId, (storageMap.get(version.file.userId) ?? 0) + version.size);
+  }
   return users.map((user) => ({ ...user, storageBytes: storageMap.get(user.id) ?? 0 }));
 }
 

@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { app, registerUser } from "./helpers.js";
 
 describe("Global search", () => {
-  it("finds a subject, a note (by title and by content), homework, and a calendar event", async () => {
+  it("finds a subject, homework, and a calendar event", async () => {
     const user = await registerUser();
     const headers = { Authorization: `Bearer ${user.accessToken}` };
 
@@ -12,32 +12,6 @@ describe("Global search", () => {
       .set(headers)
       .send({ name: "Bruchrechnung-Mathe", color: "#3B82F6" });
     const subjectId = subjectRes.body.id as string;
-
-    const sectionTypeRes = await request(app)
-      .post(`/api/subjects/${subjectId}/section-types`)
-      .set(headers)
-      .send({ name: "Regelheft" });
-    const sectionTypeId = sectionTypeRes.body.id as string;
-
-    const topicRes = await request(app)
-      .post(`/api/section-types/${sectionTypeId}/topics`)
-      .set(headers)
-      .send({ name: "Thema" });
-    const topicId = topicRes.body.id as string;
-
-    const noteByTitleRes = await request(app)
-      .post(`/api/topics/${topicId}/notes`)
-      .set(headers)
-      .send({ title: "Findbarer Titel" });
-
-    const noteByContentRes = await request(app)
-      .post(`/api/topics/${topicId}/notes`)
-      .set(headers)
-      .send({ title: "Anderer Titel" });
-    await request(app)
-      .post(`/api/notes/${noteByContentRes.body.id}/blocks/text`)
-      .set(headers)
-      .send({ contentJson: { type: "doc", content: [{ type: "text", text: "Geheimwort42 steht hier" }] } });
 
     await request(app)
       .post("/api/homework")
@@ -57,16 +31,6 @@ describe("Global search", () => {
 
     const subjectResults = await search("Bruchrechnung-Mathe");
     expect(subjectResults.some((r) => r.type === "subject" && r.id === subjectId)).toBe(true);
-
-    const noteTitleResults = await search("Findbarer Titel");
-    expect(noteTitleResults.some((r) => r.type === "note" && r.id === noteByTitleRes.body.id)).toBe(
-      true,
-    );
-
-    const noteContentResults = await search("Geheimwort42");
-    expect(
-      noteContentResults.some((r) => r.type === "note" && r.id === noteByContentRes.body.id),
-    ).toBe(true);
 
     const homeworkResults = await search("Findbare Hausaufgabe");
     expect(homeworkResults.some((r) => r.type === "homework")).toBe(true);

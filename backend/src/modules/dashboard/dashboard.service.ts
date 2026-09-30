@@ -57,7 +57,7 @@ export async function getDashboard(userId: string, now: Date = new Date()) {
   const settings = await prisma.settings.findUnique({ where: { userId } });
   const currentGradeLevel = settings?.currentGradeLevel ?? 5;
 
-  const [upcomingHomeworkRaw, upcomingEvents, generalNotesRaw, recentNotes, { timeGridSlots, timetableSlots }] =
+  const [upcomingHomeworkRaw, upcomingEvents, generalNotesRaw, { timeGridSlots, timetableSlots }] =
     await Promise.all([
       prisma.homework.findMany({
         where: { userId, done: false },
@@ -72,12 +72,6 @@ export async function getDashboard(userId: string, now: Date = new Date()) {
         take: 10,
       }),
       prisma.generalNote.findMany({ where: { userId }, orderBy: { sortOrder: "asc" } }),
-      prisma.note.findMany({
-        where: { topic: { noteSectionType: { subject: { userId } } }, lastViewedAt: { not: null } },
-        orderBy: { lastViewedAt: "desc" },
-        take: 5,
-        include: { topic: { include: { noteSectionType: { include: { subject: true } } } } },
-      }),
       getTimetable(userId),
     ]);
 
@@ -238,19 +232,6 @@ export async function getDashboard(userId: string, now: Date = new Date()) {
     ? "MORGEN"
     : GERMAN_WEEKDAY_LABELS[weekdayFor(dayB)];
 
-  const recentlyViewedNotes = recentNotes.map((note) => ({
-    id: note.id,
-    title: note.title,
-    lastViewedAt: note.lastViewedAt!.toISOString(),
-    topicId: note.topic.id,
-    topicName: note.topic.name,
-    sectionTypeId: note.topic.noteSectionType.id,
-    sectionTypeName: note.topic.noteSectionType.name,
-    subjectId: note.topic.noteSectionType.subject.id,
-    subjectName: note.topic.noteSectionType.subject.name,
-    subjectColor: note.topic.noteSectionType.subject.color,
-  }));
-
   return {
     currentGradeLevel,
     upcomingHomework,
@@ -260,6 +241,5 @@ export async function getDashboard(userId: string, now: Date = new Date()) {
     tomorrowTimetable,
     todayLabel,
     tomorrowLabel,
-    recentlyViewedNotes,
   };
 }

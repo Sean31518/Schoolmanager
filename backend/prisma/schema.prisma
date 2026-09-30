@@ -15,6 +15,7 @@ generator client {
 // TimeGridSlotType: LESSON BREAK
 // CalendarEventType: MANUAL EXAM HOLIDAY PUBLIC_HOLIDAY
 // FlashcardState: NEW LEARNING KNOWN
+// DavFileKind: PDF OTHER
 // Role: ADMIN USER - the first account ever created becomes ADMIN
 // automatically (see auth.service.ts); everyone else is USER unless an
 // admin creates their account through the admin panel.
@@ -39,10 +40,129 @@ model User {
   homework           Homework[]
   generalNotes       GeneralNote[]
   refreshTokens      RefreshToken[]
-  uploadedFiles      UploadedFile[]
   pushSubscriptions  PushSubscription[]
   notificationLogs   NotificationLog[]
   timetableOverrides TimetableOverride[]
+  appPasswords       AppPassword[]
+  davFolders         DavFolder[]
+  davFiles           DavFile[]
+  documentLinks      DocumentLink[]
+  flashcardDecks     FlashcardDeck[]
+}
+
+// Credentials Goodnotes uses for WebDAV (username = the account's email).
+// A random, high-entropy token shown once at creation - stored only as a
+// SHA-256 hash, which is safe for random tokens (nothing to brute-force)
+// and cheap enough to check on each of the hundreds of requests a single
+// Goodnotes backup run makes, unlike argon2.
+model AppPassword {
+  id         String    @id @default(cuid())
+  userId     String
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  label      String
+  tokenHash  String    @unique
+  lastUsedAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@index([userId])
+}
+
+// WebDAV collections, as Goodnotes creates them (empty ones too - it checks
+// for each with PROPFIND and MKCOLs missing ones top-down). path is relative
+// to the user's WebDAV root without leading/trailing slash, e.g.
+// "GoodNotes/Schule/Abitur/Q1/Mathe". subjectId is a manual Fach assignment
+// from "Ohne Fach"; it applies to this folder and everything below it.
+model DavFolder {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  path      String
+  subjectId String?
+  subject   Subject? @relation(fields: [subjectId], references: [id], onDelete: SetNull)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, path])
+}
+
+// One file in the WebDAV tree. PDF files are the "Hefte" the app shows and
+// links to; OTHER files (e.g. .goodnotes when the backup format is "beides")
+// are kept as metadata-only placeholders - their bytes are discarded, but
+// Goodnotes PROPFINDs a file before MOVEing it on rename, so it has to keep
+// looking present. A rename/move in Goodnotes arrives as a WebDAV MOVE and
+// only changes path, so links (which point at the id) survive it.
+model DavFile {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  path       String
+  kind       String
+  size       Int
+  sha256     String?
+  // Goodnotes never deletes from its backup, so Hefte are hidden manually;
+  // a new upload brings an archived Heft back.
+  archived   Boolean  @default(false)
+  modifiedAt DateTime @default(now())
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  versions DavFileVersion[]
+  links    DocumentLink[]
+
+  @@unique([userId, path])
+  @@index([userId])
+}
+
+// Stored PDF content, newest = current. Only the last N (Settings.
+// davVersionsToKeep) survive; an upload identical to the current version
+// (same sha256) doesn't create a new one. pageFingerprints is a JSON array,
+// one hash per page, used to re-find linked pages after pages were inserted.
+model DavFileVersion {
+  id               String   @id @default(cuid())
+  fileId           String
+  file             DavFile  @relation(fields: [fileId], references: [id], onDelete: Cascade)
+  storagePath      String
+  size             Int
+  sha256           String
+  pageCount        Int
+  pageFingerprints String
+  createdAt        DateTime @default(now())
+
+  @@index([fileId])
+}
+
+// A link from something in the app to a whole Heft (pageStart null) or a
+// page range. fingerprintStart/End remember the linked pages' fingerprints
+// so the range can be relocated when the Heft changes; uncertain is set
+// when that relocation had to guess. Exactly one owner column is set.
+model DocumentLink {
+  id               String         @id @default(cuid())
+  userId           String
+  user             User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fileId           String
+  file             DavFile        @relation(fields: [fileId], references: [id], onDelete: Cascade)
+  pageStart        Int?
+  pageEnd          Int?
+  fingerprintStart String?
+  fingerprintEnd   String?
+  uncertain        Boolean        @default(false)
+  sortOrder        Int            @default(0)
+  homeworkId       String?
+  homework         Homework?      @relation(fields: [homeworkId], references: [id], onDelete: Cascade)
+  calendarEventId  String?
+  calendarEvent    CalendarEvent? @relation(fields: [calendarEventId], references: [id], onDelete: Cascade)
+  flashcardId      String?
+  flashcard        Flashcard?     @relation(fields: [flashcardId], references: [id], onDelete: Cascade)
+  generalNoteId    String?
+  generalNote      GeneralNote?   @relation(fields: [generalNoteId], references: [id], onDelete: Cascade)
+  createdAt        DateTime       @default(now())
+
+  @@index([userId])
+  @@index([fileId])
+  @@index([homeworkId])
+  @@index([calendarEventId])
+  @@index([flashcardId])
+  @@index([generalNoteId])
 }
 
 // Single-row table (always id "singleton") for server-wide settings an
@@ -119,6 +239,8 @@ model Settings {
   iservActive            Boolean   @default(false)
   iservLastSyncAt        DateTime?
   iservLastSyncError     String?
+  // How many PDF versions per Heft to keep from Goodnotes uploads.
+  davVersionsToKeep      Int       @default(3)
 }
 
 model Subject {
@@ -136,18 +258,21 @@ model Subject {
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
-  noteSectionTypes   NoteSectionType[]
   timetableSlots     TimetableSlot[]
   calendarEvents     CalendarEvent[]
   homework           Homework[]
   timetableOverrides TimetableOverride[]
+  davFolders         DavFolder[]
+  flashcardDecks     FlashcardDeck[]
 
   @@unique([userId, name])
   @@index([userId])
 }
 
-model NoteSectionType {
+model FlashcardDeck {
   id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   subjectId String
   subject   Subject  @relation(fields: [subjectId], references: [id], onDelete: Cascade)
   name      String
@@ -155,106 +280,27 @@ model NoteSectionType {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  topics Topic[]
+  flashcards Flashcard[]
 
-  @@unique([subjectId, name])
+  @@index([userId])
   @@index([subjectId])
 }
 
-model Topic {
-  id                String          @id @default(cuid())
-  noteSectionTypeId String
-  noteSectionType   NoteSectionType @relation(fields: [noteSectionTypeId], references: [id], onDelete: Cascade)
-  name              String
-  sortOrder         Int             @default(0)
-  createdAt         DateTime        @default(now())
-  updatedAt         DateTime        @updatedAt
-
-  notes       Note[]
-  gradeLevels TopicGradeLevel[]
-  flashcards  Flashcard[]
-
-  @@index([noteSectionTypeId])
-}
-
 model Flashcard {
-  id             String    @id @default(cuid())
-  topicId        String
-  topic          Topic     @relation(fields: [topicId], references: [id], onDelete: Cascade)
+  id             String        @id @default(cuid())
+  deckId         String
+  deck           FlashcardDeck @relation(fields: [deckId], references: [id], onDelete: Cascade)
   question       String
   answer         String
-  state          String    @default("NEW")
-  sortOrder      Int       @default(0)
+  state          String        @default("NEW")
+  sortOrder      Int           @default(0)
   lastReviewedAt DateTime?
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
 
-  @@index([topicId])
-}
+  links DocumentLink[]
 
-model TopicGradeLevel {
-  id         String @id @default(cuid())
-  topicId    String
-  topic      Topic  @relation(fields: [topicId], references: [id], onDelete: Cascade)
-  gradeLevel Int
-
-  @@unique([topicId, gradeLevel])
-  @@index([topicId])
-}
-
-model Note {
-  id           String    @id @default(cuid())
-  topicId      String
-  topic        Topic     @relation(fields: [topicId], references: [id], onDelete: Cascade)
-  title        String
-  sortOrder    Int       @default(0)
-  lastViewedAt DateTime?
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
-
-  blocks        NoteBlock[]
-  examPrepItems ExamPrepItem[]
-  homework      Homework[]
-
-  @@index([topicId])
-}
-
-// type: TEXT | PDF_PAGE | VIDEO | LINK (validiert in noteBlocks.schema.ts)
-// TEXT nutzt contentJson (TipTap-Dokument), PDF_PAGE/VIDEO nutzen fileId
-// (PDF_PAGE zusätzlich pageNumber, da jede Seite ein eigener Block ist -
-// das erlaubt manuelles Einfügen von Textblöcken zwischen Seiten über den
-// normalen Block-Reihenfolge-Mechanismus), LINK nutzt url.
-model NoteBlock {
-  id          String        @id @default(cuid())
-  noteId      String
-  note        Note          @relation(fields: [noteId], references: [id], onDelete: Cascade)
-  type        String
-  sortOrder   Int           @default(0)
-  contentJson String?
-  fileId      String?
-  file        UploadedFile? @relation(fields: [fileId], references: [id], onDelete: SetNull)
-  pageNumber  Int?
-  url         String?
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
-
-  @@index([noteId])
-  @@index([fileId])
-}
-
-model UploadedFile {
-  id           String   @id @default(cuid())
-  userId       String
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  originalName String
-  mimeType     String
-  size         Int
-  storagePath  String
-  createdAt    DateTime @default(now())
-
-  blocks NoteBlock[]
-
-  @@index([userId])
+  @@index([deckId])
 }
 
 model TimeGridSlot {
@@ -373,46 +419,30 @@ model CalendarEvent {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
-  examPrepItems ExamPrepItem[]
+  // For EXAM events these links are the Klausur's Lernstoff.
+  links DocumentLink[]
 
   @@unique([userId, externalRef])
   @@index([userId, startDate])
 }
 
-model ExamPrepItem {
-  id              String        @id @default(cuid())
-  calendarEventId String
-  calendarEvent   CalendarEvent @relation(fields: [calendarEventId], references: [id], onDelete: Cascade)
-  noteId          String
-  note            Note          @relation(fields: [noteId], references: [id], onDelete: Cascade)
-  sectionIndex    Int
-  sectionLabel    String
-  createdAt       DateTime      @default(now())
-
-  @@unique([calendarEventId, noteId, sectionIndex])
-  @@index([calendarEventId])
-  @@index([noteId])
-}
-
 model Homework {
-  id           String    @id @default(cuid())
-  userId       String
-  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  title        String
-  subjectId    String?
-  subject      Subject?  @relation(fields: [subjectId], references: [id], onDelete: SetNull)
-  dueDate      DateTime?
-  done         Boolean   @default(false)
-  note         String?
-  linkedNoteId String?
-  linkedNote   Note?     @relation(fields: [linkedNoteId], references: [id], onDelete: SetNull)
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  subjectId String?
+  subject   Subject?  @relation(fields: [subjectId], references: [id], onDelete: SetNull)
+  dueDate   DateTime?
+  done      Boolean   @default(false)
+  note      String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 
   subtasks HomeworkSubtask[]
+  links    DocumentLink[]
 
   @@index([userId, dueDate])
-  @@index([linkedNoteId])
 }
 
 model HomeworkSubtask {
@@ -437,6 +467,8 @@ model GeneralNote {
   sortOrder   Int      @default(0)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
+  links DocumentLink[]
 
   @@index([userId])
 }
