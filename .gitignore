@@ -11,3 +11,4 @@ backend/prisma/test.db-journal
 backend/uploads/
 *.log
 .DS_Store
+probe-data/
