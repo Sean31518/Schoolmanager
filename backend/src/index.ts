@@ -1,6 +1,8 @@
 import { createApp } from "./app.js";
 import { env } from "./config/env.js";
 import { ensureAdminExists } from "./modules/auth/auth.service.js";
+import { startDavServer } from "./modules/dav/dav.server.js";
+import { resumePendingVersions } from "./modules/dav/davProcessing.js";
 import { runIservSyncForAllUsers } from "./modules/iserv/iservSync.service.js";
 import { runReminderCheck } from "./modules/reminders/reminders.service.js";
 
@@ -9,6 +11,9 @@ const app = createApp();
 app.listen(env.PORT, () => {
   console.log(`Schulmanager backend listening on port ${env.PORT}`);
 });
+
+startDavServer();
+resumePendingVersions().catch((err) => console.error("PDF-Warteschlange konnte nicht fortgesetzt werden", err));
 
 // Covers deployments upgrading into the admin-role feature, where the
 // first-ever account was created long before roles existed - new

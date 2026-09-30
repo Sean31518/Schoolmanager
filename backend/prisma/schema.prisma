@@ -85,11 +85,11 @@ model DavFolder {
   @@unique([userId, path])
 }
 
-// One file in the WebDAV tree. PDF files are the "Hefte" the app shows and
-// links to; OTHER files (e.g. .goodnotes when the backup format is "beides")
-// are kept as metadata-only placeholders - their bytes are discarded, but
-// Goodnotes PROPFINDs a file before MOVEing it on rename, so it has to keep
-// looking present. A rename/move in Goodnotes arrives as a WebDAV MOVE and
+// One file in the WebDAV tree. kind: PDF = the "Hefte" the app shows and
+// links to; OTHER = small non-PDF file whose bytes are kept (Goodnotes'
+// backup-root marker); PLACEHOLDER = .goodnotes or other big non-PDF file -
+// bytes discarded, only metadata kept, because Goodnotes PROPFINDs a file
+// before MOVEing it on rename, so it has to keep looking present. A rename/move in Goodnotes arrives as a WebDAV MOVE and
 // only changes path, so links (which point at the id) survive it.
 model DavFile {
   id         String   @id @default(cuid())
@@ -113,22 +113,28 @@ model DavFile {
   @@index([userId])
 }
 
-// Stored PDF content, newest = current. Only the last N (Settings.
-// davVersionsToKeep) survive; an upload identical to the current version
-// (same sha256) doesn't create a new one. pageFingerprints is a JSON array,
-// one hash per page, used to re-find linked pages after pages were inserted.
+// Stored file content, newest = current. For PDFs only the last N
+// (Settings.davVersionsToKeep) survive; an upload identical to the current
+// version (same sha256) doesn't create a new one. pageFingerprints is a JSON
+// array, one hash per page, used to re-find linked pages after pages were
+// inserted. Parsing a big PDF is slow, so it happens in a background queue
+// after the upload was answered - processedAt stays null until then.
+// Small OTHER files (Goodnotes' .GoodnotesBackupRoot marker) keep one
+// version with pageCount 0.
 model DavFileVersion {
-  id               String   @id @default(cuid())
+  id               String    @id @default(cuid())
   fileId           String
-  file             DavFile  @relation(fields: [fileId], references: [id], onDelete: Cascade)
+  file             DavFile   @relation(fields: [fileId], references: [id], onDelete: Cascade)
   storagePath      String
   size             Int
   sha256           String
-  pageCount        Int
-  pageFingerprints String
-  createdAt        DateTime @default(now())
+  pageCount        Int       @default(0)
+  pageFingerprints String    @default("[]")
+  processedAt      DateTime?
+  createdAt        DateTime  @default(now())
 
   @@index([fileId])
+  @@index([processedAt])
 }
 
 // A link from something in the app to a whole Heft (pageStart null) or a

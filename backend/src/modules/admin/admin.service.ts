@@ -2,6 +2,7 @@ import argon2 from "argon2";
 import type { z } from "zod";
 import { ConflictError, NotFoundError, ValidationError } from "../../lib/errors.js";
 import { prisma } from "../../lib/prisma.js";
+import { removeUserDavDir } from "../dav/davStorage.js";
 import type { createUserSchema, updateUserSchema } from "./admin.schema.js";
 
 const userListSelect = {
@@ -102,4 +103,6 @@ export async function deleteUser(requestingAdminId: string, targetUserId: string
     throw new NotFoundError("Konto nicht gefunden");
   }
   await prisma.user.delete({ where: { id: targetUserId } });
+  // Stored Goodnotes PDFs live on disk, outside the DB cascade.
+  await removeUserDavDir(targetUserId);
 }

@@ -22,3 +22,28 @@ export async function registerUser(
     userId: res.body.user.id as string,
   };
 }
+
+/** A PDF with one page per label, each page drawing its label - so pages
+ * with the same label get the same fingerprint, like an unchanged page
+ * re-exported by Goodnotes. */
+export async function makePdf(labels: string[]) {
+  const { PDFDocument } = await import("pdf-lib");
+  const doc = await PDFDocument.create();
+  for (const label of labels) {
+    const page = doc.addPage([400, 400]);
+    page.drawText(label, { x: 50, y: 200, size: 24 });
+  }
+  return Buffer.from(await doc.save({ useObjectStreams: false }));
+}
+
+/** A registered user plus a WebDAV Basic auth header built from a fresh
+ * app password. */
+export async function registerDavUser() {
+  const user = await registerUser();
+  const res = await request(app)
+    .post("/api/app-passwords")
+    .set({ Authorization: `Bearer ${user.accessToken}` })
+    .send({ label: "iPad" });
+  const davAuth = "Basic " + Buffer.from(`${user.email}:${res.body.password}`).toString("base64");
+  return { ...user, appPassword: res.body.password as string, davAuth };
+}

@@ -3,6 +3,7 @@ import { isRegistrationAllowed } from "../appSettings/appSettings.service.js";
 import { ConflictError, ForbiddenError, UnauthorizedError, ValidationError } from "../../lib/errors.js";
 import { signAccessToken } from "../../lib/jwt.js";
 import { prisma } from "../../lib/prisma.js";
+import { removeUserDavDir } from "../dav/davStorage.js";
 import {
   generateRefreshToken,
   hashRefreshToken,
@@ -116,6 +117,8 @@ export async function updateMe(userId: string, data: z.infer<typeof updateMeSche
  * panel) - available to any user for their own account. */
 export async function deleteMe(userId: string): Promise<void> {
   await prisma.user.delete({ where: { id: userId } });
+  // Stored Goodnotes PDFs live on disk, outside the DB cascade.
+  await removeUserDavDir(userId);
 }
 
 export async function login(email: string, password: string) {

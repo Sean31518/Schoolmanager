@@ -14,6 +14,8 @@ process.env.JWT_REFRESH_EXPIRES_IN = "30d";
 process.env.ALLOW_REGISTRATION = "true";
 process.env.COOKIE_SECURE = "false";
 process.env.PORT = "0";
+process.env.UPLOADS_DIR = "./test-uploads";
+process.env.DAV_PORT = "0";
 // Reused from backend/.env (both are dev-only, gitignored) - a validly
 // formatted key pair is required just to make webpush.setVapidDetails not
 // throw at module load; no real push service is ever contacted in tests

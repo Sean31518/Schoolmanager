@@ -28,6 +28,13 @@ const envSchema = z.object({
   // silently disabled (like push) when this isn't set. Generate with:
   // openssl rand -hex 32
   CREDENTIALS_ENCRYPTION_KEY: z.string().optional(),
+  // Goodnotes Auto-Backup target. A separate plain-HTTP listener at the
+  // root path; HTTPS and the home-network restriction come from the
+  // reverse proxy in front of it. 0 turns it off. DAV_PUBLIC_URL is only
+  // shown in the settings so the user knows what to type into Goodnotes.
+  DAV_PORT: z.coerce.number().default(6970),
+  DAV_PUBLIC_URL: z.string().optional(),
+  DAV_MAX_UPLOAD_MB: z.coerce.number().default(1024),
 });
 
 export const env = envSchema.parse(process.env);

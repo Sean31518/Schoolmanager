@@ -9,6 +9,7 @@ backend/prisma/dev.db-journal
 backend/prisma/test.db
 backend/prisma/test.db-journal
 backend/uploads/
+backend/test-uploads/
 *.log
 .DS_Store
 probe-data/
