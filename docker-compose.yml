@@ -6,12 +6,16 @@ services:
     image: schulmanager:latest
     ports:
       - "${PORT:-6969}:${PORT:-6969}"
+      # WebDAV target for Goodnotes Auto-Backup - only expose it via the
+      # reverse proxy (HTTPS, home network), see README.
+      - "${DAV_PORT:-6970}:${DAV_PORT:-6970}"
     volumes:
       - schulmanager-data:/data
     env_file:
       - .env
     environment:
       - PORT=${PORT:-6969}
+      - DAV_PORT=${DAV_PORT:-6970}
       - NODE_ENV=${NODE_ENV:-production}
       - DATABASE_URL=${DATABASE_URL:-file:/data/schulmanager.db}
       - UPLOADS_DIR=${UPLOADS_DIR:-/data/uploads}
