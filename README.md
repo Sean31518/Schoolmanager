@@ -5,6 +5,8 @@ Karteikarten, der deine Goodnotes-Hefte direkt einbindet.
 
 [![Lizenz: AGPL-3.0](https://img.shields.io/badge/Lizenz-AGPL--3.0-blue.svg)](LICENSE)
 
+![Dashboard mit Hausaufgaben, nächster Klausur, Stundenplan und zuletzt geschriebenen Heften](docs/screenshots/dashboard.png)
+
 ## Worum es geht
 
 Mitschriften entstehen in Goodnotes auf dem iPad, alles andere (Stundenplan,
@@ -34,6 +36,22 @@ einem Docker-Container, für die ganze Familie mit getrennten Konten.
 - Globale Suche, installierbar als App (PWA), Hell/Dunkel, Datenexport als JSON.
 - **Mehrere Konten** mit vollständig getrennten Daten; das erste Konto wird
   Admin und kann die Registrierung schließen.
+
+## Screenshots
+
+| | |
+|---|---|
+| ![Hefte aus Goodnotes, nach Fach sortiert](docs/screenshots/hefte.png) | ![Heft-Viewer mit markiertem Seitenbereich](docs/screenshots/heft-viewer.png) |
+| **Hefte** aus Goodnotes, automatisch nach Fach sortiert | **Viewer** springt direkt zu den verknüpften Seiten |
+| ![Seiten eines Hefts für eine Hausaufgabe auswählen](docs/screenshots/seiten-verknuepfen.png) | ![Klausur mit Lernstoff und Karteikarten](docs/screenshots/klausur.png) |
+| **Seiten verknüpfen** per Miniaturansicht | **Klausur** mit Lernstoff und passenden Stapeln |
+| ![Stundenplan mit Doppelstunden](docs/screenshots/stundenplan.png) | ![Lernmodus für Karteikarten](docs/screenshots/karteikarten.png) |
+| **Stundenplan** mit Doppelstunden und Räumen | **Karteikarten** im Lernmodus |
+
+<p align="center">
+  <img src="docs/screenshots/mobil-dashboard.png" alt="Dashboard auf dem Handy" width="260">
+  <br><em>Läuft auch auf dem Handy und lässt sich als App installieren.</em>
+</p>
 
 ## Schnellstart
 
@@ -218,6 +236,43 @@ docker/     Dockerfile und Entrypoint
 
 Die REST-API unter `/api/*` ist unabhängig vom Frontend, damit später auch
 andere Clients sie nutzen können.
+
+## Mitwirken
+
+Fehler und Ideen gern als [Issue](https://github.com/Sean31518/Schoolmanager/issues),
+Änderungen als Pull Request. Bei größeren Umbauten am besten erst ein Issue
+aufmachen, damit wir die Richtung vorher abstimmen.
+
+Damit ein Pull Request schnell reingeht:
+
+- **Prüfen vor dem Einreichen**: `npm run test:backend` und `npm run build`
+  müssen durchlaufen, `npm run lint` sollte keine neuen Fehler zeigen.
+- **Tests** für neues Backend-Verhalten in `backend/src/test/` ergänzen.
+- **Aufbau beibehalten**: Backend-Bereiche als Modul mit `routes`, `controller`,
+  `service` und `schema` (zod), Frontend-Bereiche als Ordner unter
+  `src/features/`.
+- **Sprache**: Alles, was Nutzer sehen, ist Deutsch. Code, Kommentare und
+  Commit-Nachrichten sind Englisch.
+- **Datenbank**: Schema-Änderungen nur über `npx prisma migrate dev --name …`
+  (siehe [Entwicklung](#entwicklung)). Daten von Nutzern dürfen dabei nicht
+  stillschweigend verloren gehen.
+- **Kein Lock-in**: Was jemand anlegt, muss sich später auch umbenennen,
+  ändern und löschen lassen.
+
+Mit einem Beitrag erklärst du dich einverstanden, dass er unter der
+[AGPL-3.0](LICENSE) steht.
+
+## Roadmap
+
+- [ ] Seiten-Nachführung mit echten Goodnotes-Exporten über längere Zeit prüfen
+  und bei Bedarf nachschärfen
+- [ ] IServ: Raum- und Lehrerwechsel anhand echter Vertretungsdaten
+  bestätigen (Entfall ist bereits bestätigt)
+- [ ] Datenexport auch mit Verknüpfungen zu Heften und Seiten
+- [ ] Tests für das Frontend
+- [ ] Weitere Clients (z. B. Mobile-App) auf Basis der bestehenden REST-API
+
+Wünsche und Vorschläge gern als Issue.
 
 ## Lizenz
 
