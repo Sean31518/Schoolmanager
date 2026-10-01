@@ -12,4 +12,3 @@ backend/uploads/
 backend/test-uploads/
 *.log
 .DS_Store
-probe-data/
