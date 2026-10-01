@@ -1,5 +1,7 @@
 import type { Request, Response } from "express";
 import { z } from "zod";
+import { UnauthorizedError } from "../../lib/errors.js";
+import { signHeftViewToken, verifyHeftViewToken } from "../../lib/jwt.js";
 import { confirmLink } from "../links/links.service.js";
 import * as hefteService from "./hefte.service.js";
 
@@ -30,8 +32,22 @@ export async function update(req: Request, res: Response) {
   res.json(await hefteService.setArchived(req.user!.id, req.params.id, body.archived));
 }
 
+export async function viewUrl(req: Request, res: Response) {
+  await hefteService.getHeft(req.user!.id, req.params.id);
+  const token = signHeftViewToken(req.user!.id, req.params.id);
+  res.json({ url: `/api/hefte/${req.params.id}/pdf?t=${encodeURIComponent(token)}` });
+}
+
+/** Authenticated by the ?t= view token (see signHeftViewToken), not the
+ * normal Bearer token. */
 export async function pdf(req: Request, res: Response) {
-  const { absolutePath, etag } = await hefteService.heftPdfPath(req.user!.id, req.params.id);
+  let userId: string;
+  try {
+    userId = verifyHeftViewToken(String(req.query.t ?? ""), req.params.id);
+  } catch {
+    throw new UnauthorizedError("Ansichts-Link ungültig oder abgelaufen");
+  }
+  const { absolutePath, etag } = await hefteService.heftPdfPath(userId, req.params.id);
   // sendFile answers Range requests, so pdf.js can load a 200 MB Heft
   // page by page instead of downloading it whole first.
   res.sendFile(absolutePath, {

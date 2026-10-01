@@ -101,8 +101,13 @@ describe("Hefte API and links", () => {
     await upload(user.davAuth, "/GoodNotes/Natur/Zellen.pdf", ["A", "B"]);
     expect((await request(app).get("/api/hefte").set(headers)).body).toHaveLength(2);
 
-    const pdf = await request(app).get(`/api/hefte/${byName.Mathe.id}/pdf`).set(headers).set("Range", "bytes=0-3");
+    const view = await request(app).post(`/api/hefte/${byName.Mathe.id}/view-url`).set(headers);
+    const pdf = await request(app).get(view.body.url).set("Range", "bytes=0-3");
     expect(pdf.status).toBe(206);
+    expect((await request(app).get(`/api/hefte/${byName.Mathe.id}/pdf`)).status).toBe(401);
+    // A view URL for one Heft doesn't open another.
+    const otherUrl = view.body.url.replace(byName.Mathe.id, byName.Zellen.id);
+    expect((await request(app).get(otherUrl)).status).toBe(401);
   });
 
   it("moves a homework's page link along when pages are inserted, and flags guesses as unsicher", async () => {
@@ -160,7 +165,7 @@ describe("Hefte API and links", () => {
       .send({ title: "Fremd", links: [{ fileId: heft.id }] });
     expect(res.status).toBe(404);
     expect(
-      (await request(app).get(`/api/hefte/${heft.id}/pdf`).set({ Authorization: `Bearer ${other.accessToken}` }))
+      (await request(app).post(`/api/hefte/${heft.id}/view-url`).set({ Authorization: `Bearer ${other.accessToken}` }))
         .status,
     ).toBe(404);
   });
