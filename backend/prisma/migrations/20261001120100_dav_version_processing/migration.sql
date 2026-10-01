@@ -1,3 +1,8 @@
+-- Renamed from 20260930235118_dav_version_processing, which sorted before
+-- the pivot migration that creates DavFileVersion and so failed on a fresh
+-- deploy. A failed earlier attempt may have left new_DavFileVersion behind.
+DROP TABLE IF EXISTS "new_DavFileVersion";
+
 -- RedefineTables
 PRAGMA defer_foreign_keys=ON;
 PRAGMA foreign_keys=OFF;
