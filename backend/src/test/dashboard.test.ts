@@ -41,15 +41,15 @@ describe("Dashboard", () => {
     await request(app)
       .post("/api/homework")
       .set(headers)
-      .send({ title: "Mathe Arbeitsblatt", dueDate: "2026-10-05" });
+      .send({ title: "Mathe Arbeitsblatt", dueDate: "2030-10-05" });
     await request(app)
       .post("/api/calendar-events")
       .set(headers)
-      .send({ title: "Deutsch-Klausur", type: "EXAM", startDate: "2026-10-01" });
+      .send({ title: "Deutsch-Klausur", type: "EXAM", startDate: "2030-10-01" });
     await request(app)
       .post("/api/calendar-events")
       .set(headers)
-      .send({ title: "Herbstferien", type: "HOLIDAY", startDate: "2026-10-02" });
+      .send({ title: "Herbstferien", type: "HOLIDAY", startDate: "2030-10-02" });
 
     const res = await request(app).get("/api/dashboard").set(headers);
     expect(res.status).toBe(200);

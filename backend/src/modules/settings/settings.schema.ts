@@ -12,4 +12,6 @@ export const updateSettingsSchema = z.object({
   iservPassword: z.string().min(1).max(500).optional(),
   iservClass: z.string().max(100).nullable().optional(),
   iservActive: z.boolean().optional(),
+  // How many PDF versions per Goodnotes Heft to keep.
+  davVersionsToKeep: z.number().int().min(1).max(10).optional(),
 });

@@ -1,20 +1,29 @@
 import type { z } from "zod";
 import { NotFoundError } from "../../lib/errors.js";
 import { prisma } from "../../lib/prisma.js";
+import { linksInclude, syncLinks, withMappedLinks } from "../links/links.service.js";
 import type {
   createGeneralNoteSchema,
   updateGeneralNoteSchema,
 } from "./generalNotes.schema.js";
 
+type StoredGeneralNote = Awaited<ReturnType<typeof findNotes>>[number];
+
+function findNotes(where: { userId: string } | { id: string }) {
+  return prisma.generalNote.findMany({ where, orderBy: { sortOrder: "asc" }, include: linksInclude });
+}
+
+export function mapGeneralNote(note: StoredGeneralNote) {
+  return { ...withMappedLinks(note), contentJson: JSON.parse(note.contentJson) as unknown };
+}
+
+async function getGeneralNote(id: string) {
+  const [note] = await findNotes({ id });
+  return mapGeneralNote(note);
+}
+
 export async function listGeneralNotes(userId: string) {
-  const notes = await prisma.generalNote.findMany({
-    where: { userId },
-    orderBy: { sortOrder: "asc" },
-  });
-  return notes.map((note) => ({
-    ...note,
-    contentJson: JSON.parse(note.contentJson) as unknown,
-  }));
+  return (await findNotes({ userId })).map(mapGeneralNote);
 }
 
 export async function createGeneralNote(
@@ -30,7 +39,8 @@ export async function createGeneralNote(
       sortOrder: count,
     },
   });
-  return { ...note, contentJson: data.contentJson as unknown };
+  if (data.links) await syncLinks(userId, { generalNoteId: note.id }, data.links);
+  return getGeneralNote(note.id);
 }
 
 async function requireOwnedGeneralNote(userId: string, id: string) {
@@ -47,7 +57,7 @@ export async function updateGeneralNote(
   data: z.infer<typeof updateGeneralNoteSchema>,
 ) {
   await requireOwnedGeneralNote(userId, id);
-  const note = await prisma.generalNote.update({
+  await prisma.generalNote.update({
     where: { id },
     data: {
       ...(data.title !== undefined ? { title: data.title } : {}),
@@ -56,7 +66,8 @@ export async function updateGeneralNote(
         : {}),
     },
   });
-  return { ...note, contentJson: JSON.parse(note.contentJson) as unknown };
+  if (data.links) await syncLinks(userId, { generalNoteId: id }, data.links);
+  return getGeneralNote(id);
 }
 
 export async function deleteGeneralNote(userId: string, id: string) {

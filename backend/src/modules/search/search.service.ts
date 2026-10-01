@@ -1,9 +1,11 @@
 import { prisma } from "../../lib/prisma.js";
+import { parentPath } from "../dav/davPath.js";
+import { heftName } from "../links/links.service.js";
 
 const RESULTS_PER_CATEGORY = 8;
 const MIN_QUERY_LENGTH = 2;
 
-export type SearchResultType = "subject" | "homework" | "calendarEvent" | "generalNote";
+export type SearchResultType = "subject" | "heft" | "homework" | "calendarEvent" | "generalNote";
 
 export interface SearchResult {
   type: SearchResultType;
@@ -17,9 +19,15 @@ export async function search(userId: string, query: string): Promise<SearchResul
   const q = query.trim();
   if (q.length < MIN_QUERY_LENGTH) return [];
 
-  const [subjects, homework, events, generalNotes] = await Promise.all([
+  const [subjects, hefte, homework, events, generalNotes] = await Promise.all([
     prisma.subject.findMany({
       where: { userId, name: { contains: q } },
+      take: RESULTS_PER_CATEGORY,
+    }),
+    // Matches the folder path too, so "Q1" finds every Heft in that folder.
+    prisma.davFile.findMany({
+      where: { userId, kind: "PDF", archived: false, path: { contains: q } },
+      orderBy: { modifiedAt: "desc" },
       take: RESULTS_PER_CATEGORY,
     }),
     prisma.homework.findMany({
@@ -46,6 +54,16 @@ export async function search(userId: string, query: string): Promise<SearchResul
       id: subject.id,
       title: subject.name,
       url: `/subjects/${subject.id}`,
+    });
+  }
+
+  for (const file of hefte) {
+    results.push({
+      type: "heft",
+      id: file.id,
+      title: heftName(file.path),
+      subtitle: parentPath(file.path),
+      url: `/hefte/${file.id}`,
     });
   }
 

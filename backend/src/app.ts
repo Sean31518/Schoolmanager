@@ -12,8 +12,10 @@ import { calendarEventsRouter } from "./modules/calendarEvents/calendarEvents.ro
 import { dashboardRouter } from "./modules/dashboard/dashboard.routes.js";
 import { exportRouter } from "./modules/export/export.routes.js";
 import { importRouter } from "./modules/export/import.routes.js";
+import { decksRouter, flashcardsRouter, subjectDecksRouter } from "./modules/flashcards/flashcards.routes.js";
 import { generalNotesRouter } from "./modules/generalNotes/generalNotes.routes.js";
 import { healthRouter } from "./modules/health/health.routes.js";
+import { hefteRouter, linksRouter } from "./modules/hefte/hefte.routes.js";
 import { homeworkRouter } from "./modules/homework/homework.routes.js";
 import { pushRouter } from "./modules/push/push.routes.js";
 import { searchRouter } from "./modules/search/search.routes.js";
@@ -39,7 +41,12 @@ export function createApp() {
   app.use("/api/admin", adminRouter);
   app.use("/api/settings", settingsRouter);
   app.use("/api/app-passwords", appPasswordsRouter);
+  app.use("/api/subjects/:subjectId/decks", subjectDecksRouter);
   app.use("/api/subjects", subjectsRouter);
+  app.use("/api/decks", decksRouter);
+  app.use("/api/flashcards", flashcardsRouter);
+  app.use("/api/hefte", hefteRouter);
+  app.use("/api/links", linksRouter);
   app.use("/api/time-grid", timeGridRouter);
   app.use("/api/timetable", timetableRouter);
   app.use("/api/homework", homeworkRouter);

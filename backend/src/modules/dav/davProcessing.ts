@@ -1,22 +1,14 @@
 import fsp from "node:fs/promises";
 import { analyzePdf, type PdfInfo } from "../../lib/pdfFingerprint.js";
 import { prisma } from "../../lib/prisma.js";
+import { relocateLinksForFile } from "../links/links.service.js";
 import { absoluteDavPath, removeStoredFiles } from "./davStorage.js";
-
-type ProcessedHandler = (fileId: string, info: PdfInfo) => Promise<void>;
 
 // Parsing a PDF holds the whole file in memory (Hefte reach ~200 MB), so
 // versions are analyzed strictly one after another, never in parallel -
 // the initial backup uploads a whole library within minutes.
 const queue: string[] = [];
 let draining: Promise<void> | null = null;
-const processedHandlers: ProcessedHandler[] = [];
-
-/** Lets the links module relocate page links once a new version's page
- * fingerprints are known, without dav depending on it. */
-export function onPdfVersionProcessed(handler: ProcessedHandler) {
-  processedHandlers.push(handler);
-}
 
 export function enqueueVersion(versionId: string) {
   if (!queue.includes(versionId)) queue.push(versionId);
@@ -60,6 +52,14 @@ async function processVersion(versionId: string) {
     console.error("[dav] PDF nicht lesbar", version.file.path, err);
   }
 
+  // The version page links currently refer to: the newest one analyzed
+  // before this one. The FIFO queue analyzes versions in upload order, so
+  // links are moved along one version at a time.
+  const previous = await prisma.davFileVersion.findFirst({
+    where: { fileId: version.fileId, processedAt: { not: null }, createdAt: { lt: version.createdAt } },
+    orderBy: { createdAt: "desc" },
+  });
+
   await prisma.davFileVersion.update({
     where: { id: versionId },
     data: {
@@ -69,15 +69,9 @@ async function processVersion(versionId: string) {
     },
   });
 
-  // Only react if this is still the newest version - a newer upload may
-  // have arrived while this one was being parsed and will run afterwards.
-  const newest = await prisma.davFileVersion.findFirst({
-    where: { fileId: version.fileId },
-    orderBy: { createdAt: "desc" },
-    select: { id: true },
-  });
-  if (newest?.id === versionId) {
-    for (const handler of processedHandlers) await handler(version.fileId, info);
+  if (info.pageCount > 0) {
+    const oldFps = previous ? (JSON.parse(previous.pageFingerprints) as string[]) : null;
+    await relocateLinksForFile(version.fileId, oldFps, info.fingerprints);
   }
 
   await pruneVersions(version.fileId, version.file.userId);
@@ -89,12 +83,17 @@ export async function pruneVersions(fileId: string, userId: string) {
     select: { davVersionsToKeep: true },
   });
   const keep = Math.max(1, settings?.davVersionsToKeep ?? 3);
-  const stale = await prisma.davFileVersion.findMany({
+  const versions = await prisma.davFileVersion.findMany({
     where: { fileId },
     orderBy: { createdAt: "desc" },
-    skip: keep,
-    select: { id: true, storagePath: true },
+    select: { id: true, storagePath: true, processedAt: true },
   });
+  // Never drop a version still waiting for analysis, nor the newest
+  // analyzed one - the next analysis relocates links relative to it.
+  const newestProcessed = versions.find((v) => v.processedAt);
+  const stale = versions
+    .slice(keep)
+    .filter((v) => v.processedAt && v.id !== newestProcessed?.id);
   if (stale.length === 0) return;
   await prisma.davFileVersion.deleteMany({ where: { id: { in: stale.map((v) => v.id) } } });
   await removeStoredFiles(stale.map((v) => v.storagePath));

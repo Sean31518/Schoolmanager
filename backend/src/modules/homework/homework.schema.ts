@@ -1,10 +1,13 @@
 import { z } from "zod";
+import { linksInputSchema } from "../links/links.service.js";
 
 export const createHomeworkSchema = z.object({
   title: z.string().min(1).max(200),
   subjectId: z.string().nullable().optional(),
   dueDate: z.coerce.date().nullable().optional(),
   note: z.string().max(2000).nullable().optional(),
+  // Hefte or page ranges; replaces the full list when sent.
+  links: linksInputSchema.optional(),
 });
 
 export const updateHomeworkSchema = createHomeworkSchema.partial().extend({

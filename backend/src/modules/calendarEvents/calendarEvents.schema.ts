@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { linksInputSchema } from "../links/links.service.js";
 import { calendarEventTypeSchema, federalStateSchema } from "../../lib/enums.js";
 
 const manualEventTypeSchema = calendarEventTypeSchema.exclude(["HOLIDAY", "PUBLIC_HOLIDAY"]);
@@ -18,6 +19,7 @@ export const createCalendarEventSchema = z.object({
   subjectId: z.string().nullable().optional(),
   color: colorSchema.nullable().optional(),
   note: z.string().max(2000).nullable().optional(),
+  links: linksInputSchema.optional(),
 });
 
 export const updateCalendarEventSchema = z.object({
@@ -31,6 +33,7 @@ export const updateCalendarEventSchema = z.object({
   subjectId: z.string().nullable().optional(),
   color: colorSchema.nullable().optional(),
   note: z.string().max(2000).nullable().optional(),
+  links: linksInputSchema.optional(),
 });
 
 export const listCalendarEventsQuerySchema = z.object({

@@ -2,6 +2,7 @@ import type { z } from "zod";
 import { NotFoundError } from "../../lib/errors.js";
 import { requireOwnedCalendarEvent } from "../../lib/ownership.js";
 import { prisma } from "../../lib/prisma.js";
+import { linksInclude, syncLinks, withMappedLinks } from "../links/links.service.js";
 import type {
   createCalendarEventSchema,
   listCalendarEventsQuerySchema,
@@ -10,8 +11,15 @@ import type {
 
 type ListFilters = z.infer<typeof listCalendarEventsQuerySchema>;
 
+// For a Klausur the links are its Lernstoff (Hefte and page ranges).
+const eventInclude = { subject: true, ...linksInclude };
+
+async function getEvent(id: string) {
+  return withMappedLinks(await prisma.calendarEvent.findUniqueOrThrow({ where: { id }, include: eventInclude }));
+}
+
 export async function listCalendarEvents(userId: string, filters: ListFilters) {
-  return prisma.calendarEvent.findMany({
+  const events = await prisma.calendarEvent.findMany({
     where: {
       userId,
       ...(filters.type ? { type: filters.type } : {}),
@@ -24,9 +32,10 @@ export async function listCalendarEvents(userId: string, filters: ListFilters) {
           }
         : {}),
     },
-    include: { subject: true },
+    include: eventInclude,
     orderBy: { startDate: "asc" },
   });
+  return events.map(withMappedLinks);
 }
 
 async function requireOwnedSubjectIfProvided(
@@ -45,7 +54,7 @@ export async function createCalendarEvent(
   data: z.infer<typeof createCalendarEventSchema>,
 ) {
   await requireOwnedSubjectIfProvided(userId, data.subjectId);
-  return prisma.calendarEvent.create({
+  const event = await prisma.calendarEvent.create({
     data: {
       userId,
       title: data.title,
@@ -59,8 +68,9 @@ export async function createCalendarEvent(
       color: data.color ?? null,
       note: data.note ?? null,
     },
-    include: { subject: true },
   });
+  if (data.links) await syncLinks(userId, { calendarEventId: event.id }, data.links);
+  return getEvent(event.id);
 }
 
 export async function updateCalendarEvent(
@@ -72,7 +82,10 @@ export async function updateCalendarEvent(
   if (data.subjectId !== undefined) {
     await requireOwnedSubjectIfProvided(userId, data.subjectId);
   }
-  return prisma.calendarEvent.update({ where: { id }, data, include: { subject: true } });
+  const { links, ...fields } = data;
+  await prisma.calendarEvent.update({ where: { id }, data: fields });
+  if (links) await syncLinks(userId, { calendarEventId: id }, links);
+  return getEvent(id);
 }
 
 export async function deleteCalendarEvent(userId: string, id: string) {

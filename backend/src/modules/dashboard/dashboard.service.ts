@@ -1,5 +1,6 @@
 import { weekdays } from "../../lib/enums.js";
 import { prisma } from "../../lib/prisma.js";
+import { listGeneralNotes } from "../generalNotes/generalNotes.service.js";
 import { mapHomework, withSubtasks } from "../homework/homework.service.js";
 import { getTimetable } from "../timetable/timetable.service.js";
 
@@ -57,7 +58,7 @@ export async function getDashboard(userId: string, now: Date = new Date()) {
   const settings = await prisma.settings.findUnique({ where: { userId } });
   const currentGradeLevel = settings?.currentGradeLevel ?? 5;
 
-  const [upcomingHomeworkRaw, upcomingEvents, generalNotesRaw, { timeGridSlots, timetableSlots }] =
+  const [upcomingHomeworkRaw, upcomingEvents, generalNotes, { timeGridSlots, timetableSlots }] =
     await Promise.all([
       prisma.homework.findMany({
         where: { userId, done: false },
@@ -71,16 +72,12 @@ export async function getDashboard(userId: string, now: Date = new Date()) {
         orderBy: { startDate: "asc" },
         take: 10,
       }),
-      prisma.generalNote.findMany({ where: { userId }, orderBy: { sortOrder: "asc" } }),
+      listGeneralNotes(userId),
       getTimetable(userId),
     ]);
 
   const upcomingHomework = upcomingHomeworkRaw.map(mapHomework);
 
-  const generalNotes = generalNotesRaw.map((note) => ({
-    ...note,
-    contentJson: JSON.parse(note.contentJson) as unknown,
-  }));
 
   // Reminder feed: homework (due date) + calendar events (start date, holidays
   // excluded since they're not "things to do"), merged and sorted by date.

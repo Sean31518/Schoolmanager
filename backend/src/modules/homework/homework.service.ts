@@ -1,6 +1,7 @@
 import type { z } from "zod";
 import { NotFoundError } from "../../lib/errors.js";
 import { prisma } from "../../lib/prisma.js";
+import { linksInclude, syncLinks, withMappedLinks } from "../links/links.service.js";
 import type {
   createHomeworkSchema,
   createSubtaskSchema,
@@ -16,12 +17,13 @@ interface ListFilters {
 export const withSubtasks = {
   subject: true,
   subtasks: { orderBy: { sortOrder: "asc" as const } },
+  ...linksInclude,
 };
 
-// Kept as the single place homework rows are shaped for the API (the
-// document links get attached here in the Goodnotes phase).
-export function mapHomework<T>(homework: T) {
-  return homework;
+export const mapHomework = withMappedLinks;
+
+async function getHomework(id: string) {
+  return mapHomework(await prisma.homework.findUniqueOrThrow({ where: { id }, include: withSubtasks }));
 }
 
 export async function listHomework(userId: string, filters: ListFilters) {
@@ -61,9 +63,9 @@ export async function createHomework(
       dueDate: data.dueDate ?? null,
       note: data.note ?? null,
     },
-    include: withSubtasks,
   });
-  return mapHomework(homework);
+  if (data.links) await syncLinks(userId, { homeworkId: homework.id }, data.links);
+  return getHomework(homework.id);
 }
 
 export async function requireOwnedHomework(userId: string, id: string) {
@@ -83,8 +85,10 @@ export async function updateHomework(
   if (data.subjectId !== undefined) {
     await requireOwnedSubjectIfProvided(userId, data.subjectId);
   }
-  const homework = await prisma.homework.update({ where: { id }, data, include: withSubtasks });
-  return mapHomework(homework);
+  const { links, ...fields } = data;
+  await prisma.homework.update({ where: { id }, data: fields });
+  if (links) await syncLinks(userId, { homeworkId: id }, links);
+  return getHomework(id);
 }
 
 export async function deleteHomework(userId: string, id: string) {
