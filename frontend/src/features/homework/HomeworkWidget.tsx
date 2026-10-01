@@ -70,7 +70,9 @@ function HomeworkItem({ hw }: { hw: HomeworkDto }) {
 
   return (
     <div className="border-b border-border-subtle px-3 py-2 text-sm">
-      <div className="flex items-center gap-2.5">
+      {/* Wraps the controls onto their own line when the title would
+          otherwise be squeezed to a few letters (phones). */}
+      <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
         <button
           type="button"
           onClick={() => void toggleDone.mutateAsync({ id: hw.id, done: !hw.done })}
@@ -81,7 +83,13 @@ function HomeworkItem({ hw }: { hw: HomeworkDto }) {
           }
         >
           {hw.done && (
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" className="h-2.5 w-2.5">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="3"
+              className="h-2.5 w-2.5"
+            >
               <path d="M20 6 9 17l-5-5" />
             </svg>
           )}
@@ -105,7 +113,7 @@ function HomeworkItem({ hw }: { hw: HomeworkDto }) {
                 setIsRenaming(false)
               }
             }}
-            className="flex-1 rounded-md border border-border bg-bg-muted px-1 py-0.5 text-sm text-text-primary"
+            className="min-w-[9rem] flex-1 rounded-md border border-border bg-bg-muted px-1 py-0.5 text-sm text-text-primary"
           />
         ) : (
           <button
@@ -113,56 +121,58 @@ function HomeworkItem({ hw }: { hw: HomeworkDto }) {
             onClick={() => setIsRenaming(true)}
             className={
               hw.done
-                ? 'flex-1 truncate text-left text-text-muted line-through'
-                : 'flex-1 truncate text-left text-text-primary'
+                ? 'min-w-[9rem] flex-1 truncate text-left text-text-muted line-through'
+                : 'min-w-[9rem] flex-1 truncate text-left text-text-primary'
             }
           >
             {hw.title}
           </button>
         )}
-        <select
-          value={hw.subjectId ?? ''}
-          onChange={(e) =>
-            void updateHomework.mutateAsync({
-              id: hw.id,
-              data: { subjectId: e.target.value || null },
-            })
-          }
-          className="rounded border-none bg-transparent text-[10px] text-text-muted focus:outline-none"
-        >
-          <option value="">Fach</option>
-          {(subjects ?? []).map((s) => (
-            <option key={s.id} value={s.id}>
-              {s.name}
-            </option>
-          ))}
-        </select>
-        <input
-          type="date"
-          value={hw.dueDate ? hw.dueDate.slice(0, 10) : ''}
-          onChange={(e) =>
-            void updateHomework.mutateAsync({
-              id: hw.id,
-              data: { dueDate: e.target.value || null },
-            })
-          }
-          title="Fällig am"
-          className="dark:[color-scheme:dark] shrink-0 rounded border-none bg-transparent font-mono text-[10px] text-text-tertiary focus:outline-none"
-        />
-        <button
-          type="button"
-          onClick={() => setShowSubtasks((v) => !v)}
-          className="shrink-0 rounded-[4px] bg-bg-hover px-1.5 py-px font-mono text-[10px] text-text-tertiary hover:text-text-primary"
-        >
-          {hw.subtasks.length > 0 ? `${doneSubtasks}/${hw.subtasks.length}` : '+'}
-        </button>
-        <HeftLinkButton hw={hw} />
-        <button
-          onClick={() => void deleteHomework.mutateAsync(hw.id)}
-          className="shrink-0 text-text-muted hover:text-red-400"
-        >
-          ×
-        </button>
+        <div className="ml-auto flex shrink-0 items-center gap-2.5">
+          <select
+            value={hw.subjectId ?? ''}
+            onChange={(e) =>
+              void updateHomework.mutateAsync({
+                id: hw.id,
+                data: { subjectId: e.target.value || null },
+              })
+            }
+            className="rounded border-none bg-transparent text-[10px] text-text-muted focus:outline-none"
+          >
+            <option value="">Fach</option>
+            {(subjects ?? []).map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.name}
+              </option>
+            ))}
+          </select>
+          <input
+            type="date"
+            value={hw.dueDate ? hw.dueDate.slice(0, 10) : ''}
+            onChange={(e) =>
+              void updateHomework.mutateAsync({
+                id: hw.id,
+                data: { dueDate: e.target.value || null },
+              })
+            }
+            title="Fällig am"
+            className="dark:[color-scheme:dark] shrink-0 rounded border-none bg-transparent font-mono text-[10px] text-text-tertiary focus:outline-none"
+          />
+          <button
+            type="button"
+            onClick={() => setShowSubtasks((v) => !v)}
+            className="shrink-0 rounded-[4px] bg-bg-hover px-1.5 py-px font-mono text-[10px] text-text-tertiary hover:text-text-primary"
+          >
+            {hw.subtasks.length > 0 ? `${doneSubtasks}/${hw.subtasks.length}` : '+'}
+          </button>
+          <HeftLinkButton hw={hw} />
+          <button
+            onClick={() => void deleteHomework.mutateAsync(hw.id)}
+            className="shrink-0 text-text-muted hover:text-red-400"
+          >
+            ×
+          </button>
+        </div>
       </div>
 
       <LinkChips
@@ -171,7 +181,9 @@ function HomeworkItem({ hw }: { hw: HomeworkDto }) {
         onRemove={(linkId) =>
           void updateHomework.mutateAsync({
             id: hw.id,
-            data: { links: toLinkInputs(linksToDrafts(hw.links).filter((l) => l.id !== linkId)) },
+            data: {
+              links: toLinkInputs(linksToDrafts(hw.links).filter((l) => l.id !== linkId)),
+            },
           })
         }
       />
@@ -234,7 +246,9 @@ function HeftLinkButton({ hw }: { hw: HomeworkDto }) {
           <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20" />
         </svg>
       </button>
-      {open && <HeftPickerModal subjectId={hw.subjectId} onPick={add} onClose={() => setOpen(false)} />}
+      {open && (
+        <HeftPickerModal subjectId={hw.subjectId} onPick={add} onClose={() => setOpen(false)} />
+      )}
     </>
   )
 }
