@@ -10,7 +10,6 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@excalidraw/excalidraw": "^0.18.1",
     "@tailwindcss/typography": "^0.5.20",
     "@tanstack/react-query": "^5.62.7",
     "@tiptap/extension-link": "^2.11.2",
@@ -23,18 +22,14 @@
     "@tiptap/extension-task-list": "^2.11.2",
     "@tiptap/react": "^2.11.2",
     "@tiptap/starter-kit": "^2.11.2",
-    "@tiptap/suggestion": "^2.27.3",
     "clsx": "^2.1.1",
-    "katex": "^0.18.9",
     "pdfjs-dist": "^6.3.289",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
-    "react-router-dom": "^6.28.1",
-    "tippy.js": "^6.3.7"
+    "react-router-dom": "^6.28.1"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.0.0",
-    "@types/katex": "^0.16.8",
     "@types/node": "^24.13.3",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.7",

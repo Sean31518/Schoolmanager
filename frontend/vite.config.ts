@@ -19,23 +19,11 @@ export default defineConfig({
       filename: 'sw.ts',
       registerType: 'autoUpdate',
       injectRegister: 'auto',
-      injectManifest: {
-        // Excalidraw (the "Zeichnung"/drawing note block) pulls in its
-        // optional mermaid-to-excalidraw dependency, which drags along
-        // mermaid + cytoscape + dozens of locale files - a lazily-loaded
-        // chunk (see BlockList.tsx's React.lazy import) that only fetches
-        // when a user actually opens a drawing block, but still eligible
-        // for precaching by default since Workbox globs the whole dist/.
-        // Precaching it anyway (rather than excluding it) even lets a
-        // drawing block work offline after the first visit - raise the
-        // default 2 MiB limit to fit it instead of failing the build.
-        maximumFileSizeToCacheInBytes: 8 * 1024 * 1024,
-      },
       manifest: {
         name: 'Schulmanager',
         short_name: 'Schulmanager',
         description:
-          'Selbstgehosteter Schulorganizer für Stundenplan, Hausaufgaben, Notizen und Klausuren.',
+          'Selbstgehosteter Schulorganizer für Stundenplan, Hausaufgaben, Goodnotes-Hefte und Klausuren.',
         lang: 'de',
         theme_color: '#dfa24a',
         background_color: '#0a0a09',
@@ -67,9 +55,9 @@ export default defineConfig({
     }),
   ],
   // Two React copies in one bundle crash every hook call at startup (blank
-  // page). Some Excalidraw sub-dependency once got npm to hoist React 18
-  // into the root node_modules next to the frontend's React 19 - the root
-  // package.json "overrides" prevent that, this guards the bundle itself.
+  // page) - that happened once when a dependency got npm to hoist React 18
+  // into the root node_modules. The root package.json "overrides" prevent
+  // that, this guards the bundle itself.
   resolve: {
     dedupe: ['react', 'react-dom'],
   },

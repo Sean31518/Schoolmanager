@@ -1,6 +1,8 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { CreateSubjectModal } from '../../components/CreateSubjectModal'
 import { vertretungLabel } from '../../lib/vertretungLabel'
+import { useHefte } from '../hefte/hooks'
 import { useSyncIservNow } from '../settings/hooks'
 import type { IservVertretungType } from './types'
 
@@ -130,6 +132,8 @@ export function LessonDetailModal({
             )}
           </dl>
 
+          {lesson.subjectId && <SubjectHefte subjectId={lesson.subjectId} onNavigate={onClose} />}
+
           {isUnlinked && (
             <div className="mt-4 border-t border-border-subtle pt-3">
               <p className="text-xs text-text-tertiary">
@@ -163,6 +167,41 @@ export function LessonDetailModal({
             onClose()
           }}
         />
+      )}
+    </div>
+  )
+}
+
+const MAX_HEFTE = 6
+
+/** The Fach's Hefte, most recently written first - what you'd open for
+ * this lesson. */
+function SubjectHefte({ subjectId, onNavigate }: { subjectId: string; onNavigate: () => void }) {
+  const { data: hefte } = useHefte({ subjectId })
+  if (!hefte || hefte.length === 0) return null
+  const recent = [...hefte].sort((a, b) => b.modifiedAt.localeCompare(a.modifiedAt))
+
+  return (
+    <div className="mt-4 border-t border-border-subtle pt-3">
+      <p className="font-mono text-[10px] tracking-wider text-text-tertiary">HEFTE</p>
+      <ul className="mt-1.5 space-y-0.5">
+        {recent.slice(0, MAX_HEFTE).map((heft) => (
+          <li key={heft.id}>
+            <Link
+              to={`/hefte/${heft.id}`}
+              onClick={onNavigate}
+              className="flex items-baseline gap-2 rounded px-1 py-0.5 text-sm text-text-secondary hover:bg-bg-hover hover:text-text-primary"
+            >
+              <span className="truncate">{heft.name}</span>
+              <span className="ml-auto shrink-0 font-mono text-[10px] text-text-muted">{heft.pageCount} S.</span>
+            </Link>
+          </li>
+        ))}
+      </ul>
+      {recent.length > MAX_HEFTE && (
+        <Link to={`/subjects/${subjectId}`} onClick={onNavigate} className="mt-1 block px-1 text-xs text-accent-text hover:underline">
+          Alle {recent.length} Hefte
+        </Link>
       )}
     </div>
   )

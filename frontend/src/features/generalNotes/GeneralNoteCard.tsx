@@ -1,6 +1,10 @@
 import type { JSONContent } from '@tiptap/react'
 import { useEffect, useRef, useState } from 'react'
-import { RichTextEditor } from '../notes/RichTextEditor'
+import { RichTextEditor } from '../../components/RichTextEditor'
+import { LinkChips } from '../hefte/HeftLinks'
+import { linksToDrafts } from '../hefte/links'
+import { HeftPickerModal } from '../hefte/HeftPickerModal'
+import { toLinkInputs } from '../hefte/types'
 import type { GeneralNoteDto } from './types'
 import { useDeleteGeneralNote, useUpdateGeneralNote } from './hooks'
 
@@ -15,6 +19,7 @@ export function GeneralNoteCard({ note }: { note: GeneralNoteDto }) {
     (note.contentJson as JSONContent | undefined) ?? EMPTY_DOC,
   )
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [pickerOpen, setPickerOpen] = useState(false)
 
   useEffect(() => {
     return () => {
@@ -42,12 +47,42 @@ export function GeneralNoteCard({ note }: { note: GeneralNoteDto }) {
           className="w-full border-none bg-transparent text-sm font-medium text-text-primary placeholder:text-text-muted focus:outline-none"
         />
         <button
+          type="button"
+          onClick={() => setPickerOpen(true)}
+          title="Heft oder Seiten verknüpfen"
+          className="shrink-0 text-xs text-text-muted hover:text-text-secondary"
+        >
+          + Heft
+        </button>
+        <button
           onClick={() => void deleteNote.mutateAsync(note.id)}
           className="shrink-0 text-xs text-text-muted hover:text-red-400"
         >
           Löschen
         </button>
       </div>
+      <LinkChips
+        links={note.links}
+        className="mt-2"
+        onRemove={(linkId) =>
+          void updateNote.mutateAsync({
+            id: note.id,
+            data: { links: toLinkInputs(linksToDrafts(note.links).filter((l) => l.id !== linkId)) },
+          })
+        }
+      />
+      {pickerOpen && (
+        <HeftPickerModal
+          onClose={() => setPickerOpen(false)}
+          onPick={(link) => {
+            setPickerOpen(false)
+            void updateNote.mutateAsync({
+              id: note.id,
+              data: { links: toLinkInputs([...linksToDrafts(note.links), link]) },
+            })
+          }}
+        />
+      )}
       <div className="mt-2">
         <RichTextEditor
           content={content}

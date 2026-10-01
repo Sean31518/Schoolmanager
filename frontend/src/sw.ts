@@ -20,9 +20,10 @@ precacheAndRoute(self.__WB_MANIFEST)
 
 // Last-loaded API responses stay available offline instead of erroring —
 // see project memory project_schoolmanager_pwa.md for why AuthContext's
-// /auth/me call in particular depends on this.
+// /auth/me call in particular depends on this. Heft PDFs are left out on
+// purpose: they reach ~200 MB and aren't meant to be kept offline.
 registerRoute(
-  ({ url }) => url.pathname.startsWith('/api/'),
+  ({ url }) => url.pathname.startsWith('/api/') && !/^\/api\/hefte\/[^/]+\/pdf$/.test(url.pathname),
   new NetworkFirst({
     cacheName: 'api-cache',
     networkTimeoutSeconds: 5,

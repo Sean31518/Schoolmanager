@@ -5,13 +5,13 @@ import type { SearchResultDto, SearchResultType } from '../features/search/types
 
 const TYPE_LABELS: Record<SearchResultType, string> = {
   subject: 'FACH',
-  note: 'NOTIZ',
+  heft: 'HEFT',
   generalNote: 'NOTIZ',
   homework: 'HAUSAUFGABE',
   calendarEvent: 'TERMIN',
 }
 
-const TYPE_ORDER: SearchResultType[] = ['subject', 'note', 'generalNote', 'homework', 'calendarEvent']
+const TYPE_ORDER: SearchResultType[] = ['subject', 'heft', 'generalNote', 'homework', 'calendarEvent']
 
 /**
  * Mounted exactly once (in Layout.tsx), so its Ctrl/Cmd+K listener never
@@ -91,7 +91,7 @@ export function GlobalSearchModal({
             ref={inputRef}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Fächer, Notizen, Hausaufgaben, Termine durchsuchen..."
+            placeholder="Fächer, Hefte, Hausaufgaben, Termine durchsuchen..."
             className="w-full bg-transparent text-sm text-text-primary placeholder:text-text-muted focus:outline-none"
           />
           <button

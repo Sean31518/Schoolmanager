@@ -1,8 +1,11 @@
 import { Link } from 'react-router-dom'
+import { useHefte } from '../hefte/hooks'
 import { useSubjects } from './hooks'
 
 export function SubjectsPage() {
   const { data: subjects, isLoading } = useSubjects()
+  const { data: hefte } = useHefte()
+  const heftCount = (subjectId: string) => (hefte ?? []).filter((h) => h.subject?.id === subjectId).length
 
   return (
     <div className="space-y-5">
@@ -29,7 +32,7 @@ export function SubjectsPage() {
                 />
                 <span className="font-medium text-text-primary">{subject.name}</span>
                 <span className="ml-auto font-mono text-[10px] text-text-tertiary">
-                  {subject.noteSectionTypes.length} HEFT(E)
+                  {heftCount(subject.id)} HEFT(E)
                 </span>
               </Link>
             </li>

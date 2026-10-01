@@ -10,6 +10,7 @@ import {
   isPushSupported,
 } from '../../lib/pushNotifications'
 import { useAuth } from '../auth/AuthContext'
+import { GoodnotesSettings } from './GoodnotesSettings'
 import { HolidayImportForm } from '../calendar/HolidayImportForm'
 import { SubjectManager } from '../subjects/SubjectManager'
 import { TimeGridEditor } from '../timetable/TimeGridEditor'
@@ -28,6 +29,7 @@ const BASE_CATEGORIES = [
   { id: 'faecher', label: 'Fächer' },
   { id: 'stundenplan', label: 'Stundenplan' },
   { id: 'iserv', label: 'IServ' },
+  { id: 'goodnotes', label: 'Goodnotes' },
   { id: 'kalender', label: 'Kalender' },
   { id: 'erinnerungen', label: 'Erinnerungen' },
   { id: 'daten', label: 'Daten' },
@@ -133,7 +135,7 @@ export function SettingsPage() {
   async function handleDeleteAccount() {
     if (
       !confirm(
-        'Dein Konto und alle deine Daten (Fächer, Notizen, Hausaufgaben, Stundenplan, Termine) werden unwiderruflich gelöscht. Fortfahren?',
+        'Dein Konto und alle deine Daten (Fächer, Hefte aus Goodnotes, Karteikarten, Hausaufgaben, Stundenplan, Termine) werden unwiderruflich gelöscht. Fortfahren?',
       )
     ) {
       return
@@ -308,6 +310,15 @@ export function SettingsPage() {
             onToggle={() => toggle('iserv')}
           >
             <IservSettings />
+          </SettingsSection>
+
+          <SettingsSection
+            id="goodnotes"
+            title="Goodnotes"
+            open={openIds.has('goodnotes')}
+            onToggle={() => toggle('goodnotes')}
+          >
+            <GoodnotesSettings />
           </SettingsSection>
 
           <SettingsSection
@@ -581,9 +592,9 @@ function ExportDataButton() {
   return (
     <div>
       <p className="text-sm text-text-secondary">
-        Lädt alle deine Daten (Fächer, Notizen, Hausaufgaben, Stundenplan, Termine) als JSON-Datei
-        herunter. Angehängte Dateien (Bilder/PDFs) sind darin nur als Verweis enthalten, nicht mit
-        ihrem Inhalt.
+        Lädt alle deine Daten (Fächer, Karteikarten, Hausaufgaben, Stundenplan, Termine) als JSON-Datei
+        herunter. Die Hefte aus Goodnotes und ihre Verknüpfungen sind nicht enthalten - die sichert
+        Goodnotes selbst und lädt sie beim nächsten Backup wieder hoch.
       </p>
       <button
         type="button"
@@ -600,24 +611,18 @@ function ExportDataButton() {
 
 interface ImportSummary {
   subjects: number
-  noteSectionTypes: number
-  topics: number
-  notes: number
-  blocksSkipped: number
+  flashcardDecks: number
   flashcards: number
   timeGridSlots: number
   timetableSlots: number
   calendarEvents: number
-  examPrepItems: number
   homework: number
   generalNotes: number
 }
 
 const IMPORT_SUMMARY_LABELS: Array<[keyof ImportSummary, string]> = [
   ['subjects', 'Fächer'],
-  ['noteSectionTypes', 'Hefte'],
-  ['topics', 'Themen'],
-  ['notes', 'Notizen'],
+  ['flashcardDecks', 'Karteikarten-Stapel'],
   ['flashcards', 'Karteikarten'],
   ['timeGridSlots', 'Zeitraster-Einträge'],
   ['timetableSlots', 'Stundenplan-Einträge'],
@@ -698,12 +703,6 @@ function ImportDataButton() {
               </li>
             ))}
           </ul>
-          {summary.blocksSkipped > 0 && (
-            <p className="mt-2 text-xs text-text-tertiary">
-              {summary.blocksSkipped} Anhänge (Bilder/PDFs) wurden übersprungen, da die
-              Originaldatei nicht im Export enthalten war.
-            </p>
-          )}
           <button
             type="button"
             onClick={() => window.location.reload()}

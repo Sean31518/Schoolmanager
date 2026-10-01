@@ -210,6 +210,8 @@ export async function getDashboard(userId: string, now: Date = new Date()) {
         endTime: slot.endTime,
         subjectName: cell?.subject?.name ?? null,
         subjectColor: cell?.subject?.color ?? null,
+        // Lets the lesson popup list this Fach's Hefte.
+        subjectId: cell?.subjectId ?? null,
       };
     });
   }

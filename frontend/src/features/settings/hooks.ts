@@ -43,3 +43,23 @@ export function useSyncIservNow() {
     },
   })
 }
+
+export function useAppPasswords() {
+  return useQuery({ queryKey: ['app-passwords'], queryFn: api.listAppPasswords })
+}
+
+export function useCreateAppPassword() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: api.createAppPassword,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['app-passwords'] }),
+  })
+}
+
+export function useDeleteAppPassword() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: api.deleteAppPassword,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['app-passwords'] }),
+  })
+}

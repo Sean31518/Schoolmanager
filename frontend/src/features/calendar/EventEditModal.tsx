@@ -2,6 +2,9 @@ import { useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { ToggleSwitch } from '../../components/ToggleSwitch'
 import { ApiRequestError } from '../../lib/apiClient'
+import { LinkEditor } from '../hefte/HeftLinks'
+import { linksToDrafts } from '../hefte/links'
+import { toLinkInputs, type DraftLink } from '../hefte/types'
 import { useSubjects } from '../subjects/hooks'
 import { getEffectiveColor } from './eventColors'
 import { useDeleteCalendarEvent, useUpdateCalendarEvent } from './hooks'
@@ -31,6 +34,7 @@ export function EventEditModal({
   const [endTime, setEndTime] = useState(event.endTime ?? '')
   const [subjectId, setSubjectId] = useState(event.subjectId ?? '')
   const [color, setColor] = useState(event.color)
+  const [links, setLinks] = useState<DraftLink[]>(() => linksToDrafts(event.links))
   const [error, setError] = useState<string | null>(null)
 
   const effectiveColor = color ?? getEffectiveColor({ ...event, color: null })
@@ -51,6 +55,7 @@ export function EventEditModal({
           endTime: allDay ? null : endTime || null,
           subjectId: subjectId || null,
           color,
+          ...(canRetype ? { links: toLinkInputs(links) } : {}),
         },
       })
       onClose()
@@ -195,9 +200,18 @@ export function EventEditModal({
         {event.type === 'EXAM' && (
           <p className="mt-3 text-sm">
             <Link to={`/exams/${event.id}`} className="text-accent-text hover:underline">
-              Klausurvorbereitung öffnen →
+              Klausur öffnen →
             </Link>
           </p>
+        )}
+
+        {canRetype && (
+        <div className="mt-3 text-sm text-text-secondary">
+          {type === 'EXAM' ? 'Lernstoff: Hefte / Seiten (optional)' : 'Hefte / Seiten (optional)'}
+          <div className="mt-1.5">
+            <LinkEditor value={links} onChange={setLinks} subjectId={subjectId || null} />
+          </div>
+        </div>
         )}
 
         {error && <p className="mt-3 text-sm text-red-400">{error}</p>}

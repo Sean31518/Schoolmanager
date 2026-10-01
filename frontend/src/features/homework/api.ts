@@ -1,11 +1,12 @@
 import { apiFetch } from '../../lib/apiClient'
+import type { LinkInput } from '../hefte/types'
 import type { HomeworkDto, HomeworkSubtaskDto } from './types'
 
 export function createHomework(data: {
   title: string
   subjectId?: string | null
   dueDate?: string | null
-  linkedNoteId?: string | null
+  links?: LinkInput[]
 }) {
   return apiFetch<HomeworkDto>('/homework', { method: 'POST', body: JSON.stringify(data) })
 }
@@ -17,7 +18,8 @@ export function updateHomework(
     title: string
     subjectId: string | null
     dueDate: string | null
-    linkedNoteId: string | null
+    note: string | null
+    links: LinkInput[]
   }>,
 ) {
   return apiFetch<HomeworkDto>(`/homework/${id}`, {

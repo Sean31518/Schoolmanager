@@ -1,5 +1,5 @@
 import { apiFetch } from '../../lib/apiClient'
-import type { NoteSectionTypeDto, SubjectDto } from './types'
+import type { SubjectDto } from './types'
 
 export function listSubjects() {
   return apiFetch<SubjectDto[]>('/subjects')
@@ -25,29 +25,4 @@ export function updateSubject(
 
 export function deleteSubject(subjectId: string) {
   return apiFetch<void>(`/subjects/${subjectId}`, { method: 'DELETE' })
-}
-
-export function createSectionType(subjectId: string, data: { name: string }) {
-  return apiFetch<NoteSectionTypeDto>(`/subjects/${subjectId}/section-types`, {
-    method: 'POST',
-    body: JSON.stringify(data),
-  })
-}
-
-export function updateSectionType(sectionTypeId: string, data: { name: string }) {
-  return apiFetch<NoteSectionTypeDto>(`/section-types/${sectionTypeId}`, {
-    method: 'PATCH',
-    body: JSON.stringify(data),
-  })
-}
-
-export function deleteSectionType(sectionTypeId: string) {
-  return apiFetch<void>(`/section-types/${sectionTypeId}`, { method: 'DELETE' })
-}
-
-export function reorderSectionTypes(subjectId: string, orderedIds: string[]) {
-  return apiFetch<NoteSectionTypeDto[]>(`/subjects/${subjectId}/section-types/reorder`, {
-    method: 'PATCH',
-    body: JSON.stringify({ orderedIds }),
-  })
 }

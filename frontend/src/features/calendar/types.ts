@@ -1,3 +1,5 @@
+import type { DocumentLinkDto } from '../hefte/types'
+
 export type CalendarEventType = 'MANUAL' | 'EXAM' | 'HOLIDAY' | 'PUBLIC_HOLIDAY'
 
 export interface CalendarEventDto {
@@ -13,6 +15,8 @@ export interface CalendarEventDto {
   subject: { id: string; name: string; color: string } | null
   color: string | null
   note: string | null
+  /** For a Klausur: its Lernstoff. */
+  links: DocumentLinkDto[]
 }
 
 export interface ImportHolidaysResult {

@@ -1,6 +1,8 @@
 import { useState, type FormEvent } from 'react'
 import { ApiRequestError } from '../lib/apiClient'
 import { useCreateCalendarEvent } from '../features/calendar/hooks'
+import { LinkEditor } from '../features/hefte/HeftLinks'
+import { toLinkInputs, type DraftLink } from '../features/hefte/types'
 import { useSubjects } from '../features/subjects/hooks'
 import { ToggleSwitch } from './ToggleSwitch'
 
@@ -24,6 +26,7 @@ export function CreateTerminModal({
   const [subjectId, setSubjectId] = useState('')
   const [color, setColor] = useState('#3B82F6')
   const [useColor, setUseColor] = useState(false)
+  const [links, setLinks] = useState<DraftLink[]>([])
   const [error, setError] = useState<string | null>(null)
 
   async function handleCreate(e: FormEvent) {
@@ -40,6 +43,7 @@ export function CreateTerminModal({
         endTime: allDay ? null : endTime || null,
         subjectId: subjectId || null,
         color: useColor ? color : null,
+        links: toLinkInputs(links),
       })
       onClose()
     } catch (err) {
@@ -171,6 +175,13 @@ export function CreateTerminModal({
           >
             {useColor ? 'Automatische Farbe verwenden' : 'Eigene Farbe festlegen'}
           </button>
+        </div>
+
+        <div className="mt-3 text-sm text-text-secondary">
+          {type === 'EXAM' ? 'Lernstoff: Hefte / Seiten (optional)' : 'Hefte / Seiten (optional)'}
+          <div className="mt-1.5">
+            <LinkEditor value={links} onChange={setLinks} subjectId={subjectId || null} />
+          </div>
         </div>
 
         {error && <p className="mt-3 text-sm text-red-400">{error}</p>}

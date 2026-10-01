@@ -1,4 +1,4 @@
-export type SearchResultType = 'subject' | 'note' | 'homework' | 'calendarEvent' | 'generalNote'
+export type SearchResultType = 'subject' | 'heft' | 'homework' | 'calendarEvent' | 'generalNote'
 
 export interface SearchResultDto {
   type: SearchResultType

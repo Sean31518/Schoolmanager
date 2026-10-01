@@ -5,10 +5,11 @@ import { LoginPage } from '../features/auth/LoginPage'
 import { RegisterPage } from '../features/auth/RegisterPage'
 import { CalendarPage } from '../features/calendar/CalendarPage'
 import { DashboardPage } from '../features/dashboard/DashboardPage'
-import { ExamPage } from '../features/examPrep/ExamPage'
-import { ExamPrepPage } from '../features/examPrep/ExamPrepPage'
-import { ExamsListPage } from '../features/examPrep/ExamsListPage'
-import { NoteEditorPage } from '../features/notes/NoteEditorPage'
+import { ExamPage } from '../features/exams/ExamPage'
+import { ExamsListPage } from '../features/exams/ExamsListPage'
+import { DeckPage } from '../features/flashcards/DeckPage'
+import { HeftePage } from '../features/hefte/HeftePage'
+import { HeftViewerPage } from '../features/hefte/HeftViewerPage'
 import { SettingsPage } from '../features/settings/SettingsPage'
 import { SubjectDetailPage } from '../features/subjects/SubjectDetailPage'
 import { SubjectsPage } from '../features/subjects/SubjectsPage'
@@ -65,18 +66,12 @@ export function AppRouter() {
         <Route path="/calendar" element={<CalendarPage />} />
         <Route path="/exams" element={<ExamsListPage />} />
         <Route path="/exams/:eventId" element={<ExamPage />} />
-        <Route path="/exams/:eventId/edit" element={<ExamPrepPage />} />
+        <Route path="/hefte" element={<HeftePage />} />
+        <Route path="/hefte/:heftId" element={<HeftViewerPage />} />
+        <Route path="/decks/:deckId" element={<DeckPage />} />
         <Route path="/settings" element={<SettingsPage />} />
         <Route path="/subjects" element={<SubjectsPage />} />
         <Route path="/subjects/:subjectId" element={<SubjectDetailPage />} />
-        <Route
-          path="/subjects/:subjectId/sections/:sectionTypeId"
-          element={<NoteEditorPage />}
-        />
-        <Route
-          path="/subjects/:subjectId/sections/:sectionTypeId/notes/:noteId"
-          element={<NoteEditorPage />}
-        />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

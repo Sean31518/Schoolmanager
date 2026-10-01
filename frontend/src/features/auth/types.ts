@@ -20,4 +20,5 @@ export interface SettingsDto {
   iservLastSyncAt: string | null;
   iservLastSyncError: string | null;
   iservConfigured: boolean;
+  davVersionsToKeep: number;
 }

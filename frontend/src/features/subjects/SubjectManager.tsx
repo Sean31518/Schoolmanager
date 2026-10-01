@@ -82,7 +82,7 @@ function SubjectManagerRow({ subject }: { subject: SubjectDto }) {
   }
 
   function handleDelete() {
-    if (confirm(`"${subject.name}" inklusive aller Notizbereiche und Notizen löschen?`)) {
+    if (confirm(`"${subject.name}" inklusive aller Karteikarten-Stapel löschen? Die Hefte aus Goodnotes bleiben erhalten und landen unter "Ohne Fach".`)) {
       void deleteSubject.mutateAsync(subject.id)
     }
   }

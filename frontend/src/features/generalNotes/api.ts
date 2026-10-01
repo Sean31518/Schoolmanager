@@ -1,4 +1,5 @@
 import { apiFetch } from '../../lib/apiClient'
+import type { LinkInput } from '../hefte/types'
 import type { GeneralNoteDto } from './types'
 
 export function createGeneralNote(data: { title?: string | null; contentJson: unknown }) {
@@ -10,7 +11,7 @@ export function createGeneralNote(data: { title?: string | null; contentJson: un
 
 export function updateGeneralNote(
   id: string,
-  data: Partial<{ title: string | null; contentJson: unknown }>,
+  data: Partial<{ title: string | null; contentJson: unknown; links: LinkInput[] }>,
 ) {
   return apiFetch<GeneralNoteDto>(`/general-notes/${id}`, {
     method: 'PATCH',

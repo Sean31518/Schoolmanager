@@ -1,8 +1,6 @@
-import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { useExams } from '../calendar/hooks'
-import { useExamPrep } from '../examPrep/hooks'
-import { useTopicsMastery } from '../flashcards/hooks'
+import { useDecks } from '../flashcards/hooks'
 
 function daysUntil(iso: string) {
   const now = new Date()
@@ -26,20 +24,19 @@ export function ExamHighlightWidget() {
     .filter((e) => daysUntil(e.startDate) >= 0)
     .sort((a, b) => a.startDate.localeCompare(b.startDate))[0]
 
-  const { data: examPrep } = useExamPrep(nextExam?.id ?? '')
-  const topicIds = useMemo(
-    () => [...new Set((examPrep?.items ?? []).map((item) => item.topicId))],
-    [examPrep],
-  )
-  const { byTopic } = useTopicsMastery(topicIds)
+  // Progress = the exam's Fach's Karteikarten-Stapel (an exam without a
+  // Fach shows none, even though this then fetches all decks).
+  const { data: decks } = useDecks(nextExam?.subjectId ?? undefined)
 
   if (!nextExam) return null
 
-  const totals = [...byTopic.values()].reduce(
-    (acc, t) => ({ done: acc.done + t.done, total: acc.total + t.total }),
+  const subjectDecks = nextExam.subjectId ? (decks ?? []) : []
+  const totals = subjectDecks.reduce(
+    (acc, d) => ({ done: acc.done + d.knownCount, total: acc.total + d.cardCount }),
     { done: 0, total: 0 },
   )
   const pct = totals.total > 0 ? Math.round((totals.done / totals.total) * 100) : 0
+  const lernstoff = nextExam.links.length
 
   return (
     <Link
@@ -51,11 +48,8 @@ export function ExamHighlightWidget() {
       </div>
       <div className="mt-0.5 text-sm font-semibold text-text-primary">{nextExam.title}</div>
       <div className="mt-0.5 text-xs text-text-secondary">
-        {topicIds.length > 0
-          ? totals.total > 0
-            ? `${totals.done} von ${totals.total} Karten gewusst`
-            : `${topicIds.length} Themen im Lernstapel · noch keine Karten`
-          : 'Noch kein Lernstapel angelegt'}
+        {lernstoff > 0 ? `${lernstoff} × Lernstoff` : 'Noch kein Lernstoff verknüpft'}
+        {totals.total > 0 && ` · ${totals.done} von ${totals.total} Karten gewusst`}
       </div>
       {totals.total > 0 && (
         <div className="mt-2.5 h-[5px] overflow-hidden rounded-full bg-bg-hover">

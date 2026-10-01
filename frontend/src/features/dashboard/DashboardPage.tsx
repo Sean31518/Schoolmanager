@@ -3,7 +3,7 @@ import { useAuth } from '../auth/AuthContext'
 import { GeneralNotesWidget } from '../generalNotes/GeneralNotesWidget'
 import { HomeworkWidget } from '../homework/HomeworkWidget'
 import { ExamHighlightWidget } from './ExamHighlightWidget'
-import { RecentNotesWidget } from './RecentNotesWidget'
+import { RecentHefteWidget } from './RecentHefteWidget'
 import { RemindersWidget } from './RemindersWidget'
 import { TodayTomorrowWidget } from './TodayTomorrowWidget'
 import { useDashboard } from './hooks'
@@ -32,7 +32,7 @@ export function DashboardPage() {
         <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1fr_268px]">
           <div className="flex flex-col gap-3.5 min-w-0">
             <HomeworkWidget items={data.upcomingHomework} />
-            <RecentNotesWidget notes={data.recentlyViewedNotes} />
+            <RecentHefteWidget />
             <GeneralNotesWidget notes={data.generalNotes} />
           </div>
 

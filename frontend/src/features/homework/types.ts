@@ -1,21 +1,11 @@
+import type { DocumentLinkDto } from '../hefte/types'
+
 export interface HomeworkSubtaskDto {
   id: string
   homeworkId: string
   title: string
   done: boolean
   sortOrder: number
-}
-
-export interface LinkedNoteDto {
-  id: string
-  title: string
-  topicId: string
-  topicName: string
-  sectionTypeId: string
-  sectionTypeName: string
-  subjectId: string
-  subjectName: string
-  subjectColor: string
 }
 
 export interface HomeworkDto {
@@ -26,7 +16,6 @@ export interface HomeworkDto {
   dueDate: string | null
   done: boolean
   note: string | null
-  linkedNoteId: string | null
-  linkedNote: LinkedNoteDto | null
   subtasks: HomeworkSubtaskDto[]
+  links: DocumentLinkDto[]
 }

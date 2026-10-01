@@ -31,19 +31,6 @@ export interface TimetableSlotSummaryDto {
   rawSubjectCode?: string | null
 }
 
-export interface RecentlyViewedNoteDto {
-  id: string
-  title: string
-  lastViewedAt: string
-  topicId: string
-  topicName: string
-  sectionTypeId: string
-  sectionTypeName: string
-  subjectId: string
-  subjectName: string
-  subjectColor: string
-}
-
 export interface DashboardDto {
   currentGradeLevel: number
   upcomingHomework: HomeworkDto[]
@@ -53,5 +40,4 @@ export interface DashboardDto {
   tomorrowTimetable: TimetableSlotSummaryDto[]
   todayLabel: string
   tomorrowLabel: string
-  recentlyViewedNotes: RecentlyViewedNoteDto[]
 }

@@ -1,4 +1,5 @@
 import { apiFetch } from '../../lib/apiClient'
+import type { LinkInput } from '../hefte/types'
 import type { CalendarEventDto, CalendarEventType, ImportHolidaysResult } from './types'
 
 export function listCalendarEvents(params: { from: string; to: string }) {
@@ -21,6 +22,7 @@ export function createCalendarEvent(data: {
   subjectId?: string | null
   color?: string | null
   note?: string | null
+  links?: LinkInput[]
 }) {
   return apiFetch<CalendarEventDto>('/calendar-events', {
     method: 'POST',
@@ -40,6 +42,8 @@ export function updateCalendarEvent(
     endTime: string | null
     subjectId: string | null
     color: string | null
+    note: string | null
+    links: LinkInput[]
   }>,
 ) {
   return apiFetch<CalendarEventDto>(`/calendar-events/${id}`, {
